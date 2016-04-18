@@ -61,8 +61,15 @@ $lang['LABEL_QUANTITY'] = 'Quantity';
 $lang['LABEL_TOTAL'] = 'Total';
 $lang['LABEL_SEARCH'] = 'Search';
 $lang['MSG_BOOKING_NOT_FOUND'] = 'No Booking available';
+$lang['LABEL_DIVISION_NAME'] = 'Division';
+$lang['LABEL_ZONE_NAME'] = 'Zone';
+$lang['LABEL_TERRITORY_NAME'] = 'Territory';
+$lang['LABEL_DISTRICT_NAME'] = 'District';
+$lang['LABEL_UPAZILLA_NAME'] = 'Upazila';
+$lang['LABEL_UNION_NAME'] = 'Union';
 
 //Assign User
 $lang['LABEL_USERNAME'] = 'User name';
 $lang['LABEL_EMPLOYEE_ID'] = 'Employee id';
 $lang['LABEL_USER_GROUP'] = 'User Group';
+$lang['LABEL_DESIGNATION_NAME'] = 'Designation';

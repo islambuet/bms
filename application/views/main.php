@@ -5,7 +5,7 @@ $CI = & get_instance();
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>BMS</title>
+        <title>EMS</title>
         <link rel="shortcut icon"  type="image/x-icon" href="<?php echo base_url(); ?>images/logo.png">
         <meta charset="utf-8">
         <link rel="stylesheet" href="<?php echo base_url();?>css/bootstrap.min.css">
@@ -50,6 +50,9 @@ $CI = & get_instance();
         <script type="text/javascript" src="<?php echo base_url();?>js/jqx/jqxgrid.aggregates.js"></script>
         <!-- for header tool tip-->
         <script type="text/javascript" src="<?php echo base_url();?>js/jqx/jqxtooltip.js"></script>
+        <!-- popup-->
+        <script type="text/javascript" src="<?php echo base_url();?>js/jqx/jqxwindow.js"></script>
+
         <!--    for jqx grid end-->
         <script type="text/javascript">
             var base_url = "<?php echo base_url(); ?>";
@@ -86,6 +89,11 @@ $CI = & get_instance();
         </footer>
         <div id="system_loading"><img src="<?php echo base_url(); ?>images/spinner.gif"></div>
         <div id="system_message"></div>
+        <div id="popup_window">
+            <div id="popup_window_title">Details</div>
+            <div id="popup_content" style="overflow: auto;">
+            </div>
+        </div>
         <script type="text/javascript" src="<?php echo base_url(); ?>js/system_common.js"></script>
     </body>
 </html>

@@ -75,7 +75,7 @@ $query_builder = TRUE;
 
 $db['armalik_ems_bms']['hostname'] = '127.0.0.1';
 $db['armalik_ems_bms']['username'] = 'root';
-$db['armalik_ems_bms']['password'] = 'vertrigo';
+$db['armalik_ems_bms']['password'] = '';
 $db['armalik_ems_bms']['database'] = 'shaiful_arm_ems';
 $db['armalik_ems_bms']['dbdriver'] = 'mysqli';
 $db['armalik_ems_bms']['dbprefix'] = '';
@@ -91,7 +91,7 @@ $db['armalik_ems_bms']['stricton'] = FALSE;
 
 $db['armalik_login']['hostname'] = '127.0.0.1';
 $db['armalik_login']['username'] = 'root';
-$db['armalik_login']['password'] = 'vertrigo';
+$db['armalik_login']['password'] = '';
 $db['armalik_login']['database'] = 'shaiful_arm_login';
 $db['armalik_login']['dbdriver'] = 'mysqli';
 $db['armalik_login']['dbprefix'] = '';

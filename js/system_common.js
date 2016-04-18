@@ -384,6 +384,9 @@ $(document).ready(function()
     {
         this.value = this.value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '');
     });
+    $("#popup_window").jqxWindow({
+        width: 550,height:550, resizable: true,  isModal: true, autoOpen: false, modalOpacity: 0.01,position: { x: 60, y: 60 }
+    });
 
 
 });
@@ -470,5 +473,6 @@ function turn_off_triggers()
     //stock out
     $(document).off("change", "#purpose");
     $(document).off("change", "#customer_id");
+    
 
 }

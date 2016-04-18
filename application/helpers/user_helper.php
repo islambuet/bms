@@ -213,46 +213,46 @@ class User_helper
         $CI->db->select('t.name territory_name');
         $CI->db->select('zone.name zone_name');
         $CI->db->select('division.name division_name');
-        $CI->db->join($CI->config->item('table_setup_location_unions').' union','union.id = aa.union_id','LEFT');
-        $CI->db->join($CI->config->item('table_setup_location_upazillas').' u','u.id = aa.upazilla_id','LEFT');
-        $CI->db->join($CI->config->item('table_setup_location_districts').' d','d.id = aa.district_id','LEFT');
-        $CI->db->join($CI->config->item('table_setup_location_territories').' t','t.id = aa.territory_id','LEFT');
-        $CI->db->join($CI->config->item('table_setup_location_zones').' zone','zone.id = aa.zone_id','LEFT');
-        $CI->db->join($CI->config->item('table_setup_location_divisions').' division','division.id = aa.division_id','LEFT');
+        $CI->db->join($CI->config->item('ems_setup_location_unions').' union','union.id = aa.union_id','LEFT');
+        $CI->db->join($CI->config->item('ems_setup_location_upazillas').' u','u.id = aa.upazilla_id','LEFT');
+        $CI->db->join($CI->config->item('ems_setup_location_districts').' d','d.id = aa.district_id','LEFT');
+        $CI->db->join($CI->config->item('ems_setup_location_territories').' t','t.id = aa.territory_id','LEFT');
+        $CI->db->join($CI->config->item('ems_setup_location_zones').' zone','zone.id = aa.zone_id','LEFT');
+        $CI->db->join($CI->config->item('ems_setup_location_divisions').' division','division.id = aa.division_id','LEFT');
         $CI->db->where('aa.revision',1);
         $CI->db->where('aa.user_id',$user->user_id);
         $assigned_area=$CI->db->get()->row_array();
 
         if($assigned_area)
         {
-            $CI->db->from($CI->config->item('table_system_assigned_area').' aa');
+            $CI->db->from($CI->config->item('ems_system_assigned_area').' aa');
             if($assigned_area['division_id']>0)
             {
-                $CI->db->join($CI->config->item('table_setup_location_divisions').' division','division.id = aa.division_id','INNER');
+                $CI->db->join($CI->config->item('ems_setup_location_divisions').' division','division.id = aa.division_id','INNER');
             }
             if($assigned_area['zone_id']>0)
             {
-                $CI->db->join($CI->config->item('table_setup_location_zones').' zone','zone.division_id = division.id','INNER');
+                $CI->db->join($CI->config->item('ems_setup_location_zones').' zone','zone.division_id = division.id','INNER');
                 $CI->db->where('zone.id',$assigned_area['zone_id']);
             }
             if($assigned_area['territory_id']>0)
             {
-                $CI->db->join($CI->config->item('table_setup_location_territories').' t','t.zone_id = zone.id','INNER');
+                $CI->db->join($CI->config->item('ems_setup_location_territories').' t','t.zone_id = zone.id','INNER');
                 $CI->db->where('t.id',$assigned_area['territory_id']);
             }
             if($assigned_area['district_id']>0)
             {
-                $CI->db->join($CI->config->item('table_setup_location_districts').' d','d.territory_id = t.id','INNER');
+                $CI->db->join($CI->config->item('ems_setup_location_districts').' d','d.territory_id = t.id','INNER');
                 $CI->db->where('d.id',$assigned_area['district_id']);
             }
             if($assigned_area['upazilla_id']>0)
             {
-                $CI->db->join($CI->config->item('table_setup_location_upazillas').' u','u.district_id = d.id','INNER');
+                $CI->db->join($CI->config->item('ems_setup_location_upazillas').' u','u.district_id = d.id','INNER');
                 $CI->db->where('u.id',$assigned_area['upazilla_id']);
             }
             if($assigned_area['union_id']>0)
             {
-                $CI->db->join($CI->config->item('table_setup_location_unions').' union','union.upazilla_id = u.id','INNER');
+                $CI->db->join($CI->config->item('ems_setup_location_unions').' union','union.upazilla_id = u.id','INNER');
                 $CI->db->where('union.id',$assigned_area['union_id']);
             }
             $CI->db->where('aa.revision',1);
