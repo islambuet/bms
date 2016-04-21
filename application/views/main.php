@@ -5,7 +5,7 @@ $CI = & get_instance();
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>EMS</title>
+        <title>BMS</title>
         <link rel="shortcut icon"  type="image/x-icon" href="<?php echo base_url(); ?>images/logo.png">
         <meta charset="utf-8">
         <link rel="stylesheet" href="<?php echo base_url();?>css/bootstrap.min.css">
