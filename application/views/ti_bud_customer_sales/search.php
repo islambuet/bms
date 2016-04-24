@@ -439,11 +439,8 @@
         {
             $('#system_report_container').html('');
             var crop_type_id=$('#crop_type_id').val();
-            console.log('here'+crop_type_id);
             if(crop_type_id>0)
             {
-                console.log('here2');
-
                 $('#search_form').submit();
             }
         });

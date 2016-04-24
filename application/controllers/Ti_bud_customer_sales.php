@@ -226,50 +226,67 @@ class Ti_bud_customer_sales extends Root_Controller
     }
     private function get_customer_varieties()
     {
-        echo '<PRE>';
-        print_r($this->input->post());
-        echo '</PRE>';
-        die();
-        $data['year']=$this->input->post('year');
-        $data['crop_type_id']=$this->input->post('crop_type_id');
-        $data['upazilla_id']=$this->input->post('upazilla_id');
-        $data['unions']=Query_helper::get_info($this->config->item('table_setup_location_unions'),array('id value','name text'),array('upazilla_id ='.$data['upazilla_id'],'status ="'.$this->config->item('system_status_active').'"'));
-        $data['varieties_arm']=Query_helper::get_info($this->config->item('table_setup_classification_varieties'),'*',array('crop_type_id ='.$data['crop_type_id'],'status ="'.$this->config->item('system_status_active').'"','whose ="ARM"'));
-        $data['varieties_competitor']=Query_helper::get_info($this->config->item('table_setup_classification_varieties'),'*',array('crop_type_id ='.$data['crop_type_id'],'status ="'.$this->config->item('system_status_active').'"','whose ="Competitor"'));
-        $data['max_customers_number']=$this->config->item('system_msurvey_customers_num');
-        $data['survey']=Query_helper::get_info($this->config->item('table_survey_primary'),'*',array('year ='.$data['year'],'crop_type_id ='.$data['crop_type_id'],'upazilla_id ='.$data['upazilla_id'],'status ="'.$this->config->item('system_status_active').'"'),1);
-        $data['survey_customer_survey']=array();
-        $data['survey_quantity_survey']=array();
-        $data['customers']=array();
-        $customers=Query_helper::get_info($this->config->item('table_survey_primary_customers'),'*',array('year ='.$data['year'],'upazilla_id ='.$data['upazilla_id']));
-        foreach($customers as $customer)
+        $user = User_helper::get_user();
+        $time=time();
+        $results=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('id DESC'));
+        $fiscal_years=array();
+        foreach($results as $result)
         {
-            $data['customers'][$customer['customer_no']]=$customer;
+            $fiscal_years[$result['value']]=$result;
         }
-        if($data['survey'])
+
+        $budget_search=$this->input->post('budget');
+        $years=array();
+        $years['fiscal_year_id']=$fiscal_years[$budget_search['fiscal_year_id']];
+        $setup_id=0;
+        $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('territory_id ='.$budget_search['territory_id'],'fiscal_year_id ='.$budget_search['fiscal_year_id']),1);
+        if($setup)
         {
-            $data['title']="Edit Survey";
-
-
-            $customer_survey=Query_helper::get_info($this->config->item('table_survey_primary_customer_survey'),'*',array('survey_id ='.$data['survey']['id']));
-            foreach($customer_survey as $survey)
+            $setup_id=$setup['id'];
+            for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
             {
-                $data['survey_customer_survey'][$survey['variety_id']][$survey['customer_no']]=$survey;
-            }
-            $quantity_survey=Query_helper::get_info($this->config->item('table_survey_primary_quantity_survey'),'*',array('survey_id ='.$data['survey']['id']));
-            foreach($quantity_survey as $survey)
-            {
-                $data['survey_quantity_survey'][$survey['variety_id']]=$survey;
+                $years['year'.$i.'_id']=$fiscal_years[$setup['year'.$i.'_id']];
             }
         }
         else
         {
-            $data['title']="New Survey";//edit Survey
+            $i=1;
+            $data=array();
+            $data['fiscal_year_id']=$years['fiscal_year_id']['value'];
+            foreach($fiscal_years as $result)
+            {
+                if(sizeof($years)<=$this->config->item('num_year_prediction'))
+                {
+                    if($result['value']>$years['fiscal_year_id']['value'])
+                    {
+                        $years['year'.$i.'_id']=$result;
+                        $data['year'.$i.'_id']=$result['value'];
+                        $i++;
+                    }
+                }
+            }
+            if(sizeof($years)<=$this->config->item('num_year_prediction'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line('MSG_SETUP_MORE_FISCAL_YEAR');
+                $this->jsonReturn($ajax);
+            }
+            $data['territory_id'] = $budget_search['territory_id'];
+            $data['user_created'] = $user->user_id;
+            $data['date_created'] = $time;
+            $setup_id=Query_helper::add($this->config->item('table_ti_budget'),$data);
+            if($setup_id===false)
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+                $this->jsonReturn($ajax);
+                die();
+            }
         }
-
-        //get info
-        //if exits check my editable
-
+        echo '<PRE>';
+        print_r($setup_id);
+        echo '</PRE>';
+        die();
         $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("survey_primary_market/add_edit",$data,true));
         if($this->message)
         {
