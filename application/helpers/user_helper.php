@@ -225,7 +225,7 @@ class User_helper
 
         if($assigned_area)
         {
-            $CI->db->from($CI->config->item('ems_system_assigned_area').' aa');
+            $CI->db->from($CI->config->item('table_system_assigned_area').' aa');
             if($assigned_area['division_id']>0)
             {
                 $CI->db->join($CI->config->item('ems_setup_location_divisions').' division','division.id = aa.division_id','INNER');

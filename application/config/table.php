@@ -18,3 +18,7 @@ $config['table_system_user_group_role'] = 'bms_system_user_group_role';
 $config['table_history'] = 'bms_history';
 $config['table_system_assigned_area'] = 'bms_system_assigned_area';
 
+$config['table_ti_budget'] = 'bms_ti_budget';
+$config['table_ti_bud_customer_sales_target'] = 'bms_ti_bud_customer_sales_target';
+
+
