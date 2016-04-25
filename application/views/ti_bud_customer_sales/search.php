@@ -6,7 +6,7 @@
     $action_data["action_save_new"]='#save_form';
     $CI->load->view("action_buttons",$action_data);
 ?>
-<form id="search_form" action="<?php echo site_url($CI->controller_url.'/index/get_customer_varieties');?>" method="post">
+<form id="search_form" action="<?php echo site_url($CI->controller_url.'/index/get_customer_details');?>" method="post">
     <div class="row widget">
         <div class="widget-header">
             <div class="title">

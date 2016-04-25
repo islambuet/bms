@@ -31,6 +31,7 @@ $lang['LABEL_SEASON'] = 'Season';
 $lang['LABEL_USERNAME'] = 'User name';
 $lang['LABEL_EMPLOYEE_ID'] = 'Employee id';
 $lang['LABEL_USER_GROUP'] = 'User Group';
+$lang['LABEL_DESIGNATION_NAME'] = 'Designation';
 
 //Action buttons
 $lang['ACTION_DASHBOARD'] = 'Dashboard';
@@ -78,6 +79,9 @@ $lang['LABEL_TOTAL'] = 'Total';
 $lang['LABEL_SEARCH'] = 'Search';
 $lang['LABEL_ADDRESS'] = 'address';
 $lang['LABEL_SL_NO'] = 'SL#';
+$lang['LABEL_NUM_CROP'] = '#Crops';
+$lang['LABEL_NUM_TYPES'] = '#Types';
+$lang['LABEL_NUM_VARIETIES'] = '#Varities';
 
 
 $lang['ACTIVE'] = 'Active';
@@ -96,3 +100,4 @@ $lang['LABEL_NO'] = 'No';
 $lang['LABEL_CUSTOMER_NAME'] = 'Customer';
 //
 $lang['MSG_SETUP_MORE_FISCAL_YEAR'] = 'Please contact with admin to setup more fiscal years.';
+$lang['MSG_ALREADY_FORWARDED'] = 'Already Forwarded.';

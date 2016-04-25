@@ -39,6 +39,9 @@
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="territory_name"><?php echo $CI->lang->line('LABEL_TERRITORY_NAME'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="district_name"><?php echo $CI->lang->line('LABEL_DISTRICT_NAME'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="customer_name"><?php echo $CI->lang->line('LABEL_CUSTOMER_NAME'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_crops"><?php echo $CI->lang->line('LABEL_NUM_CROP'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_types"><?php echo $CI->lang->line('LABEL_NUM_TYPES'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_varieties"><?php echo $CI->lang->line('LABEL_NUM_VARIETIES'); ?></label>
         </div>
         <?php
     }
@@ -65,7 +68,10 @@
                 { name: 'zone_name', type: 'string' },
                 { name: 'territory_name', type: 'string' },
                 { name: 'district_name', type: 'string' },
-                { name: 'customer_name', type: 'string' }
+                { name: 'customer_name', type: 'string' },
+                { name: 'num_crops', type: 'string' },
+                { name: 'num_types', type: 'string' },
+                { name: 'num_varieties', type: 'string' }
 
             ],
             id: 'id',
@@ -97,7 +103,10 @@
                     { text: '<?php echo $CI->lang->line('LABEL_ZONE_NAME'); ?>', dataField: 'zone_name',width:'150'},
                     { text: '<?php echo $CI->lang->line('LABEL_TERRITORY_NAME'); ?>', dataField: 'territory_name',width:'150'},
                     { text: '<?php echo $CI->lang->line('LABEL_DISTRICT_NAME'); ?>', dataField: 'district_name',width:'150'},
-                    { text: '<?php echo $CI->lang->line('LABEL_CUSTOMER_NAME'); ?>', dataField: 'customer_name'}
+                    { text: '<?php echo $CI->lang->line('LABEL_CUSTOMER_NAME'); ?>', dataField: 'customer_name'},
+                    { text: '<?php echo $CI->lang->line('LABEL_NUM_CROP'); ?>', dataField: 'num_crops'},
+                    { text: '<?php echo $CI->lang->line('LABEL_NUM_TYPES'); ?>', dataField: 'num_types'},
+                    { text: '<?php echo $CI->lang->line('LABEL_NUM_VARIETIES'); ?>', dataField: 'num_varieties'}
 
                 ]
             });

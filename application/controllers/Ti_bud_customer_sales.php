@@ -42,9 +42,13 @@ class Ti_bud_customer_sales extends Root_Controller
         {
             $this->system_add();
         }
-        elseif($action=="get_customer_varieties")
+        elseif($action=="get_customer_details")
         {
-            $this->get_customer_varieties();
+            $this->get_customer_details();
+        }
+        elseif($action=="get_customer_items")
+        {
+            $this->get_customer_items();
         }
         elseif($action=="edit")
         {
@@ -111,7 +115,7 @@ class Ti_bud_customer_sales extends Root_Controller
             }
 
 
-            $data['title']="New Customer Sales Prediction";
+            $data['title']="Search";
 
             $data['budget']['division_id']=$this->locations['division_id'];
             $data['budget']['zone_id']=$this->locations['zone_id'];
@@ -224,7 +228,7 @@ class Ti_bud_customer_sales extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    private function get_customer_varieties()
+    private function get_customer_details()
     {
         $user = User_helper::get_user();
         $time=time();
@@ -242,6 +246,13 @@ class Ti_bud_customer_sales extends Root_Controller
         $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('territory_id ='.$budget_search['territory_id'],'fiscal_year_id ='.$budget_search['fiscal_year_id']),1);
         if($setup)
         {
+            if($setup['status_forward']===$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                $this->jsonReturn($ajax);
+                die();
+            }
             $setup_id=$setup['id'];
             for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
             {
@@ -283,11 +294,16 @@ class Ti_bud_customer_sales extends Root_Controller
                 die();
             }
         }
-        echo '<PRE>';
-        print_r($setup_id);
-        echo '</PRE>';
-        die();
-        $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("survey_primary_market/add_edit",$data,true));
+        $keys=',';
+        $keys.="setup_id:'".$setup_id."',";
+        $keys.="customer_id:'".$budget_search['customer_id']."',";
+        $keys.="crop_type_id:'".$budget_search['crop_type_id']."',";
+        $data['keys']=trim($keys,',');
+        $data['years']=$years;
+        $data['customer_id']=$budget_search['customer_id'];
+        $data['setup_id']=$setup_id;
+        $data['title']="Customer Sales Budget";
+        $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("ti_bud_customer_sales/add_edit",$data,true));
         if($this->message)
         {
             $ajax['system_message']=$this->message;
@@ -295,209 +311,157 @@ class Ti_bud_customer_sales extends Root_Controller
         $this->jsonReturn($ajax);
 
     }
-    private function system_save()
+    private function get_customer_items()
     {
-        $user = User_helper::get_user();
-        if(!((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1))))
+        $setup_id=$this->input->post('setup_id');
+        $customer_id=$this->input->post('customer_id');
+        $crop_type_id=$this->input->post('crop_type_id');
+
+        $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_sales_target'),'*',array('setup_id ='.$setup_id,'customer_id ='.$customer_id));
+        $old_items=array();
+
+        foreach($results as $result)
         {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
-            die();
+            $old_items[$result['variety_id']]=$result;
         }
 
-        if(!$this->check_validation())
+        $results=Query_helper::get_info($this->config->item('ems_setup_classification_varieties'),array('id','name'),array('crop_type_id ='.$crop_type_id,'status ="'.$this->config->item('system_status_active').'"','whose ="ARM"'),0,0,array('ordering ASC'));
+        $items=array();
+        $count=0;
+        foreach($results as $result)
         {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->message;
-            $this->jsonReturn($ajax);
-        }
-        else
-        {
-            $time=time();
-            $data=array();
-            $year=$this->input->post('year');
-            $crop_type_id=$this->input->post('crop_type_id');
-            $upazilla_id=$this->input->post('upazilla_id');
-            $survey=Query_helper::get_info($this->config->item('table_survey_primary'),'*',array('year ='.$year,'crop_type_id ='.$crop_type_id,'upazilla_id ='.$upazilla_id,'status ="'.$this->config->item('system_status_active').'"'),1);
-            if($survey)
+            $count++;
+            $item=array();
+            $item['sl_no']=$count;
+            $item['variety_name']=$result['name'];
+            $quantity='';
+            $editable=false;
+            if((isset($old_items[$result['id']]['sale_quantity']))&&(($old_items[$result['id']]['sale_quantity'])>0))
             {
-                $data['user_updated'] = $user->user_id;
-                $data['date_updated'] = $time;
-            }
-            else
-            {
-                $data['user_created'] = $user->user_id;
-                $data['date_created'] = $time;
-            }
-
-
-            $unions=$this->input->post('unions');
-            if(sizeof($unions)>0)
-            {
-                $data['union_ids']=json_encode($unions);
-            }
-
-
-            $data['remarks']=$this->input->post('remarks');
-
-            $this->db->trans_start();  //DB Transaction Handle START
-            if($survey)
-            {
-                $survey_id=$survey['id'];
-                Query_helper::update($this->config->item('table_survey_primary'),$data,array("id = ".$survey['id']));
-
-            }
-            else
-            {
-                $data['year']=$year;
-                $data['crop_type_id']=$crop_type_id;
-                $data['upazilla_id']=$upazilla_id;
-                $survey_id=Query_helper::add($this->config->item('table_survey_primary'),$data);
-                if($survey_id===false)
+                $quantity=$old_items[$result['id']]['sale_quantity'];
+                if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
                 {
-                    $this->db->trans_complete();
-                    $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
-                    $this->jsonReturn($ajax);
-                    die();
-                }
-            }
-            $survey_customers=array();
-            $customers=Query_helper::get_info($this->config->item('table_survey_primary_customers'),'*',array('year ='.$year,'upazilla_id ='.$upazilla_id));
-            foreach($customers as $customer)
-            {
-                $survey_customers[$customer['customer_no']]=$customer;
-            }
-            $customers=$this->input->post('customers');
-            if(sizeof($customers)>0)
-            {
-                foreach($customers as $i=>$customer)
-                {
-                    if(strlen($customer)>0)
-                    {
-                        $data=array();
-                        $data['name']=$customer;
-                        if(isset($survey_customers[$i]))
-                        {
-                            $data['user_updated'] = $user->user_id;
-                            $data['date_updated'] = $time;
-                            Query_helper::update($this->config->item('table_survey_primary_customers'),$data,array("id = ".$survey_customers[$i]['id']));
-                        }
-                        else
-                        {
-                            $data['year'] = $year;
-                            $data['upazilla_id'] = $upazilla_id;
-                            $data['customer_no'] = $i;
-                            $data['user_created'] = $user->user_id;
-                            $data['date_created'] = $time;
-                            Query_helper::add($this->config->item('table_survey_primary_customers'),$data);
-                        }
-                    }
-
-                }
-            }
-            $survey_customer_survey=array();
-            $customer_survey=Query_helper::get_info($this->config->item('table_survey_primary_customer_survey'),'*',array('survey_id ='.$survey_id));
-            foreach($customer_survey as $survey)
-            {
-                $survey_customer_survey[$survey['variety_id']][$survey['customer_no']]=$survey;
-            }
-            $varieties=$this->input->post('varieties');
-            if(sizeof($varieties)>0)
-            {
-                foreach($varieties as $variety_id=>$variety)
-                {
-                    foreach($variety as $i=>$customer)
-                    {
-                        $data=array();
-                        if(isset($customer['weight_sales'])&&$customer['weight_sales']>0)
-                        {
-                            $data['weight_sales']=$customer['weight_sales'];
-                        }
-                        if(isset($customer['weight_market'])&&$customer['weight_market']>0)
-                        {
-                            $data['weight_market']=$customer['weight_market'];
-                        }
-                        if($data)
-                        {
-                            if(isset($survey_customer_survey[$variety_id][$i]))
-                            {
-                                $data['user_updated'] = $user->user_id;
-                                $data['date_updated'] = $time;
-                                Query_helper::update($this->config->item('table_survey_primary_customer_survey'),$data,array("id = ".$survey_customer_survey[$variety_id][$i]['id']));
-                            }
-                            else
-                            {
-                                $data['survey_id'] = $survey_id;
-                                $data['variety_id'] = $variety_id;
-                                $data['customer_no'] = $i;
-                                $data['user_created'] = $user->user_id;
-                                $data['date_created'] = $time;
-                                Query_helper::add($this->config->item('table_survey_primary_customer_survey'),$data);
-                            }
-
-                        }
-                    }
-                }
-            }
-            $survey_quantity_survey=array();
-            $quantity_survey=Query_helper::get_info($this->config->item('table_survey_primary_quantity_survey'),'*',array('survey_id ='.$survey_id));
-            foreach($quantity_survey as $survey)
-            {
-                $survey_quantity_survey[$survey['variety_id']]=$survey;
-            }
-
-            $weights_assumed=$this->input->post('weight_assumed');
-            if(sizeof($weights_assumed)>0)
-            {
-                foreach($weights_assumed as $variety_id=>$weight_assumed)
-                {
-                    if($weight_assumed>0)
-                    {
-                        $data=array();
-                        $data['weight_assumed']=$weight_assumed;
-                        if(isset($survey_quantity_survey[$variety_id]))
-                        {
-                            $data['user_updated'] = $user->user_id;
-                            $data['date_updated'] = $time;
-                            Query_helper::update($this->config->item('table_survey_primary_quantity_survey'),$data,array("id = ".$survey_quantity_survey[$variety_id]['id']));
-
-                        }
-                        else
-                        {
-                            $data['survey_id'] = $survey_id;
-                            $data['variety_id'] = $variety_id;
-                            $data['user_created'] = $user->user_id;
-                            $data['date_created'] = $time;
-                            Query_helper::add($this->config->item('table_survey_primary_quantity_survey'),$data);
-                        }
-                    }
-
-
-                }
-            }
-
-            $this->db->trans_complete();   //DB Transaction Handle END
-            if ($this->db->trans_status() === TRUE)
-            {
-                $save_and_new=$this->input->post('system_save_new_status');
-                $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-                if($save_and_new==1)
-                {
-                    $this->system_add();
+                    $editable=true;
                 }
                 else
                 {
-                    $this->system_list();
+                    $editable=false;
                 }
             }
             else
             {
-                $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
-                $this->jsonReturn($ajax);
+                $editable=true;
             }
+            if($editable)
+            {
+                $item['sale_quantity']='<input type="text" name="items['.$result['id'].'][sale_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
+            }
+            else
+            {
+                $item['sale_quantity']=$quantity;
+            }
+
+            for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+            {
+                $quantity='';
+                $editable=false;
+                if((isset($old_items[$result['id']]['year'.$i.'_sale_quantity']))&&(($old_items[$result['id']]['year'.$i.'_sale_quantity'])>0))
+                {
+                    $quantity=$old_items[$result['id']]['year'.$i.'_sale_quantity'];
+                    if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
+                    {
+                        $editable=true;
+                    }
+                    else
+                    {
+                        $editable=false;
+                    }
+                }
+                else
+                {
+                    $editable=true;
+                }
+                if($editable)
+                {
+                    $item['year'.$i.'_sale_quantity']='<input type="text" name="items['.$result['id'].'][year'.$i.'_sale_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
+                }
+                else
+                {
+                    $item['year'.$i.'_sale_quantity']=$quantity;
+                }
+            }
+
+            $items[]=$item;
+        }
+        $this->jsonReturn($items);
+
+
+    }
+    private function system_save()
+    {
+        $user = User_helper::get_user();
+        $time=time();
+        $setup_id=$this->input->post('setup_id');
+        $customer_id=$this->input->post('customer_id');
+        $items=$this->input->post('items');
+        $this->db->trans_start();
+        if(sizeof($items)>0)
+        {
+            $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_sales_target'),'*',array('setup_id ='.$setup_id,'customer_id ='.$customer_id));
+            $old_items=array();
+
+            foreach($results as $result)
+            {
+                $old_items[$result['variety_id']]=$result;
+            }
+
+            foreach($items as $variety_id=>$item)
+            {
+                $data=array();
+                if((isset($item['sale_quantity']))&&($item['sale_quantity']>0))
+                {
+                    $data['sale_quantity']=$item['sale_quantity'];
+
+                }
+                for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+                {
+                    if((isset($item['year'.$i.'_sale_quantity']))&&($item['year'.$i.'_sale_quantity']>0))
+                    {
+                        $data['year'.$i.'_sale_quantity']=$item['year'.$i.'_sale_quantity'];
+                    }
+                }
+                if($data)
+                {
+                    $data['customer_id']=$customer_id;
+                    $data['setup_id']=$setup_id;
+                    $data['variety_id']=$variety_id;
+                    if(isset($old_items[$variety_id]))
+                    {
+                        $data['user_updated'] = $user->user_id;
+                        $data['date_updated'] = $time;
+                        Query_helper::update($this->config->item('table_ti_bud_customer_sales_target'),$data,array("id = ".$old_items[$variety_id]['id']));
+                    }
+                    else
+                    {
+                        $data['user_created'] = $user->user_id;
+                        $data['date_created'] = $time;
+                        Query_helper::add($this->config->item('table_ti_bud_customer_sales_target'),$data);
+                    }
+                }
+            }
+        }
+
+        $this->db->trans_complete();   //DB Transaction Handle END
+        if ($this->db->trans_status() === TRUE)
+        {
+            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+            $this->system_list();
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $this->jsonReturn($ajax);
         }
     }
     private function check_my_editable($customer)
@@ -520,32 +484,37 @@ class Ti_bud_customer_sales extends Root_Controller
         }
         return true;
     }
-
-    private function check_validation()
-    {
-        return true;
-    }
-
     public function get_items()
     {
-        /*$this->db->from($this->config->item('table_survey_primary').' sp');
+        $items=array();
+        $this->db->from($this->config->item('table_ti_bud_customer_sales_target').' csst');
+        $this->db->select('csst.customer_id,csst.id');
 
-        $this->db->select('COUNT(sp.crop_type_id) num_types');
-        $this->db->select('COUNT(Distinct  types.crop_id) num_crops');
-        $this->db->select('sp.*');
+        $this->db->select('COUNT(csst.variety_id) num_varieties');
 
-        $this->db->select('upz.name upazilla_name');
+        $this->db->select('COUNT(DISTINCT types.id) num_types');
+        $this->db->select('COUNT(Distinct types.crop_id) num_crops');
+
+
+        $this->db->select('cus.name customer_name');
         $this->db->select('d.name district_name');
         $this->db->select('t.name territory_name');
         $this->db->select('zone.name zone_name');
         $this->db->select('division.name division_name');
-        $this->db->join($this->config->item('table_setup_location_upazillas').' upz','upz.id = sp.upazilla_id','INNER');
-        $this->db->join($this->config->item('table_setup_location_districts').' d','d.id = upz.district_id','INNER');
-        $this->db->join($this->config->item('table_setup_location_territories').' t','t.id = d.territory_id','INNER');
-        $this->db->join($this->config->item('table_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
-        $this->db->join($this->config->item('table_setup_location_divisions').' division','division.id = zone.division_id','INNER');
+        $this->db->select('fy.name fiscal_year');
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = csst.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
 
-        $this->db->join($this->config->item('table_setup_classification_crop_types').' types','types.id = sp.crop_type_id','INNER');
+        $this->db->join($this->config->item('table_ti_budget').' tb','tb.id = csst.setup_id','INNER');
+
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
+
+        $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.fiscal_year_id','INNER');
+
+        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id = csst.variety_id','INNER');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' types','types.id = v.crop_type_id','INNER');
         if($this->locations['division_id']>0)
         {
             $this->db->where('division.id',$this->locations['division_id']);
@@ -558,19 +527,13 @@ class Ti_bud_customer_sales extends Root_Controller
                     if($this->locations['district_id']>0)
                     {
                         $this->db->where('d.id',$this->locations['district_id']);
-                        if($this->locations['upazilla_id']>0)
-                        {
-                            $this->db->where('upz.id',$this->locations['upazilla_id']);
-                        }
                     }
                 }
             }
         }
-        $this->db->group_by(array('sp.year','sp.upazilla_id'));
-        $this->db->order_by('sp.year','DESC');
-        $this->db->order_by('sp.id','DESC');
-        $items=$this->db->get()->result_array();*/
-        $items=array();
+        $this->db->group_by(array('csst.customer_id','fy.id'));
+        $this->db->order_by('fy.id','DESC');
+        $items=$this->db->get()->result_array();
         $this->jsonReturn($items);
     }
 
