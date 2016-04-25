@@ -20,7 +20,7 @@
     {
         ?>
         <div class="action_button">
-            <button id="button_action_edit" class="btn button_action_batch" data-action-link="<?php echo $action_edit; ?>"><?php echo $CI->lang->line("ACTION_EDIT"); ?></button>
+            <button id="button_action_edit" class="btn button_action_single" data-action-link="<?php echo $action_edit; ?>"><?php echo $CI->lang->line("ACTION_EDIT"); ?></button>
         </div>
         <?php
     }
@@ -36,11 +36,21 @@
     }
     ?>
     <?php
+    if(isset($action_forward))
+    {
+        ?>
+        <div class="action_button">
+            <button id="button_action_request" class="btn button_action_single" data-action-link="<?php echo $action_forward; ?>"><?php echo $CI->lang->line("ACTION_FORWARD"); ?></button>
+        </div>
+    <?php
+    }
+    ?>
+    <?php
     if(isset($action_details))
     {
         ?>
         <div class="action_button">
-                <button id="button_action_details" class="btn button_action_batch" data-action-link="<?php echo $action_details; ?>"><?php echo $CI->lang->line("ACTION_DETAILS"); ?></button>
+                <button id="button_action_details" class="btn button_action_single" data-action-link="<?php echo $action_details; ?>"><?php echo $CI->lang->line("ACTION_DETAILS"); ?></button>
             </div>
             <?php
         }
@@ -50,7 +60,7 @@
     {
         ?>
         <div class="action_button">
-            <button id="button_action_delete" class="btn" data-action-link="<?php echo $action_delete; ?>"><?php echo $CI->lang->line("ACTION_DELETE"); ?></button>
+            <button id="button_action_delete" class="btn button_action_multiple" data-action-link="<?php echo $action_delete; ?>"><?php echo $CI->lang->line("ACTION_DELETE"); ?></button>
         </div>
     <?php
     }

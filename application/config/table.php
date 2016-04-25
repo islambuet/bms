@@ -20,5 +20,4 @@ $config['table_system_assigned_area'] = 'bms_system_assigned_area';
 
 $config['table_ti_budget'] = 'bms_ti_budget';
 $config['table_ti_bud_customer_sales_target'] = 'bms_ti_bud_customer_sales_target';
-
-
+$config['table_ti_bud_budget_target'] = 'bms_ti_bud_budget_target';

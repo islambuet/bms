@@ -45,13 +45,13 @@ $lang['ACTION_DETAILS'] = 'Details';
 $lang['ACTION_REFRESH'] = 'Refresh';
 $lang['ACTION_CLEAR'] = 'Clear';
 $lang['ACTION_DELETE'] = 'Delete';
-$lang['DELETE_CONFIRM'] = 'Are You sure to delete?';
 $lang['ACTION_REQUEST_PO_APPROVE'] = 'Request Approve';
 $lang['ACTION_PRINT'] = 'Print';
 $lang['ACTION_CSV'] = 'Download as CSV';
 $lang['ACTION_APPROVE_REJECT'] = 'Approve/Reject';
 $lang['ACTION_REPORT'] = 'View Report';
 $lang['LABEL_ACTION'] = 'Action';
+$lang['ACTION_FORWARD'] = 'Forward';
 
 //save related
 $lang['YOU_DONT_HAVE_ACCESS'] = 'You cannot access this page';
@@ -101,3 +101,4 @@ $lang['LABEL_CUSTOMER_NAME'] = 'Customer';
 //
 $lang['MSG_SETUP_MORE_FISCAL_YEAR'] = 'Please contact with admin to setup more fiscal years.';
 $lang['MSG_ALREADY_FORWARDED'] = 'Already Forwarded.';
+$lang['LABEL_FORWARDED'] = 'Forwarded';

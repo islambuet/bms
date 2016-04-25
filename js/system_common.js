@@ -194,26 +194,21 @@ $(document).ready(function()
 
     });
 
-    $(document).on("click", ".button_action_batch", function(event)
+    $(document).on("click", ".button_action_single", function(event)
     {
-        /*if($(this).attr('id')=='button_action_request_po_approve')
-        {
-
-            var sure = confirm('Are You sure?');
-            if(!sure)
-            {
-                return;
-            }
-        }*/
-
         var jqxgrid_id='#system_jqx_container';
-
         var selected_row_indexes = $(jqxgrid_id).jqxGrid('getselectedrowindexes');
-
-
-
         if (selected_row_indexes.length > 0)
         {
+            if($(this).attr('id')=='button_action_request')
+            {
+
+                var sure = confirm('Are You sure to Forward?');
+                if(!sure)
+                {
+                    return;
+                }
+            }
             //var selectedRowData = $(jqxgrid_id).jqxGrid('getrowdata', selected_row_indexes[0]);//only first selected
             var selectedRowData = $(jqxgrid_id).jqxGrid('getrowdata', selected_row_indexes[selected_row_indexes.length-1]);//only last selected
 
@@ -241,17 +236,21 @@ $(document).ready(function()
         }
 
     });
-    $(document).on("click", "#button_action_delete", function(event)
+    $(document).on("click", ".button_action_multiple", function(event)
     {
-        var jqxgrid_id='#system_jqx_container';
 
+        var jqxgrid_id='#system_jqx_container';
         var selected_row_indexes = $(jqxgrid_id).jqxGrid('getselectedrowindexes');
         if (selected_row_indexes.length > 0)
         {
-            var sure = confirm(DELETE_CONFIRM);
-            if(!sure)
+            if($(this).attr('id')=='button_action_delete')
             {
-                return;
+
+                var sure = confirm('Are You sure to Delete?');
+                if(!sure)
+                {
+                    return;
+                }
             }
             var ids=[];
             for (var i = 0; i < selected_row_indexes.length; i++)
