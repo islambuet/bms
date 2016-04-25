@@ -426,7 +426,7 @@ class Ti_bud_customer_budget extends Root_Controller
                 $data=array();
                 if((isset($item['budget_quantity']))&&($item['budget_quantity']>0))
                 {
-                    $data['sale_quantity']=$item['budget_quantity'];
+                    $data['budget_quantity']=$item['budget_quantity'];
 
                 }
                 for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
@@ -539,6 +539,7 @@ class Ti_bud_customer_budget extends Root_Controller
         }
         $this->db->group_by(array('csst.customer_id','fy.id'));
         $this->db->order_by('fy.id','DESC');
+        $this->db->order_by('csst.id','DESC');
         $items=$this->db->get()->result_array();
         $this->jsonReturn($items);
     }
