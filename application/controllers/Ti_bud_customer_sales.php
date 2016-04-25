@@ -139,7 +139,7 @@ class Ti_bud_customer_sales extends Root_Controller
                         $data['districts']=Query_helper::get_info($this->config->item('ems_setup_location_districts'),array('id value','name text'),array('territory_id ='.$this->locations['territory_id']));
                         if($this->locations['district_id']>0)
                         {
-                            $data['customers']=Query_helper::get_info($this->config->item('ems_csetup_customers'),array('id value','name text'),array('district_id ='.$this->locations['district_id'],'status ="'.$this->config->item('system_status_active').'"'));
+                            $data['customers']=Query_helper::get_info($this->config->item('ems_csetup_customers'),array('id value','CONCAT(customer_code," - ",name) text'),array('district_id ='.$this->locations['district_id'],'status ="'.$this->config->item('system_status_active').'"'));
                         }
                     }
                 }
@@ -170,55 +170,61 @@ class Ti_bud_customer_sales extends Root_Controller
         {
             if(($this->input->post('id')))
             {
-                $survey_id=$this->input->post('id');
+                $id=$this->input->post('id');
             }
-            else
-            {
-                $survey_id=$id;
-            }
-            $this->db->from($this->config->item('table_survey_primary').' sp');
-            $this->db->select('sp.*');
+            $this->db->from($this->config->item('table_ti_bud_customer_sales_target').' csst');
+            $this->db->select('csst.customer_id');
+            $this->db->select('tb.fiscal_year_id');
+
             $this->db->select('d.id district_id');
             $this->db->select('t.id territory_id');
             $this->db->select('zone.id zone_id');
-            $this->db->select('zone.division_id division_id');
-            $this->db->join($this->config->item('table_setup_location_upazillas').' upz','upz.id = sp.upazilla_id','INNER');
-            $this->db->join($this->config->item('table_setup_location_districts').' d','d.id = upz.district_id','INNER');
-            $this->db->join($this->config->item('table_setup_location_territories').' t','t.id = d.territory_id','INNER');
-            $this->db->join($this->config->item('table_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
-            $this->db->where('sp.id',$survey_id);
+            $this->db->select('division.id division_id');
+            $this->db->select('fy.name fiscal_year_name');
 
-            $data['survey']=$this->db->get()->row_array();
-            if(!$data['survey'])
+            $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = csst.customer_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+
+            $this->db->join($this->config->item('table_ti_budget').' tb','tb.id = csst.setup_id','INNER');
+
+            $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
+            $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.fiscal_year_id','INNER');
+            $this->db->where('csst.id',$id);
+
+            $data['budget']=$this->db->get()->row_array();
+            if(!$data['budget'])
             {
-                System_helper::invalid_try($this->config->item('system_edit_not_exists'),$survey_id);
+                System_helper::invalid_try($this->config->item('system_edit_not_exists'),$id);
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->jsonReturn($ajax);
             }
-            if(!$this->check_my_editable($data['survey']))
+            if(!$this->check_my_editable($data['budget']))
             {
-                System_helper::invalid_try($this->config->item('system_edit_others'),$survey_id);
+                System_helper::invalid_try($this->config->item('system_edit_others'),$id);
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->jsonReturn($ajax);
             }
-            $data['title']="Market Survey";
-            $data['divisions']=Query_helper::get_info($this->config->item('table_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
-            $data['zones']=Query_helper::get_info($this->config->item('table_setup_location_zones'),array('id value','name text'),array('division_id ='.$data['survey']['division_id']));
-            $data['territories']=Query_helper::get_info($this->config->item('table_setup_location_territories'),array('id value','name text'),array('zone_id ='.$data['survey']['zone_id']));
-            $data['districts']=Query_helper::get_info($this->config->item('table_setup_location_districts'),array('id value','name text'),array('territory_id ='.$data['survey']['territory_id']));
-            $data['upazillas']=Query_helper::get_info($this->config->item('table_setup_location_upazillas'),array('id value','name text'),array('district_id ='.$data['survey']['district_id']));
+            $data['title']="Search";
+            $data['divisions']=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
+            $data['zones']=Query_helper::get_info($this->config->item('ems_setup_location_zones'),array('id value','name text'),array('division_id ='.$data['budget']['division_id']));
+            $data['territories']=Query_helper::get_info($this->config->item('ems_setup_location_territories'),array('id value','name text'),array('zone_id ='.$data['budget']['zone_id']));
+            $data['districts']=Query_helper::get_info($this->config->item('ems_setup_location_districts'),array('id value','name text'),array('territory_id ='.$data['budget']['territory_id']));
+            $data['customers']=Query_helper::get_info($this->config->item('ems_csetup_customers'),array('id value','CONCAT(customer_code," - ",name) text'),array('district_id ='.$data['budget']['district_id'],'status ="'.$this->config->item('system_status_active').'"'));
 
-            $data['crops']=Query_helper::get_info($this->config->item('table_setup_classification_crops'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
+            $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array());
+
 
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("survey_primary_market/search",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_sales/search",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit/'.$survey_id);
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit/'.$id);
             $this->jsonReturn($ajax);
         }
         else
