@@ -342,9 +342,9 @@ class Ti_bud_customer_sales extends Root_Controller
             $item['variety_name']=$result['name'];
             $quantity='';
             $editable=false;
-            if((isset($old_items[$result['id']]['sale_quantity']))&&(($old_items[$result['id']]['sale_quantity'])>0))
+            if((isset($old_items[$result['id']]['budget_quantity']))&&(($old_items[$result['id']]['budget_quantity'])>0))
             {
-                $quantity=$old_items[$result['id']]['sale_quantity'];
+                $quantity=$old_items[$result['id']]['budget_quantity'];
                 if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
                 {
                     $editable=true;
@@ -360,20 +360,20 @@ class Ti_bud_customer_sales extends Root_Controller
             }
             if($editable)
             {
-                $item['sale_quantity']='<input type="text" name="items['.$result['id'].'][sale_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
+                $item['budget_quantity']='<input type="text" name="items['.$result['id'].'][budget_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
             }
             else
             {
-                $item['sale_quantity']=$quantity;
+                $item['budget_quantity']=$quantity;
             }
 
             for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
             {
                 $quantity='';
                 $editable=false;
-                if((isset($old_items[$result['id']]['year'.$i.'_sale_quantity']))&&(($old_items[$result['id']]['year'.$i.'_sale_quantity'])>0))
+                if((isset($old_items[$result['id']]['year'.$i.'_budget_quantity']))&&(($old_items[$result['id']]['year'.$i.'_budget_quantity'])>0))
                 {
-                    $quantity=$old_items[$result['id']]['year'.$i.'_sale_quantity'];
+                    $quantity=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
                     if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
                     {
                         $editable=true;
@@ -389,11 +389,11 @@ class Ti_bud_customer_sales extends Root_Controller
                 }
                 if($editable)
                 {
-                    $item['year'.$i.'_sale_quantity']='<input type="text" name="items['.$result['id'].'][year'.$i.'_sale_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
+                    $item['year'.$i.'_budget_quantity']='<input type="text" name="items['.$result['id'].'][year'.$i.'_budget_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
                 }
                 else
                 {
-                    $item['year'.$i.'_sale_quantity']=$quantity;
+                    $item['year'.$i.'_budget_quantity']=$quantity;
                 }
             }
 
@@ -424,16 +424,16 @@ class Ti_bud_customer_sales extends Root_Controller
             foreach($items as $variety_id=>$item)
             {
                 $data=array();
-                if((isset($item['sale_quantity']))&&($item['sale_quantity']>0))
+                if((isset($item['budget_quantity']))&&($item['budget_quantity']>0))
                 {
-                    $data['sale_quantity']=$item['sale_quantity'];
+                    $data['sale_quantity']=$item['budget_quantity'];
 
                 }
                 for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
                 {
-                    if((isset($item['year'.$i.'_sale_quantity']))&&($item['year'.$i.'_sale_quantity']>0))
+                    if((isset($item['year'.$i.'_budget_quantity']))&&($item['year'.$i.'_budget_quantity']>0))
                     {
-                        $data['year'.$i.'_sale_quantity']=$item['year'.$i.'_sale_quantity'];
+                        $data['year'.$i.'_budget_quantity']=$item['year'.$i.'_budget_quantity'];
                     }
                 }
                 if($data)

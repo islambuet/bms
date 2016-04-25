@@ -31,10 +31,10 @@
             dataFields: [
                 { name: 'id', type: 'int' },
                 { name: 'variety_name', type: 'string' },
-                { name: 'sale_quantity', type: 'string' },
+                { name: 'budget_quantity', type: 'string' },
                     <?php
                         for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                        {?>{ name: '<?php echo 'year'.$i.'_sale_quantity';?>', type: 'string' },
+                        {?>{ name: '<?php echo 'year'.$i.'_budget_quantity';?>', type: 'string' },
                 <?php
                     }
                 ?>
@@ -67,10 +67,10 @@
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center'},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
-                    { text: '<?php echo $years['fiscal_year_id']['text']; ?>', dataField: 'sale_quantity',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    { text: '<?php echo $years['fiscal_year_id']['text']; ?>', dataField: 'budget_quantity',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
                     <?php
                         for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                        {?>{ text: '<?php echo $years['year'.$i.'_id']['text']; ?>', dataField: '<?php echo 'year'.$i.'_sale_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                        {?>{ text: '<?php echo $years['year'.$i.'_id']['text']; ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
                     <?php
                         }
                     ?>
