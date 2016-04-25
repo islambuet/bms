@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Ti_bud_customer_sales extends Root_Controller
+class Ti_bud_customer_budget extends Root_Controller
 {
     private  $message;
     public $permissions;
@@ -10,7 +10,7 @@ class Ti_bud_customer_sales extends Root_Controller
     {
         parent::__construct();
         $this->message="";
-        $this->permissions=User_helper::get_permission('Ti_bud_customer_sales');
+        $this->permissions=User_helper::get_permission('Ti_bud_customer_budget');
         $this->locations=User_helper::get_locations();
         if(!is_array($this->locations))
         {
@@ -28,7 +28,7 @@ class Ti_bud_customer_sales extends Root_Controller
             }
 
         }
-        $this->controller_url='ti_bud_customer_sales';
+        $this->controller_url='ti_bud_customer_budget';
 
     }
 
@@ -70,7 +70,7 @@ class Ti_bud_customer_sales extends Root_Controller
         {
             $data['title']="Customer Sales Predicted List";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_sales/list",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/list",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -150,7 +150,7 @@ class Ti_bud_customer_sales extends Root_Controller
             $ajax['system_page_url']=site_url($this->controller_url."/index/add");
 
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_sales/search",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -219,7 +219,7 @@ class Ti_bud_customer_sales extends Root_Controller
 
 
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_sales/search",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -309,7 +309,7 @@ class Ti_bud_customer_sales extends Root_Controller
         $data['customer_id']=$budget_search['customer_id'];
         $data['setup_id']=$setup_id;
         $data['title']="Customer Sales Budget";
-        $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("ti_bud_customer_sales/add_edit",$data,true));
+        $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("ti_bud_customer_budget/add_edit",$data,true));
         if($this->message)
         {
             $ajax['system_message']=$this->message;
