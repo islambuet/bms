@@ -46,6 +46,14 @@ class Ti_bud_budget extends Root_Controller
         {
             $this->system_edit($id);
         }
+        elseif($action=="get_budget_form")
+        {
+            $this->system_get_budget_form();
+        }
+        elseif($action=="get_budget_form_items")
+        {
+            $this->system_get_budget_form_items();
+        }
         elseif($action=="save")
         {
             $this->system_save();
@@ -86,27 +94,16 @@ class Ti_bud_budget extends Root_Controller
             {
                 $id=$this->input->post('id');
             }
-            $this->db->from($this->config->item('table_ti_bud_customer_sales_target').' csst');
-            $this->db->select('csst.customer_id');
-            $this->db->select('tb.fiscal_year_id');
+            $this->db->from($this->config->item('table_ti_budget').' tb');
+            $this->db->select('tb.id');
 
-            $this->db->select('d.id district_id');
-            $this->db->select('t.id territory_id');
-            $this->db->select('zone.id zone_id');
-            $this->db->select('division.id division_id');
-            $this->db->select('fy.name fiscal_year_name');
-
-            $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = csst.customer_id','INNER');
-            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
-
-            $this->db->join($this->config->item('table_ti_budget').' tb','tb.id = csst.setup_id','INNER');
-
+            $this->db->select('t.id territory_id,t.name territory_name');
+            $this->db->select('zone.id zone_id,zone.name zone_name');
+            $this->db->select('division.id division_id,division.name division_name');
             $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
             $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
             $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
-            $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.fiscal_year_id','INNER');
-            $this->db->where('csst.id',$id);
-
+            $this->db->where('tb.id',$id);
             $data['budget']=$this->db->get()->row_array();
             if(!$data['budget'])
             {
@@ -123,17 +120,9 @@ class Ti_bud_budget extends Root_Controller
                 $this->jsonReturn($ajax);
             }
             $data['title']="Search";
-            $data['divisions']=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
-            $data['zones']=Query_helper::get_info($this->config->item('ems_setup_location_zones'),array('id value','name text'),array('division_id ='.$data['budget']['division_id']));
-            $data['territories']=Query_helper::get_info($this->config->item('ems_setup_location_territories'),array('id value','name text'),array('zone_id ='.$data['budget']['zone_id']));
-            $data['districts']=Query_helper::get_info($this->config->item('ems_setup_location_districts'),array('id value','name text'),array('territory_id ='.$data['budget']['territory_id']));
-            $data['customers']=Query_helper::get_info($this->config->item('ems_csetup_customers'),array('id value','CONCAT(customer_code," - ",name) text'),array('district_id ='.$data['budget']['district_id'],'status ="'.$this->config->item('system_status_active').'"'));
-
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array());
-
-
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_budget/search",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -147,6 +136,53 @@ class Ti_bud_budget extends Root_Controller
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->jsonReturn($ajax);
         }
+    }
+    private function system_get_budget_form()
+    {
+        $user = User_helper::get_user();
+        $time=time();
+
+
+        $data['crop_id']=$this->input->post('crop_id');
+        $data['setup_id']=$this->input->post('setup_id');
+        $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('id ='.$data['setup_id']),1);
+        $results=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('id DESC'));
+        $fiscal_years=array();
+        foreach($results as $result)
+        {
+            $fiscal_years[$result['value']]=$result;
+        }
+        $years=array();
+        $years['fiscal_year_id']=$fiscal_years[$setup['fiscal_year_id']];
+        for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+        {
+            $years['year'.$i.'_id']=$fiscal_years[$setup['year'.$i.'_id']];
+        }
+        $this->db->from($this->config->item('ems_csetup_customers').' cus');
+        $this->db->select('cus.id value,CONCAT(cus.customer_code," - ",cus.name) text');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->where('d.territory_id',$setup['territory_id']);
+        $this->db->order_by('cus.ordering');
+        $data['customers']=$this->db->get()->result_array();
+        $keys=',';
+        $keys.="setup_id:'".$data['setup_id']."',";
+        $keys.="crop_id:'".$data['crop_id']."',";
+        $data['keys']=trim($keys,',');
+        $data['years']=$years;
+        $data['title']="TI Budget";
+        $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("ti_bud_budget/add_edit",$data,true));
+        if($this->message)
+        {
+            $ajax['system_message']=$this->message;
+        }
+        $this->jsonReturn($ajax);
+
+    }
+    private function system_get_budget_form_items()
+    {
+        $items=array();
+        $this->jsonReturn($items);
+
     }
     private function system_save()
     {
@@ -215,10 +251,29 @@ class Ti_bud_budget extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
+    private function check_my_editable($customer)
+    {
+        if(($this->locations['division_id']>0)&&($this->locations['division_id']!=$customer['division_id']))
+        {
+            return false;
+        }
+        if(($this->locations['zone_id']>0)&&($this->locations['zone_id']!=$customer['zone_id']))
+        {
+            return false;
+        }
+        if(($this->locations['territory_id']>0)&&($this->locations['territory_id']!=$customer['territory_id']))
+        {
+            return false;
+        }
+        if(($this->locations['district_id']>0)&&($this->locations['district_id']!=$customer['district_id']))
+        {
+            return false;
+        }
+        return true;
+    }
     public function get_items()
     {
         $items=array();
-        //$this->db->from($this->config->item('table_ti_bud_customer_sales_target').' csst');
         $this->db->from($this->config->item('table_ti_budget').' tb');
         $this->db->select('tb.id,tb.status_forward');
         $this->db->select('t.name territory_name');
@@ -254,52 +309,6 @@ class Ti_bud_budget extends Root_Controller
                 }
             }
         }
-        /*$this->db->select('csst.customer_id,csst.id');
-
-        $this->db->select('COUNT(csst.variety_id) num_varieties');
-
-        $this->db->select('COUNT(DISTINCT types.id) num_types');
-        $this->db->select('COUNT(Distinct types.crop_id) num_crops');
-
-
-        $this->db->select('cus.name customer_name');
-        $this->db->select('d.name district_name');
-        $this->db->select('t.name territory_name');
-        $this->db->select('zone.name zone_name');
-        $this->db->select('division.name division_name');
-        $this->db->select('fy.name fiscal_year');
-        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = csst.customer_id','INNER');
-        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
-
-        $this->db->join($this->config->item('table_ti_budget').' tb','tb.id = csst.setup_id','INNER');
-
-        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
-        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
-        $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
-
-        $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.fiscal_year_id','INNER');
-
-        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id = csst.variety_id','INNER');
-        $this->db->join($this->config->item('ems_setup_classification_crop_types').' types','types.id = v.crop_type_id','INNER');
-        if($this->locations['division_id']>0)
-        {
-            $this->db->where('division.id',$this->locations['division_id']);
-            if($this->locations['zone_id']>0)
-            {
-                $this->db->where('zone.id',$this->locations['zone_id']);
-                if($this->locations['territory_id']>0)
-                {
-                    $this->db->where('t.id',$this->locations['territory_id']);
-                    if($this->locations['district_id']>0)
-                    {
-                        $this->db->where('d.id',$this->locations['district_id']);
-                    }
-                }
-            }
-        }
-        $this->db->group_by(array('csst.customer_id','fy.id'));
-        $this->db->order_by('fy.id','DESC');
-        $this->db->order_by('csst.id','DESC');*/
         $this->db->group_by(array('tb.id'));
         $items=$this->db->get()->result_array();
         $this->jsonReturn($items);

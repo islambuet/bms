@@ -3,8 +3,7 @@
 ?>
 <form class="form_valid" id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
     <input type="hidden" name="setup_id" value="<?php echo $setup_id; ?>" />
-    <input type="hidden" name="customer_id" value="<?php echo $customer_id; ?>" />
-    <input type="hidden" id="system_save_new_status" name="system_save_new_status" value="0" />
+    <input type="hidden" name="crop_id" value="<?php echo $crop_id; ?>" />
     <div class="row widget">
         <div class="widget-header">
             <div class="title">
@@ -22,7 +21,7 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
-        var url = "<?php echo base_url($CI->controller_url.'/index/get_customer_items');?>";
+        var url = "<?php echo base_url($CI->controller_url.'/index/get_budget_form_items');?>";
 
         // prepare the data
         var source =
@@ -30,15 +29,23 @@
             dataType: "json",
             dataFields: [
                 { name: 'id', type: 'int' },
+                { name: 'crop_type_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
-                { name: 'budget_quantity', type: 'string' },
                     <?php
-                        for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                        {?>{ name: '<?php echo 'year'.$i.'_budget_quantity';?>', type: 'string' },
+                        foreach($customers as $customer)
+                        {?>{ name: '<?php echo 'customer_quantity_'.$customer['value'];?>', type: 'string' },
+                <?php
+                    }
+                    for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
+                        {?>{ name: '<?php echo 'year'.$i.'_customer_total_quantity';?>', type: 'string' },
+                { name: '<?php echo 'year'.$i.'_budget_quantity';?>', type: 'string' },
                 <?php
                     }
                 ?>
-                { name: 'sl_no', type: 'int' }
+                { name: 'sl_no', type: 'int' },
+                { name: 'customer_total_quantity', type: 'string' },
+                { name: 'budget_quantity', type: 'string' },
+                { name: 'variance', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -58,24 +65,45 @@
         $("#system_jqx_container").jqxGrid(
             {
                 width: '100%',
-                autoheight: true,
+                height:'350px',
                 source: dataAdapter,
                 columnsresize: true,
                 columnsreorder: true,
                 altrows: true,
                 rowsheight: 35,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center'},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'crop_type_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
-                    { text: '<?php echo $years['fiscal_year_id']['text']; ?>', dataField: 'budget_quantity',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
                     <?php
-                        for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                        {?>{ text: '<?php echo $years['year'.$i.'_id']['text']; ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                        foreach($customers as $customer)
+                        {?>{ columngroup: 'customers',text: '<?php echo $customer['text'];?>', dataField: '<?php echo 'customer_quantity_'.$customer['value'];?>',align:'center',width:'200',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    <?php
+                        }
+                    ?>
+                    { columngroup: 'fiscal_year_id',text: 'Customer Total', dataField: 'customer_total_quantity',align:'center',width:'100',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    { columngroup: 'fiscal_year_id',text: 'TI Budget', dataField: 'budget_quantity',align:'center',width:'100',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    { columngroup: 'fiscal_year_id',text: 'Variance', dataField: 'variance',align:'center',width:'100',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                        <?php
+                            for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
+                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'Customer Prediction', dataField: '<?php echo 'year'.$i.'_customer_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    { columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'TI Prediction', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
                     <?php
                         }
                     ?>
 
-                ]
+                ],
+                columngroups:
+                    [
+                        { text: 'Customers', align: 'center', name: 'customers' },
+                            <?php
+                            for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
+                            {?>{ text: '<?php echo $years['year'.$i.'_id']['text']; ?>', align: 'center', name: '<?php echo 'year'.$i.'_id'; ?>' },
+                        <?php
+                            }
+                        ?>
+                        { text: '<?php echo $years['fiscal_year_id']['text']; ?>', align: 'center', name: 'fiscal_year_id' }
+
+                    ]
             });
 
     });
