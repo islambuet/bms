@@ -146,7 +146,7 @@ class Ti_bud_budget extends Root_Controller
         $data['crop_id']=$this->input->post('crop_id');
         $data['setup_id']=$this->input->post('setup_id');
         $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('id ='.$data['setup_id']),1);
-        $results=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('id DESC'));
+        $results=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('id ASC'));
         $fiscal_years=array();
         foreach($results as $result)
         {

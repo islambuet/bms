@@ -44,8 +44,7 @@
                 ?>
                 { name: 'sl_no', type: 'int' },
                 { name: 'customer_total_quantity', type: 'string' },
-                { name: 'budget_quantity', type: 'string' },
-                { name: 'variance', type: 'string' }
+                { name: 'budget_quantity', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -80,9 +79,8 @@
                     <?php
                         }
                     ?>
-                    { columngroup: 'fiscal_year_id',text: 'Customer Total', dataField: 'customer_total_quantity',align:'center',width:'100',cellsrenderer: cellsrenderer,cellsAlign:'right'},
-                    { columngroup: 'fiscal_year_id',text: 'TI Budget', dataField: 'budget_quantity',align:'center',width:'100',cellsrenderer: cellsrenderer,cellsAlign:'right'},
-                    { columngroup: 'fiscal_year_id',text: 'Variance', dataField: 'variance',align:'center',width:'100',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    { columngroup: 'fiscal_year_id',text: 'Customer Total', dataField: 'customer_total_quantity',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                    { columngroup: 'fiscal_year_id',text: 'TI Budget', dataField: 'budget_quantity',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
                         <?php
                             for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
                             {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'Customer Prediction', dataField: '<?php echo 'year'.$i.'_customer_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right'},
@@ -95,13 +93,15 @@
                 columngroups:
                     [
                         { text: 'Customers', align: 'center', name: 'customers' },
+                        { text: '<?php echo $CI->lang->line('LABEL_BUDGETED_YEAR'); ?>', align: 'center', name: 'budgeted_year' },
+                        { text: '<?php echo $CI->lang->line('LABEL_NEXT_YEARS'); ?>', align: 'center', name: 'next_years' },
                             <?php
                             for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ text: '<?php echo $years['year'.$i.'_id']['text']; ?>', align: 'center', name: '<?php echo 'year'.$i.'_id'; ?>' },
+                            {?>{ text: '<?php echo $years['year'.$i.'_id']['text']; ?>', align: 'center',parentgroup:'next_years', name: '<?php echo 'year'.$i.'_id'; ?>' },
                         <?php
                             }
                         ?>
-                        { text: '<?php echo $years['fiscal_year_id']['text']; ?>', align: 'center', name: 'fiscal_year_id' }
+                        { text: '<?php echo $years['fiscal_year_id']['text']; ?>', align: 'center',parentgroup:'budgeted_year', name: 'fiscal_year_id' }
 
                     ]
             });

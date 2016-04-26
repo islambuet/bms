@@ -238,7 +238,7 @@ class Ti_bud_customer_budget extends Root_Controller
     {
         $user = User_helper::get_user();
         $time=time();
-        $results=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('id DESC'));
+        $results=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('id ASC'));
         $fiscal_years=array();
         foreach($results as $result)
         {
@@ -460,8 +460,16 @@ class Ti_bud_customer_budget extends Root_Controller
         $this->db->trans_complete();   //DB Transaction Handle END
         if ($this->db->trans_status() === TRUE)
         {
+            $save_and_new=$this->input->post('system_save_new_status');
             $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-            $this->system_list();
+            if($save_and_new==1)
+            {
+                $this->system_add();
+            }
+            else
+            {
+                $this->system_list();
+            }
         }
         else
         {
