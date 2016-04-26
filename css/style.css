@@ -171,8 +171,8 @@ footer a{
     width: 100%;
     height: 100%;
     z-index: 9999999;
-    background-color: #000000;
-    opacity: 0.2;
+    /*background-color: #000000;*/
+    /*opacity: 0.2;*/
     display: none;
 
 }
@@ -214,7 +214,7 @@ footer a{
     border-bottom-right-radius: 5px;
 }
 .navbar-nav > li:nth-child(even){
-    background-color: #d5fb8b;
+    background-color: #e0dff6;
 }
 /*action_buttons*/
 .action_button{
