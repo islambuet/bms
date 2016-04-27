@@ -58,6 +58,10 @@ class Ti_bud_budget extends Root_Controller
         {
             $this->system_save();
         }
+        elseif($action=="forward")
+        {
+            $this->system_forward($id);
+        }
         else
         {
             $this->system_list();
@@ -95,7 +99,7 @@ class Ti_bud_budget extends Root_Controller
                 $id=$this->input->post('id');
             }
             $this->db->from($this->config->item('table_ti_budget').' tb');
-            $this->db->select('tb.id');
+            $this->db->select('tb.id,tb.status_forward');
 
             $this->db->select('t.id territory_id,t.name territory_name');
             $this->db->select('zone.id zone_id,zone.name zone_name');
@@ -111,6 +115,13 @@ class Ti_bud_budget extends Root_Controller
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->jsonReturn($ajax);
+            }
+            if($data['budget']['status_forward']===$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                $this->jsonReturn($ajax);
+                die();
             }
             if(!$this->check_my_editable($data['budget']))
             {
@@ -438,6 +449,17 @@ class Ti_bud_budget extends Root_Controller
         $user = User_helper::get_user();
         $time=time();
         $setup_id=$this->input->post('setup_id');
+        $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('id ='.$setup_id),1);
+        if($setup)
+        {
+            if($setup['status_forward']===$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                $this->jsonReturn($ajax);
+                die();
+            }
+        }
         $items=$this->input->post('items');
         $this->db->trans_start();
         if(sizeof($items)>0)
@@ -489,6 +511,81 @@ class Ti_bud_budget extends Root_Controller
         if ($this->db->trans_status() === TRUE)
         {
             $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+            $this->system_list();
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $this->jsonReturn($ajax);
+        }
+    }
+    private function system_forward()
+    {
+        $user = User_helper::get_user();
+        $time=time();
+        if(($this->input->post('id')))
+        {
+            $id=$this->input->post('id');
+        }
+        $this->db->from($this->config->item('table_ti_budget').' tb');
+        $this->db->select('tb.*');
+        $this->db->select('t.id territory_id,t.zone_id zone_id');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
+        $this->db->where('tb.id',$id);
+        $setup=$this->db->get()->row_array();
+        if($setup)
+        {
+            if($setup['status_forward']===$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                $this->jsonReturn($ajax);
+                die();
+            }
+        }
+        else
+        {
+            System_helper::invalid_try('Invalid forward',$id);
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->jsonReturn($ajax);
+        }
+        $this->db->trans_start();
+        $zone_setup=Query_helper::get_info($this->config->item('table_zi_budget'),'*',array('zone_id ='.$setup['zone_id'],'fiscal_year_id ='.$setup['fiscal_year_id']),1);
+        if($zone_setup)
+        {
+            if($zone_setup['status_forward']===$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='ZI already Forwarded.You cannot forward more';
+                $this->jsonReturn($ajax);
+                die();
+            }
+        }
+        else
+        {
+
+            $data=array();
+            $data['zone_id']=$setup['zone_id'];
+            $data['fiscal_year_id']=$setup['fiscal_year_id'];
+            for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+            {
+                $data['year'.$i.'_id']=$setup['year'.$i.'_id'];
+            }
+            $data['user_created'] = $user->user_id;
+            $data['date_created'] = $time;
+            Query_helper::add($this->config->item('table_zi_budget'),$data);
+        }
+        $data=array();
+        $data['status_forward']=$this->config->item('system_status_yes');
+        $data['user_updated'] = $user->user_id;
+        $data['date_updated'] = $time;
+        Query_helper::update($this->config->item('table_ti_budget'),$data,array("id = ".$id));
+        $this->db->trans_complete();   //DB Transaction Handle END
+        if ($this->db->trans_status() === TRUE)
+        {
+            $this->message='Forwarded Successfully';
             $this->system_list();
         }
         else
