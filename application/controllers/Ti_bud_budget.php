@@ -180,8 +180,189 @@ class Ti_bud_budget extends Root_Controller
     }
     private function system_get_budget_form_items()
     {
+        $crop_id=$this->input->post('crop_id');
+        $setup_id=$this->input->post('setup_id');
+        $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('id ='.$setup_id),1);
+        $this->db->from($this->config->item('ems_csetup_customers').' cus');
+        $this->db->select('cus.id');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->where('d.territory_id',$setup['territory_id']);
+        $this->db->order_by('cus.ordering');
+        $customers=$this->db->get()->result_array();
+
+        $total_types=array();
+        $total_crop=array();
+        foreach($customers as $customer)
+        {
+            $total_types['customer'][$customer['id']]=0;
+            $total_crop['customer'][$customer['id']]=0;
+        }
+        $total_types['budget_quantity']='';
+        $total_crop['budget_quantity']='';
+        $total_types['customer_total_quantity']=0;
+        $total_crop['customer_total_quantity']=0;
+
+        for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+        {
+            $total_types['year'.$i.'_customer_total_quantity']=0;
+            $total_types['year'.$i.'_budget_quantity']='';
+            $total_crop['year'.$i.'_customer_total_quantity']=0;
+            $total_crop['year'.$i.'_budget_quantity']=0;
+        }
+
+        $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_sales_target'),'*',array('setup_id ='.$setup_id));
+        $old_items=array();
+
+        foreach($results as $result)
+        {
+            $old_items[$result['variety_id']][$result['customer_id']]=$result;
+        }
+
+
+        $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
+        $this->db->select('v.id,v.name');
+        $this->db->select('type.name crop_type_name');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        $this->db->where('v.whose','ARM');
+        $this->db->where('v.status =',$this->config->item('system_status_active'));
+        $this->db->where('type.crop_id',$crop_id);
+        $this->db->order_by('type.ordering','ASC');
+        $this->db->order_by('v.ordering','ASC');
+
+        $results=$this->db->get()->result_array();
+
         $items=array();
+        $prev_type='';
+        foreach($results as $i=>$result)
+        {
+            $item=array();
+            if($i>0)
+            {
+                if($prev_type!=$result['crop_type_name'])
+                {
+                    $total_item=array();
+                    $total_item['crop_type_name']='';
+                    $total_item['variety_name']='Type Total';
+                    $items[]=$this->get_form_row($total_item,$total_types);
+                    foreach($customers as $customer)
+                    {
+                        $total_types['customer'][$customer['id']]=0;
+                    }
+                    $total_types['customer_total_quantity']=0;
+                    for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+                    {
+                        $total_types['year'.$i.'_customer_total_quantity']=0;;
+                    }
+
+
+                    $item['crop_type_name']=$result['crop_type_name'];
+                    $prev_type=$result['crop_type_name'];
+                }
+                else
+                {
+                    $item['crop_type_name']='';
+                }
+            }
+            else
+            {
+                $prev_type=$result['crop_type_name'];
+                $item['crop_type_name']=$result['crop_type_name'];
+            }
+            $item['variety_name']=$result['name'];
+            $row_quantity=array();
+            $row_quantity['customer_total_quantity']=0;
+            $row_quantity['budget_quantity']='';
+            for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+            {
+                $row_quantity['year'.$i.'_customer_total_quantity']=0;
+                $row_quantity['year'.$i.'_budget_quantity']='';
+            }
+
+            foreach($customers as $customer)
+            {
+                if(isset($old_items[$result['id']][$customer['id']]))
+                {
+                    if($old_items[$result['id']][$customer['id']]['budget_quantity']>0)
+                    {
+                        $row_quantity['customer'][$customer['id']]=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_types['customer'][$customer['id']]+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_crop['customer'][$customer['id']]+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+
+                        $row_quantity['customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_types['customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_crop['customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        //also input field
+                    }
+                    for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+                    {
+                        if($old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity']>0)
+                        {
+                            $row_quantity['year'.$i.'_customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
+                            $total_types['year'.$i.'_customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
+                            $total_crop['year'.$i.'_customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
+                        }
+                    }
+                }
+                else
+                {
+                    $row_quantity['customer'][$customer['id']]=0;
+                }
+
+            }
+            $items[]=$this->get_form_row($item,$row_quantity);
+        }
+        $total_item=array();
+        $total_item['crop_type_name']='';
+        $total_item['variety_name']='Type Total';
+        $items[]=$this->get_form_row($total_item,$total_types);
+        $total_item=array();
+        $total_item['crop_type_name']='Crop Total';
+        $total_item['variety_name']='';
+        $items[]=$this->get_form_row($total_item,$total_crop);
+
         $this->jsonReturn($items);
+
+    }
+    private function get_form_row($item,$row_quantity)
+    {
+
+        $row=array();
+        $row['crop_type_name']=$item['crop_type_name'];
+        $row['variety_name']=$item['variety_name'];
+        foreach($row_quantity['customer'] as $id=>$quantity)
+        {
+            if($quantity>0)
+            {
+                $row['customer_quantity_'.$id]=$quantity;
+            }
+            else
+            {
+                $row['customer_quantity_'.$id]='';
+            }
+
+        }
+        if($row_quantity['customer_total_quantity']>0)
+        {
+            $row['customer_total_quantity']=$row_quantity['customer_total_quantity'];
+        }
+        else
+        {
+            $row['customer_total_quantity']='';
+        }
+        for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+        {
+            if($row_quantity['year'.$i.'_customer_total_quantity']>0)
+            {
+                $row['year'.$i.'_customer_total_quantity']=$row_quantity['year'.$i.'_customer_total_quantity'];
+            }
+            else
+            {
+                $row['year'.$i.'_customer_total_quantity']='';
+            }
+
+        }
+
+        return $row;
 
     }
     private function system_save()
@@ -262,10 +443,6 @@ class Ti_bud_budget extends Root_Controller
             return false;
         }
         if(($this->locations['territory_id']>0)&&($this->locations['territory_id']!=$customer['territory_id']))
-        {
-            return false;
-        }
-        if(($this->locations['district_id']>0)&&($this->locations['district_id']!=$customer['district_id']))
         {
             return false;
         }

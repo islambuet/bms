@@ -55,8 +55,23 @@
         var cellsrenderer = function(row, column, value, defaultHtml, columnSettings, record)
         {
             var element = $(defaultHtml);
-            // console.log(defaultHtml);
+            if (record.variety_name=="Type Total")
+            {
+                if(column!='crop_type_name')
+                {
+                    element.css({ 'background-color': '#6CAB44','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+            }
+            else if (record.crop_type_name=="Crop Total")
+            {
+
+                element.css({ 'background-color': '#AEC2DD','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+
+            }
+            else
+            {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+            }
             return element[0].outerHTML;
 
         };
