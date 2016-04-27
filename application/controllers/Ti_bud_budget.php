@@ -182,6 +182,13 @@ class Ti_bud_budget extends Root_Controller
     {
         $crop_id=$this->input->post('crop_id');
         $setup_id=$this->input->post('setup_id');
+        $results=Query_helper::get_info($this->config->item('table_ti_bud_budget_target'),'*',array('setup_id ='.$setup_id));
+        $old_items=array();
+        foreach($results as $result)
+        {
+            $old_items[$result['variety_id']]=$result;
+        }
+
         $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('id ='.$setup_id),1);
         $this->db->from($this->config->item('ems_csetup_customers').' cus');
         $this->db->select('cus.id');
@@ -207,15 +214,15 @@ class Ti_bud_budget extends Root_Controller
             $total_types['year'.$i.'_customer_total_quantity']=0;
             $total_types['year'.$i.'_budget_quantity']='';
             $total_crop['year'.$i.'_customer_total_quantity']=0;
-            $total_crop['year'.$i.'_budget_quantity']=0;
+            $total_crop['year'.$i.'_budget_quantity']='';
         }
 
         $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_sales_target'),'*',array('setup_id ='.$setup_id));
-        $old_items=array();
+        $old_customer_items=array();
 
         foreach($results as $result)
         {
-            $old_items[$result['variety_id']][$result['customer_id']]=$result;
+            $old_customer_items[$result['variety_id']][$result['customer_id']]=$result;
         }
 
 
@@ -280,26 +287,26 @@ class Ti_bud_budget extends Root_Controller
 
             foreach($customers as $customer)
             {
-                if(isset($old_items[$result['id']][$customer['id']]))
+                if(isset($old_customer_items[$result['id']][$customer['id']]))
                 {
-                    if($old_items[$result['id']][$customer['id']]['budget_quantity']>0)
+                    if($old_customer_items[$result['id']][$customer['id']]['budget_quantity']>0)
                     {
-                        $row_quantity['customer'][$customer['id']]=$old_items[$result['id']][$customer['id']]['budget_quantity'];
-                        $total_types['customer'][$customer['id']]+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
-                        $total_crop['customer'][$customer['id']]+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $row_quantity['customer'][$customer['id']]=$old_customer_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_types['customer'][$customer['id']]+=$old_customer_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_crop['customer'][$customer['id']]+=$old_customer_items[$result['id']][$customer['id']]['budget_quantity'];
 
-                        $row_quantity['customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
-                        $total_types['customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
-                        $total_crop['customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $row_quantity['customer_total_quantity']+=$old_customer_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_types['customer_total_quantity']+=$old_customer_items[$result['id']][$customer['id']]['budget_quantity'];
+                        $total_crop['customer_total_quantity']+=$old_customer_items[$result['id']][$customer['id']]['budget_quantity'];
                         //also input field
                     }
                     for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
                     {
-                        if($old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity']>0)
+                        if($old_customer_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity']>0)
                         {
-                            $row_quantity['year'.$i.'_customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
-                            $total_types['year'.$i.'_customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
-                            $total_crop['year'.$i.'_customer_total_quantity']+=$old_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
+                            $row_quantity['year'.$i.'_customer_total_quantity']+=$old_customer_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
+                            $total_types['year'.$i.'_customer_total_quantity']+=$old_customer_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
+                            $total_crop['year'.$i.'_customer_total_quantity']+=$old_customer_items[$result['id']][$customer['id']]['year'.$i.'_budget_quantity'];
                         }
                     }
                 }
@@ -308,6 +315,61 @@ class Ti_bud_budget extends Root_Controller
                     $row_quantity['customer'][$customer['id']]=0;
                 }
 
+            }
+            $quantity='';
+            $editable=false;
+            if((isset($old_items[$result['id']]['budget_quantity']))&&(($old_items[$result['id']]['budget_quantity'])>0))
+            {
+                $quantity=$old_items[$result['id']]['budget_quantity'];
+                if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
+                {
+                    $editable=true;
+                }
+                else
+                {
+                    $editable=false;
+                }
+            }
+            else
+            {
+                $editable=true;
+            }
+            if($editable)
+            {
+                $row_quantity['budget_quantity']='<input type="text" name="items['.$result['id'].'][budget_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
+            }
+            else
+            {
+                $row_quantity['budget_quantity']=$quantity;
+            }
+            for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+            {
+                $quantity='';
+                $editable=false;
+                if((isset($old_items[$result['id']]['year'.$i.'_budget_quantity']))&&(($old_items[$result['id']]['year'.$i.'_budget_quantity'])>0))
+                {
+                    $quantity=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
+                    if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
+                    {
+                        $editable=true;
+                    }
+                    else
+                    {
+                        $editable=false;
+                    }
+                }
+                else
+                {
+                    $editable=true;
+                }
+                if($editable)
+                {
+                    $row_quantity['year'.$i.'_budget_quantity']='<input type="text" name="items['.$result['id'].'][year'.$i.'_budget_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
+                }
+                else
+                {
+                    $row_quantity['year'.$i.'_budget_quantity']=$quantity;
+                }
             }
             $items[]=$this->get_form_row($item,$row_quantity);
         }
@@ -329,6 +391,7 @@ class Ti_bud_budget extends Root_Controller
         $row=array();
         $row['crop_type_name']=$item['crop_type_name'];
         $row['variety_name']=$item['variety_name'];
+
         foreach($row_quantity['customer'] as $id=>$quantity)
         {
             if($quantity>0)
@@ -349,6 +412,7 @@ class Ti_bud_budget extends Root_Controller
         {
             $row['customer_total_quantity']='';
         }
+        $row['budget_quantity']=$row_quantity['budget_quantity'];
         for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
         {
             if($row_quantity['year'.$i.'_customer_total_quantity']>0)
@@ -359,7 +423,7 @@ class Ti_bud_budget extends Root_Controller
             {
                 $row['year'.$i.'_customer_total_quantity']='';
             }
-
+            $row['year'.$i.'_budget_quantity']=$row_quantity['year'.$i.'_budget_quantity'];
         }
 
         return $row;
@@ -370,12 +434,11 @@ class Ti_bud_budget extends Root_Controller
         $user = User_helper::get_user();
         $time=time();
         $setup_id=$this->input->post('setup_id');
-        $customer_id=$this->input->post('customer_id');
         $items=$this->input->post('items');
         $this->db->trans_start();
         if(sizeof($items)>0)
         {
-            $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_sales_target'),'*',array('setup_id ='.$setup_id,'customer_id ='.$customer_id));
+            $results=Query_helper::get_info($this->config->item('table_ti_bud_budget_target'),'*',array('setup_id ='.$setup_id));
             $old_items=array();
 
             foreach($results as $result)
@@ -400,20 +463,19 @@ class Ti_bud_budget extends Root_Controller
                 }
                 if($data)
                 {
-                    $data['customer_id']=$customer_id;
                     $data['setup_id']=$setup_id;
                     $data['variety_id']=$variety_id;
                     if(isset($old_items[$variety_id]))
                     {
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        Query_helper::update($this->config->item('table_ti_bud_customer_sales_target'),$data,array("id = ".$old_items[$variety_id]['id']));
+                        Query_helper::update($this->config->item('table_ti_bud_budget_target'),$data,array("id = ".$old_items[$variety_id]['id']));
                     }
                     else
                     {
                         $data['user_created'] = $user->user_id;
                         $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_ti_bud_customer_sales_target'),$data);
+                        Query_helper::add($this->config->item('table_ti_bud_budget_target'),$data);
                     }
                 }
             }
