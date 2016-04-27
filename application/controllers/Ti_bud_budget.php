@@ -407,23 +407,27 @@ class Ti_bud_budget extends Root_Controller
         if($row_quantity['customer_total_quantity']>0)
         {
             $row['customer_total_quantity']=$row_quantity['customer_total_quantity'];
+            $row['budget_quantity']=$row_quantity['budget_quantity'];
         }
         else
         {
             $row['customer_total_quantity']='';
+            $row['budget_quantity']='';
         }
-        $row['budget_quantity']=$row_quantity['budget_quantity'];
+
         for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
         {
             if($row_quantity['year'.$i.'_customer_total_quantity']>0)
             {
                 $row['year'.$i.'_customer_total_quantity']=$row_quantity['year'.$i.'_customer_total_quantity'];
+                $row['year'.$i.'_budget_quantity']=$row_quantity['year'.$i.'_budget_quantity'];
             }
             else
             {
                 $row['year'.$i.'_customer_total_quantity']='';
+                $row['year'.$i.'_budget_quantity']='';
             }
-            $row['year'.$i.'_budget_quantity']=$row_quantity['year'.$i.'_budget_quantity'];
+
         }
 
         return $row;
