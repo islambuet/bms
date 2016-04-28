@@ -79,7 +79,7 @@
         $("#system_jqx_container").jqxGrid(
             {
                 width: '100%',
-                height:'350px',
+                autoHeight:true,
                 source: dataAdapter,
                 columnsresize: true,
                 columnsreorder: true,
