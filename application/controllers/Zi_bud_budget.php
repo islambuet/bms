@@ -627,7 +627,7 @@ class Zi_bud_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = zb.zone_id','INNER');
         $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
 
-        $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = zb.fiscal_year_id','INNER');
+        $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = zb.year0_id','INNER');
         $this->db->join($this->config->item('ems_setup_location_territories').' t','zone.id = t.zone_id','INNER');
 
         $this->db->join($this->config->item('ems_setup_location_territories').' t1','zone.id = t1.zone_id','INNER');
