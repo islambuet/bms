@@ -42,13 +42,13 @@ class Ti_bud_customer_budget extends Root_Controller
         {
             $this->system_add();
         }
-        elseif($action=="get_customer_details")
+        elseif($action=="get_budget_form")
         {
-            $this->get_customer_details();
+            $this->system_get_budget_form();
         }
-        elseif($action=="get_customer_items")
+        elseif($action=="get_budget_form_items")
         {
-            $this->get_customer_items();
+            $this->system_get_budget_form_items();
         }
         elseif($action=="edit")
         {
@@ -92,8 +92,8 @@ class Ti_bud_customer_budget extends Root_Controller
         if((isset($this->permissions['add'])&&($this->permissions['add']==1))||(isset($this->permissions['edit'])&&($this->permissions['edit']==1)))
         {
             $data['budget']=array();
-            $data['fiscal_year_id']=0;
-            $data['fiscal_year_name']='';
+            $data['year0_id']=0;
+            $data['year0_name']='';
             $time=time();
             $data['fiscal_years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('status ="'.$this->config->item('system_status_active').'"'));
             //deciding current year is in a fiscal year
@@ -101,13 +101,13 @@ class Ti_bud_customer_budget extends Root_Controller
             {
                 if($year['date_start']<=$time && $year['date_end']>=$time)
                 {
-                    $data['budget']['fiscal_year_id']=$year['value'];
-                    $data['budget']['fiscal_year_name']=$year['text'];
+                    $data['budget']['year0_id']=$year['value'];
+                    $data['budget']['year0_name']=$year['text'];
                     break;
                 }
 
             }
-            if(!($data['budget']['fiscal_year_id']>0))
+            if(!($data['budget']['year0_id']>0))
             {
                 $ajax['status']=false;
                 $ajax['system_message']="Current Date is not in any Fiscal Year.";
@@ -174,13 +174,13 @@ class Ti_bud_customer_budget extends Root_Controller
             }
             $this->db->from($this->config->item('table_ti_bud_customer_sales_target').' csst');
             $this->db->select('csst.customer_id');
-            $this->db->select('tb.fiscal_year_id');
+            $this->db->select('tb.year0_id');
 
             $this->db->select('d.id district_id');
             $this->db->select('t.id territory_id');
             $this->db->select('zone.id zone_id');
             $this->db->select('division.id division_id');
-            $this->db->select('fy.name fiscal_year_name');
+            $this->db->select('fy.name year0_name');
 
             $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = csst.customer_id','INNER');
             $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
@@ -190,7 +190,7 @@ class Ti_bud_customer_budget extends Root_Controller
             $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
             $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
             $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
-            $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.fiscal_year_id','INNER');
+            $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.year0_id','INNER');
             $this->db->where('csst.id',$id);
 
             $data['budget']=$this->db->get()->row_array();
@@ -234,7 +234,7 @@ class Ti_bud_customer_budget extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    private function get_customer_details()
+    private function system_get_budget_form()
     {
         $user = User_helper::get_user();
         $time=time();
@@ -247,9 +247,9 @@ class Ti_bud_customer_budget extends Root_Controller
 
         $budget_search=$this->input->post('budget');
         $years=array();
-        $years['fiscal_year_id']=$fiscal_years[$budget_search['fiscal_year_id']];
+        $years['year0_id']=$fiscal_years[$budget_search['year0_id']];
         $setup_id=0;
-        $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('territory_id ='.$budget_search['territory_id'],'fiscal_year_id ='.$budget_search['fiscal_year_id']),1);
+        $setup=Query_helper::get_info($this->config->item('table_ti_budget'),'*',array('territory_id ='.$budget_search['territory_id'],'year0_id ='.$budget_search['year0_id']),1);
         if($setup)
         {
             if($setup['status_forward']===$this->config->item('system_status_yes'))
@@ -269,12 +269,12 @@ class Ti_bud_customer_budget extends Root_Controller
         {
             $i=1;
             $data=array();
-            $data['fiscal_year_id']=$years['fiscal_year_id']['value'];
+            $data['year0_id']=$years['year0_id']['value'];
             foreach($fiscal_years as $result)
             {
                 if(sizeof($years)<=$this->config->item('num_year_prediction'))
                 {
-                    if($result['value']>$years['fiscal_year_id']['value'])
+                    if($result['value']>$years['year0_id']['value'])
                     {
                         $years['year'.$i.'_id']=$result;
                         $data['year'.$i.'_id']=$result['value'];
@@ -317,7 +317,7 @@ class Ti_bud_customer_budget extends Root_Controller
         $this->jsonReturn($ajax);
 
     }
-    private function get_customer_items()
+    private function system_get_budget_form_items()
     {
         $setup_id=$this->input->post('setup_id');
         $customer_id=$this->input->post('customer_id');
@@ -339,8 +339,9 @@ class Ti_bud_customer_budget extends Root_Controller
             $count++;
             $item=array();
             $item['sl_no']=$count;
+            $item['variety_id']=$result['id'];
             $item['variety_name']=$result['name'];
-            $quantity='';
+            /*$quantity='';
             $editable=false;
             if((isset($old_items[$result['id']]['budget_quantity']))&&(($old_items[$result['id']]['budget_quantity'])>0))
             {
@@ -358,6 +359,9 @@ class Ti_bud_customer_budget extends Root_Controller
             {
                 $editable=true;
             }
+            $item['budget_quantity']=$quantity;
+            $item['budget_quantity_editable']=$editable;
+
             if($editable)
             {
                 $item['budget_quantity']='<input type="text" name="items['.$result['id'].'][budget_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
@@ -365,9 +369,9 @@ class Ti_bud_customer_budget extends Root_Controller
             else
             {
                 $item['budget_quantity']=$quantity;
-            }
+            }*/
 
-            for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
             {
                 $quantity='';
                 $editable=false;
@@ -387,14 +391,8 @@ class Ti_bud_customer_budget extends Root_Controller
                 {
                     $editable=true;
                 }
-                if($editable)
-                {
-                    $item['year'.$i.'_budget_quantity']='<input type="text" name="items['.$result['id'].'][year'.$i.'_budget_quantity]"  class="jqxgrid_input integer_type_positive" value="'.$quantity.'"/>';
-                }
-                else
-                {
-                    $item['year'.$i.'_budget_quantity']=$quantity;
-                }
+                $item['year'.$i.'_budget_quantity']=$quantity;
+                $item['year'.$i.'_budget_quantity_editable']=$editable;
             }
 
             $items[]=$item;
@@ -424,12 +422,7 @@ class Ti_bud_customer_budget extends Root_Controller
             foreach($items as $variety_id=>$item)
             {
                 $data=array();
-                if((isset($item['budget_quantity']))&&($item['budget_quantity']>0))
-                {
-                    $data['budget_quantity']=$item['budget_quantity'];
-
-                }
-                for($i=1;$i<=$this->config->item('num_year_prediction');$i++)
+                for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
                 {
                     if((isset($item['year'.$i.'_budget_quantity']))&&($item['year'.$i.'_budget_quantity']>0))
                     {
@@ -525,7 +518,7 @@ class Ti_bud_customer_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
         $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
 
-        $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.fiscal_year_id','INNER');
+        $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = tb.year0_id','INNER');
 
         $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id = csst.variety_id','INNER');
         $this->db->join($this->config->item('ems_setup_classification_crop_types').' types','types.id = v.crop_type_id','INNER');

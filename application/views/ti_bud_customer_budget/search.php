@@ -6,7 +6,7 @@
     $action_data["action_save_new"]='#save_form';
     $CI->load->view("action_buttons",$action_data);
 ?>
-<form id="search_form" action="<?php echo site_url($CI->controller_url.'/index/get_customer_details');?>" method="post">
+<form id="search_form" action="<?php echo site_url($CI->controller_url.'/index/get_budget_form');?>" method="post">
     <div class="row widget">
         <div class="widget-header">
             <div class="title">
@@ -20,8 +20,8 @@
                 <label class="control-label pull-right"><?php echo $this->lang->line('LABEL_FISCAL_YEAR');?></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <label class="control-label"><?php echo $budget['fiscal_year_name'];?></label>
-                <input type="hidden" id="fiscal_year_id" name="budget[fiscal_year_id]" value="<?php echo $budget['fiscal_year_id'];?>"/>
+                <label class="control-label"><?php echo $budget['year0_name'];?></label>
+                <input type="hidden" id="year0_id" name="budget[year0_id]" value="<?php echo $budget['year0_id'];?>"/>
             </div>
         </div>
         <div style="" class="row show-grid">
