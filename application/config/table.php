@@ -27,3 +27,6 @@ $config['table_zi_budget'] = 'bms_zi_budget';
 $config['table_zi_bud_budget_target'] = 'bms_zi_bud_budget_target';
 
 $config['table_di_budget'] = 'bms_di_budget';
+$config['table_di_bud_budget_target'] = 'bms_di_bud_budget_target';
+$config['table_hom_budget'] = 'bms_hom_budget';
+$config['table_hom_bud_budget_target'] = 'bms_hom_bud_budget_target';
