@@ -218,6 +218,7 @@ class Zi_bud_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
         $this->db->where('tb.status_forward',$this->config->item('system_status_yes'));
         $this->db->where('t.zone_id',$setup['zone_id']);
+        $this->db->where('tb.year0_id',$setup['year0_id']);
         $results=$this->db->get()->result_array();
         $old_territory_items=array();
 
@@ -573,7 +574,9 @@ class Zi_bud_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_territories').' t','zone.id = t.zone_id','INNER');
 
         $this->db->join($this->config->item('ems_setup_location_territories').' t1','zone.id = t1.zone_id','INNER');
-        $this->db->join($this->config->item('table_ti_budget').' tb','tb.territory_id = t1.id','INNER');
+
+        $this->db->join($this->config->item('table_ti_budget').' tb','tb.territory_id = t1.id and tb.year0_id = zb.year0_id','INNER');
+
         $this->db->where('tb.status_forward',$this->config->item('system_status_yes'));
 
         $this->db->join($this->config->item('table_ti_bud_budget_target').' tbt','tbt.setup_id = tb.id','INNER');
@@ -588,6 +591,7 @@ class Zi_bud_budget extends Root_Controller
             }
         }
         $this->db->group_by(array('zb.id'));
+        $this->db->order_by('zb.id DESC');
         $items=$this->db->get()->result_array();
         $this->jsonReturn($items);
     }

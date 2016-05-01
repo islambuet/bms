@@ -219,6 +219,7 @@ class Di_bud_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = zb.zone_id','INNER');
         $this->db->where('zb.status_forward',$this->config->item('system_status_yes'));
         $this->db->where('zone.division_id',$setup['division_id']);
+        $this->db->where('zb.year0_id',$setup['year0_id']);
         $results=$this->db->get()->result_array();
         $old_area_items=array();
 
@@ -566,7 +567,7 @@ class Di_bud_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_zones').' zone','division.id = zone.division_id','INNER');
 
         $this->db->join($this->config->item('ems_setup_location_zones').' z1','division.id = z1.division_id','INNER');
-        $this->db->join($this->config->item('table_zi_budget').' zb','zb.zone_id = z1.id','INNER');
+        $this->db->join($this->config->item('table_zi_budget').' zb','zb.zone_id = z1.id and zb.year0_id = db.year0_id','INNER');
         $this->db->where('zb.status_forward',$this->config->item('system_status_yes'));
 
         $this->db->join($this->config->item('table_zi_bud_budget_target').' zbt','zbt.setup_id = zb.id','INNER');
@@ -577,6 +578,7 @@ class Di_bud_budget extends Root_Controller
             $this->db->where('division.id',$this->locations['division_id']);
         }
         $this->db->group_by(array('db.id'));
+        $this->db->order_by('db.id DESC');
         $items=$this->db->get()->result_array();
         $this->jsonReturn($items);
     }
