@@ -50,18 +50,29 @@ class Ti_bud_customer_budget extends Root_Controller
         {
             $this->system_edit($id1,$id2,$id3);
         }
-        elseif($action=="get_budget_form")
+        elseif($action=="get_edit_form")
         {
-            $this->system_get_budget_form();
+            $this->system_get_edit_form();
         }
-        elseif($action=="get_budget_form_items")
+        elseif($action=="get_edit_items")
         {
-            $this->system_get_budget_form_items();
+            $this->system_get_edit_items();
         }
-
         elseif($action=="save")
         {
             $this->system_save();
+        }
+        elseif($action=="details")
+        {
+            $this->system_details($id1,$id2,$id3);
+        }
+        elseif($action=="get_details_form")
+        {
+            $this->system_get_details_form();
+        }
+        elseif($action=="get_details_items")
+        {
+            $this->system_get_details_items();
         }
         else
         {
@@ -181,7 +192,7 @@ class Ti_bud_customer_budget extends Root_Controller
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array());
             $data['year0']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('id ='.$year0_id),1);
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search_budget",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search_edit",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -196,7 +207,7 @@ class Ti_bud_customer_budget extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    private function system_get_budget_form()
+    private function system_get_edit_form()
     {
         $territory_id=$this->input->post('territory_id');
         $year0_id=$this->input->post('year0_id');
@@ -233,7 +244,7 @@ class Ti_bud_customer_budget extends Root_Controller
         $this->jsonReturn($ajax);
 
     }
-    private function system_get_budget_form_items()
+    private function system_get_edit_items()
     {
         $territory_id=$this->input->post('territory_id');
         $year0_id=$this->input->post('year0_id');
@@ -384,6 +395,233 @@ class Ti_bud_customer_budget extends Root_Controller
         $this->db->where('cus.status',$this->config->item('system_status_active'));
         $items=$this->db->get()->result_array();
         $this->jsonReturn($items);
+    }
+    private function system_details($territory_id,$year0_id,$customer_id)
+    {
+        if(isset($this->permissions['view'])&&($this->permissions['view']==1))
+        {
+            if(($this->input->post('id')))
+            {
+                $customer_id=$this->input->post('id');
+            }
+            $this->db->from($this->config->item('ems_csetup_customers').' cus');
+            $this->db->select('cus.id');
+            $this->db->select('CONCAT(cus.customer_code," - ",cus.name) customer_name');
+            $this->db->select('d.name district_name');
+            $this->db->select('t.id territory_id,t.name territory_name');
+            $this->db->select('zone.id zone_id,zone.name zone_name');
+            $this->db->select('division.id division_id,division.name division_name');
+
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_divisions').' division','division.id = zone.division_id','INNER');
+
+            $this->db->where('d.territory_id',$territory_id);
+            $this->db->where('cus.id',$customer_id);
+            $data['customer']=$this->db->get()->row_array();
+            if(!$data['customer'])
+            {
+                System_helper::invalid_try($this->config->item('system_edit_not_exists'),$customer_id);
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+                $this->jsonReturn($ajax);
+            }
+            if(!$this->check_my_editable($data['customer']))
+            {
+                System_helper::invalid_try($this->config->item('system_edit_others'),$customer_id);
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+                $this->jsonReturn($ajax);
+            }
+            $data['title']="Search";
+            $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array());
+            $data['year0']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('id ='.$year0_id),1);
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search_details",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$customer_id);
+            $this->jsonReturn($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->jsonReturn($ajax);
+        }
+    }
+    private function system_get_details_form()
+    {
+        $territory_id=$this->input->post('territory_id');
+        $year0_id=$this->input->post('year0_id');
+        $customer_id=$this->input->post('customer_id');
+        $crop_id=$this->input->post('crop_id');
+        $user = User_helper::get_user();
+        $time=time();
+
+        if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
+        {
+            //echo 'check if already forwarded';
+            //if forwarded dont allow
+        }
+        $years=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
+
+        $keys=',';
+        $keys.="territory_id:'".$territory_id."',";
+        $keys.="year0_id:'".$year0_id."',";
+        $keys.="customer_id:'".$customer_id."',";
+        $keys.="crop_id:'".$crop_id."',";
+        $data['keys']=trim($keys,',');
+        $data['years']=$years;
+        $data['territory_id']=$territory_id;
+        $data['year0_id']=$year0_id;
+        $data['customer_id']=$customer_id;
+        $data['title']="Customer Budget";
+        $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("ti_bud_customer_budget/details",$data,true));
+        if($this->message)
+        {
+            $ajax['system_message']=$this->message;
+        }
+        $this->jsonReturn($ajax);
+
+    }
+    private function system_get_details_items()
+    {
+        $territory_id=$this->input->post('territory_id');
+        $year0_id=$this->input->post('year0_id');
+        $customer_id=$this->input->post('customer_id');
+        $crop_id=$this->input->post('crop_id');
+
+        $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_bt'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id,'customer_id ='.$customer_id));
+        $old_items=array();
+
+        foreach($results as $result)
+        {
+            $old_items[$result['variety_id']]=$result;
+        }
+        $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
+        $this->db->select('v.id,v.name');
+        $this->db->select('crop.name crop_name');
+        $this->db->select('type.name type_name');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
+        $this->db->where('v.status !=',$this->config->item('system_status_delete'));
+        $this->db->where('v.whose','ARM');
+        $this->db->where('crop.id',$crop_id);
+        $this->db->order_by('type.ordering','ASC');
+        $this->db->order_by('v.ordering','ASC');
+        $results=$this->db->get()->result_array();
+        $items=array();
+        $total_types=array();
+        $total_crop=array();
+        $count=0;
+        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+        {
+            $total_types['year'.$i]=0;
+            $total_crop['year'.$i]=0;
+        }
+        $prev_type='';
+        foreach($results as $index=>$result)
+        {
+            $item=array();
+            if($index>0)
+            {
+                if($prev_type!=$result['type_name'])
+                {
+                    $total_item=array();
+                    $total_item['type_name']='';
+                    $total_item['variety_name']='Total Type';
+                    $total_item['variety_id']='';
+
+                    for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+                    {
+                        if($total_types['year'.$i]>0)
+                        {
+                            $total_item['year'.$i.'_budget_quantity']=$total_types['year'.$i];
+                        }
+                        else
+                        {
+                            $total_item['year'.$i.'_budget_quantity']='';
+                        }
+
+                        $total_types['year'.$i]=0;
+                    }
+                    $items[]=$total_item;
+                    $count=0;
+                    $item['type_name']=$result['type_name'];
+                    $prev_type=$result['type_name'];
+                }
+                else
+                {
+                    $item['type_name']='';
+                }
+            }
+            else
+            {
+                $prev_type=$result['type_name'];
+                $item['type_name']=$result['type_name'];
+            }
+
+            $count++;
+
+            $item['sl_no']=$count;
+            $item['variety_id']=$result['id'];
+            $item['variety_name']=$result['name'];
+
+            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+            {
+                $quantity='';
+                if((isset($old_items[$result['id']]['year'.$i.'_budget_quantity']))&&(($old_items[$result['id']]['year'.$i.'_budget_quantity'])>0))
+                {
+                    $quantity=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
+                    $total_types['year'.$i]+=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
+                    $total_crop['year'.$i]+=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
+                }
+                $item['year'.$i.'_budget_quantity']=$quantity;
+            }
+
+            $items[]=$item;
+        }
+        $total_item=array();
+        $total_item['type_name']='';
+        $total_item['variety_name']='Total Type';
+        $total_item['variety_id']='';
+
+        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+        {
+            if($total_types['year'.$i]>0)
+            {
+                $total_item['year'.$i.'_budget_quantity']=$total_types['year'.$i];
+            }
+            else
+            {
+                $total_item['year'.$i.'_budget_quantity']='';
+            }
+        }
+        $items[]=$total_item;
+        $total_item=array();
+        $total_item['type_name']='Total Crop';
+        $total_item['variety_name']='';
+        $total_item['variety_id']='';
+
+        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+        {
+            if($total_crop['year'.$i]>0)
+            {
+                $total_item['year'.$i.'_budget_quantity']=$total_crop['year'.$i];
+            }
+            else
+            {
+                $total_item['year'.$i.'_budget_quantity']='';
+            }
+        }
+        $items[]=$total_item;
+        $this->jsonReturn($items);
+
+
     }
 
 }

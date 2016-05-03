@@ -36,9 +36,6 @@
         <div class="col-xs-12" style="margin-bottom: 20px;">
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="district_name"><?php echo $CI->lang->line('LABEL_DISTRICT_NAME'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="customer_name"><?php echo $CI->lang->line('LABEL_CUSTOMER_NAME'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_crops"><?php echo $CI->lang->line('LABEL_NUM_CROP'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_types"><?php echo $CI->lang->line('LABEL_NUM_TYPES'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_varieties"><?php echo $CI->lang->line('LABEL_NUM_VARIETIES'); ?></label>
         </div>
         <?php
     }
@@ -60,11 +57,7 @@
             dataFields: [
                 { name: 'id', type: 'int' },
                 { name: 'district_name', type: 'string' },
-                { name: 'customer_name', type: 'string' },
-                { name: 'num_crops', type: 'string' },
-                { name: 'num_types', type: 'string' },
-                { name: 'num_varieties', type: 'string' }
-
+                { name: 'customer_name', type: 'string' }
             ],
             id: 'id',
             url: url
@@ -91,10 +84,7 @@
                 enabletooltips: true,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_DISTRICT_NAME'); ?>', dataField: 'district_name',width:'150',filtertype: 'list'},
-                    { text: '<?php echo $CI->lang->line('LABEL_CUSTOMER_NAME'); ?>', dataField: 'customer_name',width:'250'},
-                    { text: '<?php echo $CI->lang->line('LABEL_NUM_CROP'); ?>', dataField: 'num_crops'},
-                    { text: '<?php echo $CI->lang->line('LABEL_NUM_TYPES'); ?>', dataField: 'num_types'},
-                    { text: '<?php echo $CI->lang->line('LABEL_NUM_VARIETIES'); ?>', dataField: 'num_varieties'}
+                    { text: '<?php echo $CI->lang->line('LABEL_CUSTOMER_NAME'); ?>', dataField: 'customer_name'}
 
                 ]
             });
