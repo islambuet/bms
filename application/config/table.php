@@ -21,6 +21,7 @@ $config['table_system_assigned_area'] = 'bms_system_assigned_area';
 
 $config['table_ti_bud_customer_bt'] = 'bms_ti_bud_customer_bt';
 $config['table_ti_bud_ti_bt'] = 'bms_ti_bud_ti_bt';
+$config['table_forward_ti'] = 'bms_forward_ti';
 /*$config['table_ti_budget'] = 'bms_ti_budget';
 
 

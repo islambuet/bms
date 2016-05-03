@@ -23,7 +23,7 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
-        var url = "<?php echo base_url($CI->controller_url.'/index/get_edit_items');?>";
+        var url = "<?php echo site_url($CI->controller_url.'/index/get_edit_items');?>";
 
         // prepare the data
         var source =
@@ -60,7 +60,6 @@
             return element[0].outerHTML;
 
         };
-        var cellEdit =
         // create jqxgrid.
         $("#system_jqx_container").jqxGrid(
             {
