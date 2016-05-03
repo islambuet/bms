@@ -101,5 +101,32 @@ class System_helper
         return $users;
 
     }
+    public static function get_fiscal_years()
+    {
+        $CI =& get_instance();
+        $results=Query_helper::get_info($CI->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('status ="'.$CI->config->item('system_status_active').'"'),0,0,array('id ASC'));
+        $fiscal_years=array();
+        $time=time();
+        if(sizeof($results)>$CI->config->item('num_year_prediction'))
+        {
+            $budget_year=$results[0];
+            for($i=0;$i<(sizeof($results)-$CI->config->item('num_year_prediction'));$i++)
+            {
+                $fiscal_years[]=$results[$i];
+                if($results[$i]['date_start']<=$time && $results[$i]['date_end']>=$time)
+                {
+                    $budget_year=$results[$i+1];
+                }
+            }
+            return array('budget_year'=>$budget_year,'years'=>$fiscal_years);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$CI->lang->line('MSG_SETUP_MORE_FISCAL_YEAR');
+            $CI->jsonReturn($ajax);
+            return null;
+        }
+    }
 
 }

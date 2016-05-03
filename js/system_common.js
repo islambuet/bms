@@ -457,6 +457,7 @@ function turn_off_triggers()
     $(document).off("change",'input[name="variety[whose]:radio');//at create_crop_variety
     //stock in
     $(document).off("change", "#fiscal_year_id");
+    $(document).off("change", "#year0_id");
     $(document).off("change", "#warehouse_id");
     $(document).off("change", "#variety_id");
     $(document).off("change", "#arm_bank_id");

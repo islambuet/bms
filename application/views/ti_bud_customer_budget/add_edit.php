@@ -2,9 +2,10 @@
     $CI = & get_instance();
 ?>
 <form class="form_valid" id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
-    <input type="hidden" name="setup_id" value="<?php echo $setup_id; ?>" />
+    <input type="hidden" name="territory_id" value="<?php echo $territory_id; ?>" />
+    <input type="hidden" name="year0_id" value="<?php echo $year0_id; ?>" />
     <input type="hidden" name="customer_id" value="<?php echo $customer_id; ?>" />
-    <input type="hidden" id="system_save_new_status" name="system_save_new_status" value="0" />
+
 
 </form>
 <div class="row widget">
@@ -51,12 +52,9 @@
         {
             var element = $(defaultHtml);
             element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-            if((column!='budget_quantity')||(column!='budget_quantity'))
+            if(record[column+'_editable'])
             {
-                if(record[column+'_editable'])
-                {
-                    element.html('<div class="jqxgrid_input">'+value+'</div>');
-                }
+                element.html('<div class="jqxgrid_input">'+value+'</div>');
             }
 
             return element[0].outerHTML;
@@ -78,9 +76,9 @@
                     { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     <?php
-                        for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
+                        for($i=0;$i<sizeof($years);$i++)
                         {?>{
-                        columngroup: '<?php if($i>0){ echo 'next_years';}else{echo 'budgeted_year';} ?>',text: '<?php echo $years['year'.$i.'_id']['text']; ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom',
+                        columngroup: '<?php if($i>0){ echo 'next_years';}else{echo 'budgeted_year';} ?>',text: '<?php echo $years[$i]['text']; ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom',
                         cellbeginedit: function (row)
                         {
                             var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);//only last selected
