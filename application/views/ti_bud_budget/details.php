@@ -2,18 +2,16 @@
     $CI = & get_instance();
     $action_data=array();
     $action_data["action_back"]=base_url($CI->controller_url);
-    $action_data["action_save"]='#save_form';
-    if(isset($CI->permissions['view'])&&($CI->permissions['view']==1))
+    if((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1)))
     {
-        $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$crop_id);
+        $action_data["action_edit_get"]=site_url($CI->controller_url."/index/edit/".$territory_id.'/'.$year0_id.'/'.$crop_id);
+    }
+    if(isset($CI->permissions['forward'])&&($CI->permissions['forward']==1))
+    {
+        $action_data["action_forward_get"]=site_url($CI->controller_url."/index/forward/".$territory_id.'/'.$year0_id.'/'.$crop_id);
     }
     $CI->load->view("action_buttons",$action_data);
 ?>
-<form class="form_valid" id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
-    <input type="hidden" name="territory_id" value="<?php echo $territory_id; ?>" />
-    <input type="hidden" name="year0_id" value="<?php echo $year0_id; ?>" />
-    <input type="hidden" name="crop_id" value="<?php echo $crop_id; ?>" />
-</form>
 <div class="row widget">
     <div class="widget-header">
         <div class="title">
@@ -82,10 +80,6 @@
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
-            if(record[column+'_editable'])
-            {
-                element.html('<div class="jqxgrid_input">'+value+'</div>');
-            }
             return element[0].outerHTML;
 
         };
@@ -99,14 +93,13 @@
                 columnsreorder: true,
                 altrows: true,
                 rowsheight: 35,
-                editable:true,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
+                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center'},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'100',cellsrenderer: cellsrenderer,align:'center'},
+                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
                         <?php
                             foreach($areas as $area)
-                            {?>{ columngroup: 'area',text: '<?php echo $area['text'];?>', dataField: '<?php echo 'area_quantity_'.$area['value'];?>',align:'center',width:'200',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
+                            {?>{ columngroup: 'area',text: '<?php echo $area['text'];?>', dataField: '<?php echo 'area_quantity_'.$area['value'];?>',align:'center',width:'200',cellsrenderer: cellsrenderer,cellsAlign:'right'},
                     <?php
                         }
                     ?>
@@ -114,26 +107,7 @@
                             for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
                             {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "Customer Prediction";}else{echo "Customer Budget";} ?>', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
                     {
-                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "TI Prediction";}else{echo "TI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom',
-                        cellbeginedit: function (row)
-                        {
-                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);//only last selected
-                            return selectedRowData['<?php echo 'year'.$i.'_budget_quantity_editable';?>'];
-                        },
-                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
-                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input integer_type_positive"><div>');
-                        },
-                        geteditorvalue: function (row, cellvalue, editor) {
-                            // return the editor's value.
-                            var value=editor.find('input').val();
-                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
-                            //console.log(selectedRowData);
-                            $('#items_'+selectedRowData['variety_id']+'<?php echo 'year'.$i.'_budget_quantity';?>').remove();
-                            $('#save_form').append('<input type="hidden" id="items_'+selectedRowData['variety_id']+'<?php echo 'year'.$i.'_budget_quantity';?>" name="items['+selectedRowData['variety_id']+'][<?php echo 'year'.$i.'_budget_quantity';?>]" value="'+value+'">');
-
-                            return editor.find('input').val();
-                        }
-                    },
+                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "TI Prediction";}else{echo "TI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom'},
                     <?php
                         }
                     ?>

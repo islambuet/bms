@@ -66,17 +66,22 @@ class Ti_bud_budget extends Root_Controller
         {
             $this->system_details($id1,$id2,$id3);
         }
-        elseif($action=="get_details_form")
+        //details are same from edit
+        /*elseif($action=="get_details_form")
         {
             $this->system_get_details_form();
         }
         elseif($action=="get_details_items")
         {
             $this->system_get_details_items();
+        }*/
+        elseif($action=="forward")
+        {
+            $this->system_forward($id1,$id2,$id3);
         }
         else
         {
-            $this->system_list();
+            $this->system_search();
         }
     }
     private function system_search()
@@ -181,8 +186,18 @@ class Ti_bud_budget extends Root_Controller
             }
             if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                //echo 'check if already forwarded';
-                //if forwarded dont allow
+                $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+
+                if($info)
+                {
+                    if($info['status_forward']===$this->config->item('system_status_yes'))
+                    {
+                        $ajax['status']=false;
+                        $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                        $this->jsonReturn($ajax);
+                        die();
+                    }
+                }
             }
             $crop=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array('id ='.$crop_id),1);
             $data['years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
@@ -452,12 +467,71 @@ class Ti_bud_budget extends Root_Controller
         return $row;
 
     }
+    private function system_details($territory_id,$year0_id,$crop_id)
+    {
+        if(isset($this->permissions['view'])&&($this->permissions['view']==1))
+        {
+            if(($this->input->post('id')))
+            {
+                $crop_id=$this->input->post('id');
+            }
+            $crop=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array('id ='.$crop_id),1);
+            $data['years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
+            $data['territory_id']=$territory_id;
+            $data['year0_id']=$year0_id;
+            $data['crop_id']=$crop_id;
+            $this->db->from($this->config->item('ems_csetup_customers').' cus');
+            $this->db->select('cus.id value');
+            $this->db->select('CONCAT(cus.customer_code," - ",cus.name) text');
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+            $this->db->where('d.territory_id',$territory_id);
+            $this->db->order_by('cus.ordering','ASC');
+            $this->db->where('cus.status',$this->config->item('system_status_active'));
+            $data['areas']=$this->db->get()->result_array();//customers
+
+            $keys=',';
+            $keys.="territory_id:'".$territory_id."',";
+            $keys.="year0_id:'".$year0_id."',";
+            $keys.="crop_id:'".$crop_id."',";
+            $data['keys']=trim($keys,',');
+
+
+            $data['title']="TI Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_budget/details",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$crop_id);
+            $this->jsonReturn($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->jsonReturn($ajax);
+        }
+    }
     private function system_save()
     {
         $territory_id=$this->input->post('territory_id');
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
+        if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
+        {
+            $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
 
+            if($info)
+            {
+                if($info['status_forward']===$this->config->item('system_status_yes'))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                    $this->jsonReturn($ajax);
+                    die();
+                }
+            }
+        }
         $user = User_helper::get_user();
         $time=time();
         //check forward status if has only add permission but not edit permission
@@ -519,72 +593,53 @@ class Ti_bud_budget extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    private function system_forward()
+    private function system_forward($territory_id,$year0_id,$crop_id)
     {
         $user = User_helper::get_user();
         $time=time();
         if(($this->input->post('id')))
         {
-            $id=$this->input->post('id');
+            $crop_id=$this->input->post('id');
         }
-        $this->db->from($this->config->item('table_ti_budget').' tb');
-        $this->db->select('tb.*');
-        $this->db->select('t.id territory_id,t.zone_id zone_id');
-        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tb.territory_id','INNER');
-        $this->db->where('tb.id',$id);
-        $setup=$this->db->get()->row_array();
-        if($setup)
+        $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+        $this->db->trans_start();
+        if($info)
         {
-            if($setup['status_forward']===$this->config->item('system_status_yes'))
+            if($info['status_forward']===$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
                 $this->jsonReturn($ajax);
                 die();
             }
-        }
-        else
-        {
-            System_helper::invalid_try('Invalid forward',$id);
-            $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
-        }
-        $this->db->trans_start();
-        $zone_setup=Query_helper::get_info($this->config->item('table_zi_budget'),'*',array('zone_id ='.$setup['zone_id'],'year0_id ='.$setup['year0_id']),1);
-        if($zone_setup)
-        {
-            if($zone_setup['status_forward']===$this->config->item('system_status_yes'))
+            else
             {
-                $ajax['status']=false;
-                $ajax['system_message']='ZI already Forwarded.You cannot forward more';
-                $this->jsonReturn($ajax);
-                die();
+                $data=array();
+                $data['status_forward']=$this->config->item('system_status_yes');
+                $data['user_updated'] = $user->user_id;
+                $data['date_updated'] = $time;
+                Query_helper::update($this->config->item('table_forward_ti'),$data,array("id = ".$info['id']));
             }
         }
         else
         {
-
             $data=array();
-            $data['zone_id']=$setup['zone_id'];
-            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-            {
-                $data['year'.$i.'_id']=$setup['year'.$i.'_id'];
-            }
+            $data['status_forward']=$this->config->item('system_status_yes');
+            $data['territory_id']=$territory_id;
+            $data['year0_id']=$year0_id;
+            $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
-            Query_helper::add($this->config->item('table_zi_budget'),$data);
+            $data['user_forwarded'] = $user->user_id;
+            $data['date_forwarded'] = $time;
+            Query_helper::add($this->config->item('table_forward_ti'),$data);
         }
-        $data=array();
-        $data['status_forward']=$this->config->item('system_status_yes');
-        $data['user_updated'] = $user->user_id;
-        $data['date_updated'] = $time;
-        Query_helper::update($this->config->item('table_ti_budget'),$data,array("id = ".$id));
         $this->db->trans_complete();   //DB Transaction Handle END
         if ($this->db->trans_status() === TRUE)
         {
-            $this->message='Forwarded Successfully';
-            $this->system_list();
+            $ajax['status']=true;
+            $ajax['system_message']=$this->lang->line("MSG_SUCCESSFULLY_FORWARDED");
+            $this->jsonReturn($ajax);
         }
         else
         {

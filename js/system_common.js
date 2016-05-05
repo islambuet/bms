@@ -193,7 +193,32 @@ $(document).ready(function()
         $($(this).attr('data-form')).submit();
 
     });
+    $(document).on("click", "#button_action_request_get", function(event)
+    {
+        if($(this).attr('id')=='button_action_request')
+        {
 
+            var sure = confirm('Are You sure to Forward?');
+            if(!sure)
+            {
+                return;
+            }
+        }
+        $.ajax({
+            url: $(this).attr('data-action-link'),
+            type: 'POST',
+            dataType: "JSON",
+            success: function (data, status)
+            {
+
+            },
+            error: function (xhr, desc, err)
+            {
+                console.log("error");
+
+            }
+        });
+    });
     $(document).on("click", ".button_action_single", function(event)
     {
         var jqxgrid_id='#system_jqx_container';

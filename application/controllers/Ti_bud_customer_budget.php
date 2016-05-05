@@ -212,14 +212,25 @@ class Ti_bud_customer_budget extends Root_Controller
         $territory_id=$this->input->post('territory_id');
         $year0_id=$this->input->post('year0_id');
         $customer_id=$this->input->post('customer_id');
+        $crop_id=$this->input->post('crop_id');
         $crop_type_id=$this->input->post('crop_type_id');
         $user = User_helper::get_user();
         $time=time();
 
         if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
         {
-            //echo 'check if already forwarded';
-            //if forwarded dont allow
+            $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+
+            if($info)
+            {
+                if($info['status_forward']===$this->config->item('system_status_yes'))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                    $this->jsonReturn($ajax);
+                    die();
+                }
+            }
         }
 
         //echo $territory_id.' '.$year0_id.' '.$customer_id.' '.$crop_type_id;
@@ -461,12 +472,6 @@ class Ti_bud_customer_budget extends Root_Controller
         $crop_id=$this->input->post('crop_id');
         $user = User_helper::get_user();
         $time=time();
-
-        if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
-        {
-            //echo 'check if already forwarded';
-            //if forwarded dont allow
-        }
         $years=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
 
         $keys=',';

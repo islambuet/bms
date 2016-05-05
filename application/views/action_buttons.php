@@ -46,6 +46,16 @@
     }
     ?>
     <?php
+    if(isset($action_forward_get))
+    {
+        ?>
+        <div class="action_button">
+            <button id="button_action_request_get" class="btn" data-action-link="<?php echo $action_forward_get; ?>"><?php echo $CI->lang->line("ACTION_FORWARD"); ?></button>
+        </div>
+    <?php
+    }
+    ?>
+    <?php
     if(isset($action_details))
     {
         ?>
@@ -54,6 +64,16 @@
             </div>
             <?php
         }
+    ?>
+    <?php
+    if(isset($action_details_get))
+    {
+        ?>
+        <div class="action_button">
+            <a class="btn" id="button_action_details_get" href="<?php echo $action_details_get; ?>"><?php echo $CI->lang->line("ACTION_DETAILS"); ?></a>
+        </div>
+    <?php
+    }
     ?>
     <?php
     if(isset($action_delete))
