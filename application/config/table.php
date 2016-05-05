@@ -22,15 +22,9 @@ $config['table_system_assigned_area'] = 'bms_system_assigned_area';
 $config['table_ti_bud_customer_bt'] = 'bms_ti_bud_customer_bt';
 $config['table_ti_bud_ti_bt'] = 'bms_ti_bud_ti_bt';
 $config['table_forward_ti'] = 'bms_forward_ti';
-/*$config['table_ti_budget'] = 'bms_ti_budget';
 
+$config['table_zi_bud_zi_bt'] = 'bms_zi_bud_zi_bt';
+$config['table_forward_zi'] = 'bms_forward_zi';
 
-$config['table_zi_budget'] = 'bms_zi_budget';
-$config['table_zi_bud_budget_target'] = 'bms_zi_bud_budget_target';
-
-$config['table_di_budget'] = 'bms_di_budget';
-$config['table_di_bud_budget_target'] = 'bms_di_bud_budget_target';
-$config['table_hom_budget'] = 'bms_hom_budget';
-$config['table_hom_bud_budget_target'] = 'bms_hom_bud_budget_target';*/
 
 $config['table_variety_min_stock'] = 'bms_variety_min_stock';
