@@ -561,7 +561,7 @@ class Zi_bud_budget extends Root_Controller
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="TI Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $data['title']="ZI Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("zi_bud_budget/details",$data,true));
             if($this->message)
             {

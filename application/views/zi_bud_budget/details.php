@@ -105,9 +105,9 @@
                     ?>
                         <?php
                             for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "Customer Prediction";}else{echo "Customer Budget";} ?>', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
+                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "TI Prediction";}else{echo "TI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
                     {
-                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "TI Prediction";}else{echo "TI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom'},
+                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "ZI Prediction";}else{echo "ZI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom'},
                     <?php
                         }
                     ?>
@@ -115,7 +115,7 @@
                 ],
                 columngroups:
                     [
-                        { text: 'Customers', align: 'center', name: 'area' },
+                        { text: 'Territories', align: 'center', name: 'area' },
                         { text: '<?php echo $CI->lang->line('LABEL_BUDGETED_YEAR'); ?>', align: 'center', name: 'budgeted_year' },
                         { text: '<?php echo $CI->lang->line('LABEL_NEXT_YEARS'); ?>', align: 'center', name: 'next_years' },
                             <?php
