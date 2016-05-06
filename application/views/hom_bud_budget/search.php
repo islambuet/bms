@@ -1,12 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
     $CI = & get_instance();
-    $action_data=array();
-    $action_data["action_back"]=base_url($CI->controller_url);
-    $action_data["action_save"]='#save_form';
-    $CI->load->view("action_buttons",$action_data);
 ?>
-<form id="search_form" action="<?php echo site_url($CI->controller_url.'/index/get_budget_form');?>" method="post">
-    <input type="hidden" name="setup_id" value="<?php echo $budget['id']; ?>" />
     <div class="row widget">
         <div class="widget-header">
             <div class="title">
@@ -14,17 +8,18 @@
             </div>
             <div class="clearfix"></div>
         </div>
-        <div class="row show-grid" id="crop_id_container">
+
+        <div class="row show-grid">
             <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_CROP_NAME');?><span style="color:#FF0000">*</span></label>
+                <label class="control-label pull-right"><?php echo $this->lang->line('LABEL_FISCAL_YEAR');?></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <select id="crop_id" name="crop_id" class="form-control">
+                <select id="year0_id" class="form-control">
                     <option value=""><?php echo $this->lang->line('SELECT');?></option>
                     <?php
-                    foreach($crops as $crop)
+                    foreach($years as $year)
                     {?>
-                        <option value="<?php echo $crop['value']?>"><?php echo $crop['text'];?></option>
+                        <option value="<?php echo $year['value']?>" <?php if($year['value']==$budget['year0_id']){echo 'selected';} ?>><?php echo $year['text'];?></option>
                     <?php
                     }
                     ?>
@@ -32,7 +27,6 @@
             </div>
         </div>
     </div>
-</form>
     <div id="system_report_container">
 
     </div>
@@ -41,17 +35,36 @@
 
 
 <script type="text/javascript">
+    function load_crops()
+    {
+        var year0_id=$('#year0_id').val();
+        if(year0_id>0)
+        {
+            $.ajax({
+                url: '<?php echo site_url($CI->controller_url.'/index/list');?>',
+                type: 'POST',
+                datatype: "JSON",
+                data:{year0_id:year0_id},
+                success: function (data, status)
+                {
+
+                },
+                error: function (xhr, desc, err)
+                {
+                    console.log("error");
+
+                }
+            });
+        }
+    }
     jQuery(document).ready(function()
     {
         turn_off_triggers();
-        $(document).on("change","#crop_id",function()
+        load_crops();
+        $(document).on("change","#year0_id",function()
         {
             $('#system_report_container').html('');
-            var crop_id=$('#crop_id').val();
-            if(crop_id>0)
-            {
-                $('#search_form').submit();
-            }
+            load_crops();
         });
 
     });

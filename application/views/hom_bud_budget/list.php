@@ -4,11 +4,11 @@
     $action_data=array();
     if((isset($CI->permissions['add'])&&($CI->permissions['add']==1))||(isset($CI->permissions['edit'])&&($CI->permissions['edit']==1)))
     {
-        $action_data["action_edit"]=base_url($CI->controller_url."/index/edit");
+        $action_data["action_edit"]=site_url($CI->controller_url."/index/edit/".$year0_id);
     }
-    if(isset($CI->permissions['forward'])&&($CI->permissions['forward']==1))
+    if(isset($CI->permissions['view'])&&($CI->permissions['view']==1))
     {
-        $action_data["action_forward"]=base_url($CI->controller_url."/index/forward");
+        $action_data["action_details"]=site_url($CI->controller_url."/index/details/".$year0_id);
     }
     if(isset($CI->permissions['print'])&&($CI->permissions['print']==1))
     {
@@ -18,8 +18,6 @@
     {
         $action_data["action_csv"]='csv';
     }
-
-    $action_data["action_refresh"]=base_url($CI->controller_url."/index/list");
     $CI->load->view("action_buttons",$action_data);
 ?>
 
@@ -36,12 +34,8 @@
 
         ?>
         <div class="col-xs-12" style="margin-bottom: 20px;">
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="fiscal_year"><?php echo $CI->lang->line('LABEL_FISCAL_YEAR'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="status_forward"><?php echo $CI->lang->line('LABEL_FORWARDED'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_total_divisions">Number of Divisions</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_forwarded_divisions">Number of Divisions Forwarded</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_varieties_di">#Varieties Budgeted by DI</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="num_varieties_hom">#Varieties Budgeted by HOM</label>
         </div>
         <?php
     }
@@ -51,17 +45,10 @@
     </div>
 </div>
 <div class="clearfix"></div>
-<style type="text/css">
-    .jqx-grid-header
-    {
-        height: 91px !important;
-    }
-</style>
 <script type="text/javascript">
     $(document).ready(function ()
     {
-        turn_off_triggers();
-        var url = "<?php echo base_url($CI->controller_url.'/get_items');?>";
+        var url = "<?php echo site_url($CI->controller_url."/index/get_items/".$year0_id);?>";
 
         // prepare the data
         var source =
@@ -69,13 +56,8 @@
             dataType: "json",
             dataFields: [
                 { name: 'id', type: 'int' },
-                { name: 'fiscal_year', type: 'string' },
-                { name: 'status_forward', type: 'string' },
-                { name: 'num_total_divisions', type: 'string' },
-                { name: 'num_forwarded_divisions', type: 'string' },
-                { name: 'num_varieties_di', type: 'string' },
-                { name: 'num_varieties_hom', type: 'string' }
-
+                { name: 'crop_name', type: 'string' },
+                { name: 'status_forward', type: 'string' }
             ],
             id: 'id',
             url: url
@@ -100,14 +82,9 @@
                 autorowheight: true,
                 columnsreorder: true,
                 enabletooltips: true,
-                columnsheight:'60px',
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_FISCAL_YEAR'); ?>', dataField: 'fiscal_year',width:'100',filtertype: 'list',align:'center'},
-                    { text: '<?php echo $CI->lang->line('LABEL_FORWARDED'); ?>', dataField: 'status_forward',width:'150',filtertype: 'list',align:'center'},
-                    { text: 'Number of<br>Divisions', dataField: 'num_total_divisions',width:'80',cellsAlign:'right',align:'center'},
-                    { text: 'Number of <br>Divisions<br>Forwarded', dataField: 'num_forwarded_divisions',width:'80',cellsAlign:'right',align:'center'},
-                    { text: '#Varieties<br>Budgeted<br>by DI', dataField: 'num_varieties_di',width:'100',cellsAlign:'right',align:'center'},
-                    { text: '#Varieties<br>Budgeted<br>by HOM', dataField: 'num_varieties_hom',width:'100',cellsAlign:'right',align:'center'}
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name'},
+                    { text: '<?php echo $CI->lang->line('LABEL_FORWARDED'); ?>', dataField: 'status_forward'}
 
                 ]
             });
