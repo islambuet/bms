@@ -26,5 +26,10 @@ $config['table_forward_ti'] = 'bms_forward_ti';
 $config['table_zi_bud_zi_bt'] = 'bms_zi_bud_zi_bt';
 $config['table_forward_zi'] = 'bms_forward_zi';
 
+$config['table_di_bud_di_bt'] = 'bms_di_bud_di_bt';
+$config['table_forward_di'] = 'bms_forward_di';
+
+$config['table_hom_bud_hom_bt'] = 'bms_hom_bud_hom_bt';
+$config['table_forward_hom'] = 'bms_forward_di';
 
 $config['table_variety_min_stock'] = 'bms_variety_min_stock';

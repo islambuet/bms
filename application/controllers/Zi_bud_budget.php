@@ -246,10 +246,11 @@ class Zi_bud_budget extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = tbt.territory_id','INNER');
         $this->db->join($this->config->item('table_forward_ti').' fti','fti.territory_id = tbt.territory_id','INNER');
         $this->db->where('fti.crop_id',$crop_id);
+        $this->db->where('fti.status_forward',$this->config->item('system_status_yes'));
         $this->db->where('t.zone_id',$zone_id);
         $this->db->where('tbt.year0_id',$year0_id);
         $results=$this->db->get()->result_array();
-        $prev_area_items=array();//customer budget
+        $prev_area_items=array();//ti budget
 
         foreach($results as $result)
         {
