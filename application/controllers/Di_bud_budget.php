@@ -97,7 +97,7 @@ class Di_bud_budget extends Root_Controller
             $data['budget']['zone_id']=$this->locations['zone_id'];
             $data['divisions']=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
 
-            $data['title']="Search";
+            $data['title']="DI Budget";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_budget/search",$data,true));
             if($this->message)

@@ -102,7 +102,7 @@ class Zi_bud_budget extends Root_Controller
                 $data['zones']=Query_helper::get_info($this->config->item('ems_setup_location_zones'),array('id value','name text'),array('division_id ='.$this->locations['division_id']));
             }
 
-            $data['title']="Search";
+            $data['title']="ZI Budget";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("zi_bud_budget/search",$data,true));
             if($this->message)

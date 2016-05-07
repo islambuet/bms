@@ -95,7 +95,7 @@ class Hom_bud_budget extends Root_Controller
             $data['budget']['year0_id']=$fy_info['budget_year']['value'];
             $data['budget']['division_id']=$this->locations['division_id'];
             $data['budget']['zone_id']=$this->locations['zone_id'];
-            $data['title']="Search";
+            $data['title']="HOM Budget";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_budget/search",$data,true));
             if($this->message)

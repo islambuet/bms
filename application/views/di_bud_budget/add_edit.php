@@ -101,20 +101,20 @@
                 rowsheight: 35,
                 editable:true,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
+                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
                         <?php
                             foreach($areas as $area)
-                            {?>{ columngroup: 'area',text: '<?php echo $area['text'];?>', dataField: '<?php echo 'area_quantity_'.$area['value'];?>',align:'center',width:'200',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
+                            {?>{ columngroup: 'area',text: '<?php echo $area['text'];?>', dataField: '<?php echo 'area_quantity_'.$area['value'];?>',align:'center',width:'90',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
                     <?php
                         }
                     ?>
                         <?php
                             for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "ZI Prediction";}else{echo "ZI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
+                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'ZI', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'80',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
                     {
-                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "DI Prediction";}else{echo "DI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom',
+                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'DI', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'110',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom',
                         cellbeginedit: function (row)
                         {
                             var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);//only last selected
