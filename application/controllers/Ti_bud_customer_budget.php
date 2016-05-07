@@ -105,7 +105,7 @@ class Ti_bud_customer_budget extends Root_Controller
                 }
             }
 
-            $data['title']="Search";
+            $data['title']="Customer Budget";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_budget/search",$data,true));
             if($this->message)
@@ -188,7 +188,7 @@ class Ti_bud_customer_budget extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->jsonReturn($ajax);
             }
-            $data['title']="Search";
+            $data['title']="Customer Budget";
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array());
             $data['year0']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('id ='.$year0_id),1);
             $ajax['status']=true;
@@ -445,7 +445,7 @@ class Ti_bud_customer_budget extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->jsonReturn($ajax);
             }
-            $data['title']="Search";
+            $data['title']="Customer Budget";
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array());
             $data['year0']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('id ='.$year0_id),1);
             $ajax['status']=true;
