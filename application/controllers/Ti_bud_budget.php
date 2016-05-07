@@ -110,7 +110,7 @@ class Ti_bud_budget extends Root_Controller
                 }
             }
 
-            $data['title']="Search";
+            $data['title']="TI Budget";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_budget/search",$data,true));
             if($this->message)
@@ -206,7 +206,7 @@ class Ti_bud_budget extends Root_Controller
             $data['crop_id']=$crop_id;
             $this->db->from($this->config->item('ems_csetup_customers').' cus');
             $this->db->select('cus.id value');
-            $this->db->select('CONCAT(cus.customer_code," - ",cus.name) text');
+            $this->db->select('CONCAT(cus.customer_code," -<br> ",cus.name) text');
             $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
             $this->db->where('d.territory_id',$territory_id);
             $this->db->order_by('cus.ordering','ASC');
@@ -482,7 +482,7 @@ class Ti_bud_budget extends Root_Controller
             $data['crop_id']=$crop_id;
             $this->db->from($this->config->item('ems_csetup_customers').' cus');
             $this->db->select('cus.id value');
-            $this->db->select('CONCAT(cus.customer_code," - ",cus.name) text');
+            $this->db->select('CONCAT(cus.customer_code," -<br> ",cus.name) text');
             $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
             $this->db->where('d.territory_id',$territory_id);
             $this->db->order_by('cus.ordering','ASC');
