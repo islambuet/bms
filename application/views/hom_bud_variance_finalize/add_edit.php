@@ -44,7 +44,8 @@
                 { name: 'cur_stock', type: 'string' },
                 { name: 'min_stock', type: 'string' },
                 { name: 'cur_variance', type: 'string' },
-                { name: 'variance', type: 'string' }
+                { name: 'variance', type: 'string' },
+                { name: 'variance_editable', type: 'string' }
 
             ],
             id: 'id',
@@ -97,10 +98,10 @@
                     { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: 'HOM BUD',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: 'Cur Stock',dataField: 'cur_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: 'Min Stock',dataField: 'min_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: 'Cur Variance',dataField: 'cur_variance',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
+                    { text: 'HOM BUD',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Cur Stock',dataField: 'cur_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Min Stock',dataField: 'min_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Cur Variance',dataField: 'cur_variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     {
                         text: 'Final Variance',dataField: 'variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
                         cellbeginedit: function (row)

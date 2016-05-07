@@ -56,7 +56,7 @@ class Hom_bud_variance_finalize extends Root_Controller
         }
         elseif($action=="save")
         {
-            $this->system_save();
+            //$this->system_save();
         }
         elseif($action=="details")
         {
@@ -197,29 +197,17 @@ class Hom_bud_variance_finalize extends Root_Controller
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
         $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
-        $old_items=array();//di budget
+        $old_items=array();//hom budget
         foreach($results as $result)
         {
             $old_items[$result['variety_id']]=$result;
         }
-        //zones
-        $areas=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
-
-        $this->db->from($this->config->item('table_di_bud_di_bt').' dbt');
-        $this->db->select('dbt.*');
-
-        $this->db->join($this->config->item('table_forward_di').' fdi','fdi.division_id = dbt.division_id','INNER');
-        $this->db->where('fdi.crop_id',$crop_id);
-        $this->db->where('fdi.status_forward',$this->config->item('system_status_yes'));
-        $this->db->where('dbt.year0_id',$year0_id);
-        $results=$this->db->get()->result_array();
-        $prev_area_items=array();//divisions
-
+        $results=Query_helper::get_info($this->config->item('table_variety_min_stock'),'*',array('revision =1'));
+        $min_stocks=array();//hom budget
         foreach($results as $result)
         {
-            $prev_area_items[$result['variety_id']][$result['division_id']]=$result;
+            $min_stocks[$result['variety_id']]=$result['quantity'];
         }
-
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id,v.name');
         $this->db->select('type.name type_name');
@@ -233,20 +221,8 @@ class Hom_bud_variance_finalize extends Root_Controller
         $results=$this->db->get()->result_array();
 
 
-        $total_types=array();
-        $total_crop=array();
-        foreach($areas as $area)
-        {
-            $total_types['area'][$area['value']]=0;
-            $total_crop['area'][$area['value']]=0;
-        }
-        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-        {
-            $total_types['year'.$i.'_area_total_quantity']=0;
-            $total_types['year'.$i.'_budget_quantity']=0;
-            $total_crop['year'.$i.'_area_total_quantity']=0;
-            $total_crop['year'.$i.'_budget_quantity']=0;
-        }
+        $total_types=0;
+        $total_crop=0;
         $count=0;
         $items=array();
         $prev_type='';
@@ -262,15 +238,21 @@ class Hom_bud_variance_finalize extends Root_Controller
                     $total_item['type_name']='';
                     $total_item['variety_name']='Total Type';
                     $total_item['variety_id']='';
-                    $items[]=$this->get_edit_row($total_item,$total_types);
-                    foreach($areas as $area)
+                    if($total_types>0)
                     {
-                        $total_types['area'][$area['value']]=0;
+                        $total_item['year0_budget_quantity']=$total_types;
                     }
-                    for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+                    else
                     {
-                        $total_types['year'.$i.'_area_total_quantity']=0;;
+                        $total_item['year0_budget_quantity']='';
                     }
+                    $total_item['cur_stock']='';
+                    $total_item['min_stock']='';
+                    $total_item['cur_variance']='';
+                    $total_item['variance']='';
+                    $total_item['variance_editable']=false;
+                    $items[]=$total_item;
+                    $total_types=0;
                     $count=0;
                     $item['type_name']=$result['type_name'];
                     $prev_type=$result['type_name'];
@@ -290,64 +272,21 @@ class Hom_bud_variance_finalize extends Root_Controller
             $item['sl_no']=$count;
             $item['variety_id']=$result['id'];
             $item['variety_name']=$result['name'];
-
-            $row_quantity=array();
-            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+            if((isset($old_items[$result['id']]['year0_budget_quantity']))&&(($old_items[$result['id']]['year0_budget_quantity'])>0))
             {
-                $row_quantity['year'.$i.'_area_total_quantity']=0;
-                $row_quantity['year'.$i.'_budget_quantity']=0;
+                $item['year0_budget_quantity']=$old_items[$result['id']]['year0_budget_quantity'];
+                $total_types+=$old_items[$result['id']]['year0_budget_quantity'];
+                $total_crop+=$old_items[$result['id']]['year0_budget_quantity'];
             }
-            foreach($areas as $area)
+            if((isset($min_stocks[$result['id']]))&&(($min_stocks[$result['id']])>0))
             {
-                if(isset($prev_area_items[$result['id']][$area['value']]))
-                {
-                    if($prev_area_items[$result['id']][$area['value']]['year0_budget_quantity']>0)
-                    {
-                        $row_quantity['area'][$area['value']]=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
-                        $total_types['area'][$area['value']]+=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
-                        $total_crop['area'][$area['value']]+=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
-                    }
-                    for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-                    {
-                        if($prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity']>0)
-                        {
-                            $row_quantity['year'.$i.'_area_total_quantity']+=$prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity'];
-                            $total_types['year'.$i.'_area_total_quantity']+=$prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity'];
-                            $total_crop['year'.$i.'_area_total_quantity']+=$prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity'];
-                        }
-                    }
-                }
-                else
-                {
-                    $row_quantity['area'][$area['value']]=0;
-                }
-
+                $item['min_stock']=$min_stocks[$result['id']];
             }
-            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+            else
             {
-                $quantity='';
-                $editable=false;
-                if((isset($old_items[$result['id']]['year'.$i.'_budget_quantity']))&&(($old_items[$result['id']]['year'.$i.'_budget_quantity'])>0))
-                {
-                    $quantity=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
-                    if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
-                    {
-                        $editable=true;
-                    }
-                    else
-                    {
-                        $editable=false;
-                    }
-                }
-                else
-                {
-                    $editable=true;
-                }
-                $row_quantity['year'.$i.'_budget_quantity']=$quantity;
-                $row_quantity['year'.$i.'_budget_quantity_editable']=$editable;
+                $item['min_stock']='-';
             }
-
-            $items[]=$this->get_edit_row($item,$row_quantity);
+            $items[]=$item;
 
         }
         $total_item=array();
@@ -355,71 +294,44 @@ class Hom_bud_variance_finalize extends Root_Controller
         $total_item['type_name']='';
         $total_item['variety_name']='Total Type';
         $total_item['variety_id']='';
-        $items[]=$this->get_edit_row($total_item,$total_types);
+        if($total_types>0)
+        {
+            $total_item['year0_budget_quantity']=$total_types;
+        }
+        else
+        {
+            $total_item['year0_budget_quantity']='';
+        }
+        $total_item['cur_stock']='';
+        $total_item['min_stock']='';
+        $total_item['cur_variance']='';
+        $total_item['variance']='';
+        $total_item['variance_editable']=false;
+        $items[]=$total_item;
         $total_item=array();
         $total_item['sl_no']='';
         $total_item['type_name']='Total Crop';
         $total_item['variety_name']='';
         $total_item['variety_id']='';
-        $items[]=$this->get_edit_row($total_item,$total_crop);
+        if($total_crop>0)
+        {
+            $total_item['year0_budget_quantity']=$total_crop;
+        }
+        else
+        {
+            $total_item['year0_budget_quantity']='';
+        }
+        $total_item['cur_stock']='';
+        $total_item['min_stock']='';
+        $total_item['cur_variance']='';
+        $total_item['variance']='';
+        $total_item['variance_editable']=false;
+        $items[]=$total_item;
 
         $this->jsonReturn($items);
 
     }
-    private function get_edit_row($item,$row_quantity)
-    {
 
-        $row=array();
-        $row['sl_no']=$item['sl_no'];
-        $row['type_name']=$item['type_name'];
-        $row['variety_name']=$item['variety_name'];
-        $row['variety_id']=$item['variety_id'];
-
-        foreach($row_quantity['area'] as $id=>$quantity)
-        {
-            if($quantity>0)
-            {
-                $row['area_quantity_'.$id]=$quantity;
-            }
-            else
-            {
-                $row['area_quantity_'.$id]='';
-            }
-
-        }
-        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-        {
-            if($row_quantity['year'.$i.'_area_total_quantity']>0)
-            {
-                $row['year'.$i.'_area_total_quantity']=$row_quantity['year'.$i.'_area_total_quantity'];
-            }
-            else
-            {
-                $row['year'.$i.'_area_total_quantity']='';
-            }
-            if($row_quantity['year'.$i.'_budget_quantity']>0)
-            {
-                $row['year'.$i.'_budget_quantity']=$row_quantity['year'.$i.'_budget_quantity'];
-            }
-            else
-            {
-                $row['year'.$i.'_budget_quantity']='';
-            }
-            if(isset($row_quantity['year'.$i.'_budget_quantity_editable']))
-            {
-                $row['year'.$i.'_budget_quantity_editable']=$row_quantity['year'.$i.'_budget_quantity_editable'];
-            }
-            else
-            {
-                $row['year'.$i.'_budget_quantity_editable']=false;
-            }
-
-
-        }
-
-        return $row;
-
-    }
     private function system_save()
     {
         $year0_id=$this->input->post('year0_id');
