@@ -128,5 +128,162 @@ class System_helper
             return null;
         }
     }
+    public static function get_stocks($crop_id=0,$type_id=0,$variety_id=0)
+    {
+        $CI = & get_instance();
+        $stocks=array();
+        //+get stock in
+        $CI->db->from($CI->config->item('ems_stockin_varieties').' sinv');
+        $CI->db->select('sinv.variety_id');
+        $CI->db->select('SUM(sinv.quantity*pack.name) stock_in');
+
+        $CI->db->join($CI->config->item('ems_setup_classification_vpack_size').' pack','pack.id = sinv.pack_size_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_varieties').' v','v.id = sinv.variety_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        if($crop_id>0)
+        {
+            $CI->db->where('type.crop_id',$crop_id);
+        }
+        if($type_id>0)
+        {
+            $CI->db->where('type.id',$type_id);
+        }
+        if($variety_id>0)
+        {
+            $CI->db->where('v.id',$variety_id);
+        }
+        $CI->db->group_by('sinv.variety_id');
+        $results=$CI->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $stocks[$result['variety_id']]['stock_in']=$result['stock_in'];
+            $stocks[$result['variety_id']]['excess']=0;
+            $stocks[$result['variety_id']]['stock_out']=0;
+            $stocks[$result['variety_id']]['sales']=0;
+            $stocks[$result['variety_id']]['current_stock']=$result['stock_in'];
+        }
+
+        //+excess Inventory
+        $CI->db->from($CI->config->item('ems_stockin_excess_inventory').' sinv');
+        $CI->db->select('sinv.variety_id');
+        $CI->db->select('SUM(sinv.quantity*pack.name) stock_in');
+
+        $CI->db->join($CI->config->item('ems_setup_classification_vpack_size').' pack','pack.id = sinv.pack_size_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_varieties').' v','v.id = sinv.variety_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        if($crop_id>0)
+        {
+            $CI->db->where('type.crop_id',$crop_id);
+        }
+        if($type_id>0)
+        {
+            $CI->db->where('type.id',$type_id);
+        }
+        if($variety_id>0)
+        {
+            $CI->db->where('v.id',$variety_id);
+        }
+        $CI->db->group_by('sinv.variety_id');
+        $results=$CI->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $stocks[$result['variety_id']]['excess']=$result['stock_in'];
+            $stocks[$result['variety_id']]['current_stock']+=$result['stock_in'];
+        }
+        //-stock out all
+        $CI->db->from($CI->config->item('ems_stockout').' sinv');
+        $CI->db->select('sinv.variety_id');
+        $CI->db->select('SUM(sinv.quantity*pack.name) stock_out');
+
+        $CI->db->join($CI->config->item('ems_setup_classification_vpack_size').' pack','pack.id = sinv.pack_size_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_varieties').' v','v.id = sinv.variety_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        if($crop_id>0)
+        {
+            $CI->db->where('type.crop_id',$crop_id);
+        }
+        if($type_id>0)
+        {
+            $CI->db->where('type.id',$type_id);
+        }
+        if($variety_id>0)
+        {
+            $CI->db->where('v.id',$variety_id);
+        }
+        $CI->db->group_by('sinv.variety_id');
+        $results=$CI->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $stocks[$result['variety_id']]['stock_out']=$result['stock_out'];
+            $stocks[$result['variety_id']]['current_stock']-=$result['stock_out'];
+        }
+        //-sales and sales return
+
+        $CI->db->from($CI->config->item('ems_sales_po_details').' spd');
+        $CI->db->select('variety_id');
+        $CI->db->select('SUM((spd.quantity-spd.quantity_return)*spd.pack_size) sales');
+        $CI->db->join($CI->config->item('ems_sales_po').' sp','sp.id =spd.sales_po_id','INNER');
+
+        $CI->db->join($CI->config->item('ems_setup_classification_varieties').' v','v.id = spd.variety_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+
+        $CI->db->where('sp.status_approved',$CI->config->item('system_status_po_approval_approved'));
+        $CI->db->where('spd.revision',1);
+
+        if($crop_id>0)
+        {
+            $CI->db->where('type.crop_id',$crop_id);
+        }
+        if($type_id>0)
+        {
+            $CI->db->where('type.id',$type_id);
+        }
+        if($variety_id>0)
+        {
+            $CI->db->where('v.id',$variety_id);
+        }
+        $CI->db->group_by('variety_id');
+        $results=$CI->db->get()->result_array();
+
+        foreach($results as $result)
+        {
+            $stocks[$result['variety_id']]['sales']=$result['sales'];
+            $stocks[$result['variety_id']]['current_stock']-=$result['sales'];
+        }
+        //-sales bonus and bonus return
+        $CI->db->from($CI->config->item('ems_sales_po_details').' spd');
+        $CI->db->select('variety_id');
+        $CI->db->select('SUM((quantity_bonus-quantity_bonus_return)*bonus_pack_size) sales');
+        $CI->db->join($CI->config->item('ems_sales_po').' sp','sp.id =spd.sales_po_id','INNER');
+
+        $CI->db->join($CI->config->item('ems_setup_classification_varieties').' v','v.id = spd.variety_id','INNER');
+        $CI->db->join($CI->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+
+        $CI->db->where('bonus_details_id >',0);
+        $CI->db->where('sp.status_approved',$CI->config->item('system_status_po_approval_approved'));
+        $CI->db->where('spd.revision',1);
+        if($crop_id>0)
+        {
+            $CI->db->where('type.crop_id',$crop_id);
+        }
+        if($type_id>0)
+        {
+            $CI->db->where('type.id',$type_id);
+        }
+        if($variety_id>0)
+        {
+            $CI->db->where('v.id',$variety_id);
+        }
+        $CI->db->group_by('variety_id');
+        $results=$CI->db->get()->result_array();
+
+        foreach($results as $result)
+        {
+            $stocks[$result['variety_id']]['sales']+=$result['sales'];
+            $stocks[$result['variety_id']]['current_stock']-=$result['sales'];
+        }
+        return $stocks;
+
+    }
 
 }

@@ -8,4 +8,6 @@ $config['system_status_yes']='Yes';
 $config['system_status_no']='No';
 $config['num_year_prediction']=3;
 
+$config['system_status_po_approval_approved']='Approved';
+
 

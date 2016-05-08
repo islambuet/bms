@@ -208,6 +208,7 @@ class Hom_bud_variance_finalize extends Root_Controller
         {
             $min_stocks[$result['variety_id']]=$result['quantity'];
         }
+        $current_stocks=System_helper::get_stocks($crop_id);
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id,v.name');
         $this->db->select('type.name type_name');
@@ -278,13 +279,33 @@ class Hom_bud_variance_finalize extends Root_Controller
                 $total_types+=$old_items[$result['id']]['year0_budget_quantity'];
                 $total_crop+=$old_items[$result['id']]['year0_budget_quantity'];
             }
+            $item['cur_variance']='0';
+            if((isset($current_stocks[$result['id']]['current_stock']))&&(($current_stocks[$result['id']]['current_stock'])>0))
+            {
+                $item['cur_stock']=round($current_stocks[$result['id']]['current_stock']/1000,0);
+                $item['cur_variance']=$item['cur_stock'];
+            }
+            else
+            {
+                $item['cur_stock']='-';
+            }
+
             if((isset($min_stocks[$result['id']]))&&(($min_stocks[$result['id']])>0))
             {
                 $item['min_stock']=$min_stocks[$result['id']];
+                $item['cur_variance']-=$item['min_stock'];
             }
             else
             {
                 $item['min_stock']='-';
+            }
+            //check already variance saved and editable if not set current one
+
+            $item['variance']=$item['cur_variance'];
+            $item['variance_editable']=true;
+            if($item['cur_variance']<=0)
+            {
+                $item['cur_variance']='-';
             }
             $items[]=$item;
 
