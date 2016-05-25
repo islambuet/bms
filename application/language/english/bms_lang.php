@@ -7,6 +7,7 @@ $lang['MSG_LOGOUT_SUCCESS'] = 'Successfully Logged out';
 $lang['MSG_NOT_ASSIGNED_GROUP'] = 'Please Contact with Admin(01777709208) to assign some task.';
 $lang['MSG_LOCATION_INVALID'] = 'Your assigned Location is invalid.Please contact with admin(01777709208).';
 $lang['MSG_LOCATION_NOT_ASSIGNED'] = 'No Location assigned for you.Please contact with admin(01777709208).';
+$lang['MSG_SITE_OFFLINE'] = 'Site is Currently Offline.Please contact with admin(01777709208).';
 //locations
 $lang['LABEL_DIVISION_NAME'] = 'Division';
 $lang['LABEL_ZONE_NAME'] = 'Zone';
