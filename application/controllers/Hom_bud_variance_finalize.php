@@ -58,6 +58,10 @@ class Hom_bud_variance_finalize extends Root_Controller
         {
             $this->system_get_edit_items();
         }
+        elseif($action=="get_detail_items")
+        {
+            $this->system_get_edit_items('details');
+        }
         elseif($action=="save")
         {
             $this->system_save();
@@ -210,7 +214,7 @@ class Hom_bud_variance_finalize extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    private function system_get_edit_items()
+    private function system_get_edit_items($task_purpose='edit')
     {
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
@@ -335,7 +339,15 @@ class Hom_bud_variance_finalize extends Root_Controller
             }
             else
             {
-                $item['variance']=$item['cur_variance'];
+                if($task_purpose=='edit')
+                {
+                    $item['variance']=$item['cur_variance'];
+                }
+                else
+                {
+                    $item['variance']='-';
+                }
+
             }
 
             $item['variance_editable']=true;

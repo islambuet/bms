@@ -28,7 +28,7 @@
     $(document).ready(function ()
     {
         turn_off_triggers();
-        var url = "<?php echo site_url($CI->controller_url.'/index/get_edit_items');?>";
+        var url = "<?php echo site_url($CI->controller_url.'/index/get_detail_items');?>";
 
         // prepare the data
         var source =
