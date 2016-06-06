@@ -2,14 +2,15 @@
     $CI = & get_instance();
     $action_data=array();
     $action_data["action_back"]=base_url($CI->controller_url);
-    $action_data["action_save"]='#save_form';
+    //$action_data["action_save"]='#save_form';
+    $action_data["action_save_jqx"]='#save_form_jqx';
     if(isset($CI->permissions['view'])&&($CI->permissions['view']==1))
     {
         $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$year0_id.'/'.$crop_id);
     }
     $CI->load->view("action_buttons",$action_data);
 ?>
-<form class="form_valid" id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
+<form class="form_valid" id="save_form_jqx" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
     <input type="hidden" name="year0_id" value="<?php echo $year0_id; ?>" />
     <input type="hidden" name="crop_id" value="<?php echo $crop_id; ?>" />
 </form>
@@ -28,6 +29,21 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
+        turn_off_triggers();
+        $(document).on("click", "#button_action_save_jqx", function(event)
+        {
+            $("#system_loading").show();
+            var data=$('#system_jqx_container').jqxGrid('getrows');
+            for(var i=0;i<data.length;i++)
+            {
+                if(data[i]['variance_editable'])
+                {
+                    $('#save_form_jqx').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_variance" name="items['+data[i]['variety_id']+']" value="'+data[i]['variance']+'">');
+                }
+            }
+            $("#save_form_jqx").submit();
+
+        });
         var url = "<?php echo site_url($CI->controller_url.'/index/get_edit_items');?>";
 
         // prepare the data
@@ -106,7 +122,7 @@
                         text: 'Final Variance',dataField: 'variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
                         cellbeginedit: function (row)
                         {
-                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);//only last selected
+                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
                             return selectedRowData['variance_editable'];
                         },
                         initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
@@ -117,9 +133,10 @@
                             // return the editor's value.
                             var value=editor.find('input').val();
                             var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
-                            //console.log(selectedRowData);
-                            $('#items_'+selectedRowData['variety_id']+'_variance').remove();
-                            $('#save_form').append('<input type="hidden" id="items_'+selectedRowData['variety_id']+'_variance" name="items['+selectedRowData['variety_id']+'][variance]" value="'+value+'">');
+
+                            //$('#items_'+selectedRowData['variety_id']+'_variance').remove();
+                            //$('#save_form').append('<input type="hidden" id="items_'+selectedRowData['variety_id']+'_variance" name="items['+selectedRowData['variety_id']+'][variance]" value="'+value+'">');
+                            //$('#items_'+selectedRowData['variety_id']+'_variance').val(value);
 
                             return editor.find('input').val();
                         }

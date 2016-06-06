@@ -28,6 +28,10 @@ class Hom_bud_variance_finalize extends Root_Controller
             }
 
         }
+        if((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1)))
+        {
+            $this->permissions['forward']=1;
+        }
         $this->controller_url='hom_bud_variance_finalize';
 
     }
@@ -56,7 +60,7 @@ class Hom_bud_variance_finalize extends Root_Controller
         }
         elseif($action=="save")
         {
-            //$this->system_save();
+            $this->system_save();
         }
         elseif($action=="details")
         {
@@ -154,6 +158,8 @@ class Hom_bud_variance_finalize extends Root_Controller
         }
         $this->jsonReturn($items);
     }
+    //if edit permission he can edit whenever he want
+    //if add permission he can edit until forward/finalize
 
     private function system_edit($year0_id,$crop_id)
     {
@@ -163,13 +169,25 @@ class Hom_bud_variance_finalize extends Root_Controller
             {
                 $crop_id=$this->input->post('id');
             }
+            if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
+            {
+                $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+
+                if($info)
+                {
+                    if($info['status_variance_finalize']===$this->config->item('system_status_yes'))
+                    {
+                        $ajax['status']=false;
+                        $ajax['system_message']=$this->lang->line("MSG_ALREADY_FINALIZED");
+                        $this->jsonReturn($ajax);
+                        die();
+                    }
+                }
+            }
             $crop=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array('id ='.$crop_id),1);
             $data['years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
-            //divisions
-            $data['areas']=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
-
             $keys=',';
             $keys.="year0_id:'".$year0_id."',";
             $keys.="crop_id:'".$crop_id."',";
@@ -202,7 +220,14 @@ class Hom_bud_variance_finalize extends Root_Controller
         {
             $old_items[$result['variety_id']]=$result;
         }
-        $results=Query_helper::get_info($this->config->item('table_variety_min_stock'),'*',array('revision =1'));
+        $results=Query_helper::get_info($this->config->item('table_hom_bud_variance'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
+        $old_variances=array();//hom budget
+        foreach($results as $result)
+        {
+            $old_variances[$result['variety_id']]=$result;
+        }
+
+        $results=Query_helper::get_info($this->config->item('table_variety_min_stock'),'*',array('revision =1'));//only for this crop could be done
         $min_stocks=array();//hom budget
         foreach($results as $result)
         {
@@ -279,6 +304,10 @@ class Hom_bud_variance_finalize extends Root_Controller
                 $total_types+=$old_items[$result['id']]['year0_budget_quantity'];
                 $total_crop+=$old_items[$result['id']]['year0_budget_quantity'];
             }
+            else
+            {
+                $item['year0_budget_quantity']='-';
+            }
             $item['cur_variance']='0';
             if((isset($current_stocks[$result['id']]['current_stock']))&&(($current_stocks[$result['id']]['current_stock'])>0))
             {
@@ -300,10 +329,18 @@ class Hom_bud_variance_finalize extends Root_Controller
                 $item['min_stock']='-';
             }
             //check already variance saved and editable if not set current one
+            if(isset($old_variances[$item['variety_id']]))
+            {
+                $item['variance']=$old_variances[$item['variety_id']]['year0_variance_quantity'];
+            }
+            else
+            {
+                $item['variance']=$item['cur_variance'];
+            }
 
-            $item['variance']=$item['cur_variance'];
             $item['variance_editable']=true;
-            if($item['cur_variance']<=0)
+
+            if($item['cur_variance']==0)
             {
                 $item['cur_variance']='-';
             }
@@ -363,10 +400,10 @@ class Hom_bud_variance_finalize extends Root_Controller
 
             if($info)
             {
-                if($info['status_forward']===$this->config->item('system_status_yes'))
+                if($info['status_variance_finalize']===$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FINALIZED");
                     $this->jsonReturn($ajax);
                     die();
                 }
@@ -376,43 +413,38 @@ class Hom_bud_variance_finalize extends Root_Controller
         $time=time();
         //check forward status if has only add permission but not edit permission
         $items=$this->input->post('items');
+
         $this->db->trans_start();
         if(sizeof($items)>0)
         {
-            $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
+            $results=Query_helper::get_info($this->config->item('table_hom_bud_variance'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
             $old_items=array();//hom budget
             foreach($results as $result)
             {
                 $old_items[$result['variety_id']]=$result;
             }
 
-            foreach($items as $variety_id=>$item)
+            foreach($items as $variety_id=>$quantity)
             {
                 $data=array();
-                for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-                {
-                    if((isset($item['year'.$i.'_budget_quantity']))&&($item['year'.$i.'_budget_quantity']>0))
-                    {
-                        $data['year'.$i.'_budget_quantity']=$item['year'.$i.'_budget_quantity'];
-                    }
-                }
-                if($data)
                 {
                     $data['year0_id']=$year0_id;
                     $data['variety_id']=$variety_id;
-                    $data['user_budgeted'] = $user->user_id;
-                    $data['date_budgeted'] = $time;
+                    $data['year0_variance_quantity']=$quantity;
                     if(isset($old_items[$variety_id]))
                     {
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        Query_helper::update($this->config->item('table_hom_bud_hom_bt'),$data,array("id = ".$old_items[$variety_id]['id']));
+                        if($quantity!=$old_items[$variety_id]['year0_variance_quantity'])
+                        {
+                            Query_helper::update($this->config->item('table_hom_bud_variance'),$data,array("id = ".$old_items[$variety_id]['id']));
+                        }
                     }
                     else
                     {
                         $data['user_created'] = $user->user_id;
                         $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_hom_bud_hom_bt'),$data);
+                        Query_helper::add($this->config->item('table_hom_bud_variance'),$data);
                     }
                 }
             }
@@ -443,8 +475,6 @@ class Hom_bud_variance_finalize extends Root_Controller
             $data['years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
-            //divisions
-            $data['areas']=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
 
 
             $keys=',';
@@ -453,8 +483,8 @@ class Hom_bud_variance_finalize extends Root_Controller
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="HOM Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_budget/details",$data,true));
+            $data['title']="Variance Finalize For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_variance_finalize/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -482,7 +512,7 @@ class Hom_bud_variance_finalize extends Root_Controller
         $this->db->trans_start();
         if($info)
         {
-            if($info['status_forward']===$this->config->item('system_status_yes'))
+            if($info['status_variance_finalize']===$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
@@ -492,7 +522,7 @@ class Hom_bud_variance_finalize extends Root_Controller
             else
             {
                 $data=array();
-                $data['status_forward']=$this->config->item('system_status_yes');
+                $data['status_variance_finalize']=$this->config->item('system_status_yes');
                 $data['user_updated'] = $user->user_id;
                 $data['date_updated'] = $time;
                 Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
@@ -501,13 +531,11 @@ class Hom_bud_variance_finalize extends Root_Controller
         else
         {
             $data=array();
-            $data['status_forward']=$this->config->item('system_status_yes');
+            $data['status_variance_finalize']=$this->config->item('system_status_yes');
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
-            $data['user_forwarded'] = $user->user_id;
-            $data['date_forwarded'] = $time;
             Query_helper::add($this->config->item('table_forward_hom'),$data);
         }
         $this->db->trans_complete();   //DB Transaction Handle END

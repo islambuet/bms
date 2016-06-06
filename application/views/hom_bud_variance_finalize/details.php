@@ -27,6 +27,7 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
+        turn_off_triggers();
         var url = "<?php echo site_url($CI->controller_url.'/index/get_edit_items');?>";
 
         // prepare the data
@@ -35,22 +36,17 @@
             dataType: "json",
             dataFields: [
                 { name: 'id', type: 'int' },
+                { name: 'sl_no', type: 'int' },
                 { name: 'type_name', type: 'string' },
                 { name: 'variety_id', type: 'string' },
                 { name: 'variety_name', type: 'string' },
-                    <?php
-                        foreach($areas as $area)
-                        {?>{ name: '<?php echo 'area_quantity_'.$area['value'];?>', type: 'string' },
-                    <?php
-                        }
-                        for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ name: '<?php echo 'year'.$i.'_area_total_quantity';?>', type: 'string' },
-                { name: '<?php echo 'year'.$i.'_budget_quantity';?>', type: 'string' },
-                { name: '<?php echo 'year'.$i.'_budget_quantity_editable';?>', type: 'string' },
-                <?php
-                    }
-                ?>
-                { name: 'sl_no', type: 'int' }
+                { name: 'year0_budget_quantity', type: 'string' },
+                { name: 'cur_stock', type: 'string' },
+                { name: 'min_stock', type: 'string' },
+                { name: 'cur_variance', type: 'string' },
+                { name: 'variance', type: 'string' },
+                { name: 'variance_editable', type: 'string' }
+
             ],
             id: 'id',
             url: url,
@@ -94,39 +90,15 @@
                 altrows: true,
                 rowsheight: 35,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center'},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'100',cellsrenderer: cellsrenderer,align:'center'},
+                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center'},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
-                        <?php
-                            foreach($areas as $area)
-                            {?>{ columngroup: 'area',text: '<?php echo $area['text'];?>', dataField: '<?php echo 'area_quantity_'.$area['value'];?>',align:'center',width:'200',cellsrenderer: cellsrenderer,cellsAlign:'right'},
-                    <?php
-                        }
-                    ?>
-                        <?php
-                            for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "DI Prediction";}else{echo "DI Budget";} ?>', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
-                    {
-                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php if($i>0){echo "HOM Prediction";}else{echo "HOM Budget";} ?>', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'150',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom'},
-                    <?php
-                        }
-                    ?>
-
-                ],
-                columngroups:
-                    [
-                        { text: 'Divisions', align: 'center', name: 'area' },
-                        { text: '<?php echo $CI->lang->line('LABEL_BUDGETED_YEAR'); ?>', align: 'center', name: 'budgeted_year' },
-                        { text: '<?php echo $CI->lang->line('LABEL_NEXT_YEARS'); ?>', align: 'center', name: 'next_years' },
-                            <?php
-                            for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ text: '<?php echo $years[$i]['text']; ?>', align: 'center',parentgroup:'next_years', name: '<?php echo 'year'.$i.'_id'; ?>' },
-                        <?php
-                            }
-                        ?>
-                        { text: '<?php echo $years[0]['text']; ?>', align: 'center',parentgroup:'budgeted_year', name: 'year0_id' }
-
-                    ]
+                    { text: 'HOM BUD',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { text: 'Cur Stock',dataField: 'cur_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { text: 'Min Stock',dataField: 'min_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { text: 'Cur Variance',dataField: 'cur_variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { text: 'Final Variance',dataField: 'variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'}
+                ]
             });
 
     });

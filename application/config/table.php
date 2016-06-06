@@ -31,6 +31,7 @@ $config['table_di_bud_di_bt'] = 'bms_di_bud_di_bt';
 $config['table_forward_di'] = 'bms_forward_di';
 
 $config['table_hom_bud_hom_bt'] = 'bms_hom_bud_hom_bt';
+$config['table_hom_bud_variance'] = 'bms_hom_bud_variance';
 $config['table_forward_hom'] = 'bms_forward_hom';
 
 $config['table_variety_min_stock'] = 'bms_variety_min_stock';

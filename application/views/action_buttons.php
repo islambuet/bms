@@ -116,6 +116,16 @@
     }
     ?>
     <?php
+    if(isset($action_save_jqx))
+    {
+        ?>
+        <div class="action_button">
+            <button id="button_action_save_jqx" class="btn" data-form="<?php echo $action_save_jqx; ?>"><?php echo $CI->lang->line("ACTION_SAVE"); ?></button>
+        </div>
+    <?php
+    }
+    ?>
+    <?php
     if(isset($action_save_new))
     {
         ?>
