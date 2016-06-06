@@ -537,6 +537,8 @@ class Hom_bud_variance_finalize extends Root_Controller
                 $data['status_variance_finalize']=$this->config->item('system_status_yes');
                 $data['user_updated'] = $user->user_id;
                 $data['date_updated'] = $time;
+                $data['user_variance_finalized'] = $user->user_id;
+                $data['date_variance_finalized'] = $time;
                 Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
             }
         }
@@ -548,6 +550,8 @@ class Hom_bud_variance_finalize extends Root_Controller
             $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
+            $data['user_variance_finalized'] = $user->user_id;
+            $data['date_variance_finalized'] = $time;
             Query_helper::add($this->config->item('table_forward_hom'),$data);
         }
         $this->db->trans_complete();   //DB Transaction Handle END
