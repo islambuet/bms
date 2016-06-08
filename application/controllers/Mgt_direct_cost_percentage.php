@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Mgt_currency_rate extends Root_Controller
+class Mgt_direct_cost_percentage extends Root_Controller
 {
     private  $message;
     public $permissions;
@@ -9,8 +9,8 @@ class Mgt_currency_rate extends Root_Controller
     {
         parent::__construct();
         $this->message="";
-        $this->permissions=User_helper::get_permission('Mgt_currency_rate');
-        $this->controller_url='mgt_currency_rate';
+        $this->permissions=User_helper::get_permission('Mgt_direct_cost_percentage');
+        $this->controller_url='mgt_direct_cost_percentage';
         //$this->load->model("sys_module_task_model");
     }
 
@@ -42,9 +42,9 @@ class Mgt_currency_rate extends Root_Controller
     {
         if(isset($this->permissions['view'])&&($this->permissions['view']==1))
         {
-            $data['title']="Currency Rate(fiscal year lists)";
+            $data['title']="Direct Cost Percentage(fiscal year lists)";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_currency_rate/list",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_direct_cost_percentage/list",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -64,8 +64,8 @@ class Mgt_currency_rate extends Root_Controller
     {
         $this->db->from($this->config->item('ems_basic_setup_fiscal_year').' fy');
         $this->db->select('fy.id,fy.name,fy.ordering');
-        $this->db->select('COUNT(cr.id) num_currency_setup');
-        $this->db->join($this->config->item('table_mgt_currency_rate').' cr','cr.fiscal_year_id = fy.id and cr.status ="'.$this->config->item('system_status_active').'"','LEFT');
+        $this->db->select('COUNT(dcp.id) num_item_setup');
+        $this->db->join($this->config->item('table_mgt_direct_cost_percentage').' dcp','dcp.fiscal_year_id = fy.id and dcp.status ="'.$this->config->item('system_status_active').'"','LEFT');
         $this->db->where('fy.status !=',$this->config->item('system_status_delete'));
         $this->db->group_by('fy.id');
         $this->db->order_by('fy.id','ASC');
@@ -84,17 +84,18 @@ class Mgt_currency_rate extends Root_Controller
             {
                 $fiscal_year_id=$id;
             }
-            $rates=Query_helper::get_info($this->config->item('table_mgt_currency_rate'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$fiscal_year_id));
-            $data['rates']=array();
-            foreach($rates as $rate)
+            $results=Query_helper::get_info($this->config->item('table_mgt_direct_cost_percentage'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$fiscal_year_id));
+            $data['percentages']=array();
+            foreach($results as $result)
             {
-                $data['rates'][$rate['currency_id']]=$rate['rate'];
+                $data['percentages'][$result['item_id']]=$result;
             }
-            $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),'*',array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
+            $data['items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),'*',array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['fiscal_year_id']=$fiscal_year_id;
-            $data['title']="Edit Currency Rate";
+            $year=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('id ='.$fiscal_year_id),1);
+            $data['title']="Edit Direct Cost Item Percentage(".$year['text'].')';
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_currency_rate/add_edit",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_direct_cost_percentage/add_edit",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -111,7 +112,7 @@ class Mgt_currency_rate extends Root_Controller
     }
     private function system_details($id)
     {
-        if(isset($this->permissions['view'])&&($this->permissions['view']==1))
+        if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
         {
             if(($this->input->post('id')))
             {
@@ -121,17 +122,18 @@ class Mgt_currency_rate extends Root_Controller
             {
                 $fiscal_year_id=$id;
             }
-            $rates=Query_helper::get_info($this->config->item('table_mgt_currency_rate'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$fiscal_year_id));
-            $data['rates']=array();
-            foreach($rates as $rate)
+            $results=Query_helper::get_info($this->config->item('table_mgt_direct_cost_percentage'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$fiscal_year_id));
+            $data['percentages']=array();
+            foreach($results as $result)
             {
-                $data['rates'][$rate['currency_id']]=$rate['rate'];
+                $data['percentages'][$result['item_id']]=$result;
             }
-            $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),'*',array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
+            $data['items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),'*',array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['fiscal_year_id']=$fiscal_year_id;
-            $data['title']="Details of Currency Rate";
+            $year=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('id ='.$fiscal_year_id),1);
+            $data['title']="Edit Direct Cost Item Percentage(".$year['text'].')';
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_currency_rate/details",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_direct_cost_percentage/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -167,42 +169,41 @@ class Mgt_currency_rate extends Root_Controller
         }
         else
         {
-            $results=Query_helper::get_info($this->config->item('table_mgt_currency_rate'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$fiscal_year_id));
-            $old_rates=array();
+            $results=Query_helper::get_info($this->config->item('table_mgt_direct_cost_percentage'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$fiscal_year_id));
+            $old_percentages=array();
             foreach($results as $result)
             {
-                $old_rates[$result['currency_id']]=$result;
+                $old_percentages[$result['item_id']]=$result;
             }
-
-            $currencies=$this->input->post('currencies');
+            $items=$this->input->post('items');
 
             $this->db->trans_start();  //DB Transaction Handle START
-            if(sizeof($currencies)>0)
+            if(sizeof($items)>0)
             {
-                foreach($currencies as $currency_id=>$rate)
+                foreach($items as $item_id=>$percentage)
                 {
                     $data=array();
-                    $data['currency_id']=$currency_id;
-                    if(strlen($rate)==0)
+                    $data['item_id']=$item_id;
+                    if(strlen($percentage)==0)
                     {
-                        $data['rate']=0;
+                        $data['percentage']=0;
                     }
                     else
                     {
-                        $data['rate']=$rate;
+                        $data['percentage']=$percentage;
                     }
-                    if(isset($old_rates[$currency_id]))
+                    if(isset($old_percentages[$item_id]))
                     {
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        Query_helper::update($this->config->item('table_mgt_currency_rate'),$data,array("id = ".$old_rates[$currency_id]['id']));
+                        Query_helper::update($this->config->item('table_mgt_direct_cost_percentage'),$data,array("id = ".$old_percentages[$item_id]['id']));
                     }
                     else
                     {
                         $data['fiscal_year_id']=$fiscal_year_id;
                         $data['user_created'] = $user->user_id;
                         $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_mgt_currency_rate'),$data);
+                        Query_helper::add($this->config->item('table_mgt_direct_cost_percentage'),$data);
                     }
                 }
             }
