@@ -62,7 +62,7 @@
                 autoheight: true,
                 columns: [
                     { text: 'ID', dataField: 'id',width:'50',cellsalign: 'right'},
-                    { text: '<?php echo $CI->lang->line('LABEL_NAME'); ?>', dataField: 'name',width:'100'},
+                    { text: '<?php echo $CI->lang->line('LABEL_NAME'); ?>', dataField: 'name'},
                     { text: '<?php echo $CI->lang->line('LABEL_ORDER'); ?>', dataField: 'ordering',width:'100',cellsalign: 'right'}
                 ]
             });
