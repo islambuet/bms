@@ -9,7 +9,7 @@ $config['table_system_other_sites'] = 'system_other_sites';
 $config['table_other_sites_visit'] = 'other_sites_visit';
 $config['table_setup_designation'] = 'setup_designation';
 
-//bms site
+//bms system site
 $config['table_system_assigned_group'] = 'bms_system_assigned_group';
 
 $config['table_system_user_group'] = 'bms_system_user_group';
@@ -19,6 +19,10 @@ $config['table_history'] = 'bms_history';
 $config['table_system_assigned_area'] = 'bms_system_assigned_area';
 $config['table_system_site_offline'] = 'bms_system_site_offline';
 
+
+//bms setup
+$config['table_setup_currency'] = 'bms_setup_currency';
+$config['table_setup_direct_cost_items'] = 'bms_setup_direct_cost_items';
 
 $config['table_ti_bud_customer_bt'] = 'bms_ti_bud_customer_bt';
 $config['table_ti_bud_ti_bt'] = 'bms_ti_bud_ti_bt';

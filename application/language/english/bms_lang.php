@@ -107,3 +107,5 @@ $lang['LABEL_FORWARDED'] = 'Forwarded';
 $lang['LABEL_BUDGETED_YEAR'] = 'Budgeting Year';
 $lang['LABEL_NEXT_YEARS'] = 'Next Years';
 $lang['MSG_ALREADY_FINALIZED'] = 'Already Finalized.';
+//setup
+$lang['LABEL_CURRENCY_SYMBOL'] = 'Currency Symbol';
