@@ -44,3 +44,4 @@ $config['table_variety_min_stock'] = 'bms_variety_min_stock';
 //mgt
 $config['table_mgt_currency_rate'] = 'bms_mgt_currency_rate';
 $config['table_mgt_direct_cost_percentage'] = 'bms_mgt_direct_cost_percentage';
+$config['table_mgt_packing_cost_kg'] = 'bms_mgt_packing_cost_kg';
