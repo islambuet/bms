@@ -23,6 +23,7 @@ $config['table_system_site_offline'] = 'bms_system_site_offline';
 //bms setup
 $config['table_setup_currency'] = 'bms_setup_currency';
 $config['table_setup_direct_cost_items'] = 'bms_setup_direct_cost_items';
+$config['table_setup_packing_material_items'] = 'bms_setup_packing_material_items';
 
 $config['table_ti_bud_customer_bt'] = 'bms_ti_bud_customer_bt';
 $config['table_ti_bud_ti_bt'] = 'bms_ti_bud_ti_bt';
