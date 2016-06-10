@@ -114,7 +114,7 @@ class Mgt_packing_material_cost extends Root_Controller
             {
                 if(isset($prev_packing_cost[$item['id']][$pack_item['value']]))
                 {
-                    $item['item_'.$pack_item['value']]=$prev_packing_cost[$item['id']][$pack_item['value']]['cost'];
+                    $item['item_'.$pack_item['value']]=number_format($prev_packing_cost[$item['id']][$pack_item['value']]['cost'],2);
                 }
                 else
                 {
