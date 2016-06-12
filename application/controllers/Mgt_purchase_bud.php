@@ -96,7 +96,11 @@ class Mgt_purchase_bud extends Root_Controller
         $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
         $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
         $this->db->where('v.whose','ARM');
+        $this->db->order_by('crop.ordering');
+        $this->db->order_by('type.ordering');
         $this->db->order_by('v.ordering');
+
+
         $this->db->where('v.status',$this->config->item('system_status_active'));
         $items=$this->db->get()->result_array();
         /*$packing_items=Query_helper::get_info($this->config->item('table_setup_packing_material_items'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
@@ -133,13 +137,54 @@ class Mgt_purchase_bud extends Root_Controller
             {
                 $variety_id=$this->input->post('id');
             }
-            /*$results=Query_helper::get_info($this->config->item('table_mgt_packing_cost_kg'),array('id value','packing_item_id packing_item_id','cost cost'),array('year0_id ='.$year0_id,'variety_id ='.$variety_id));
-            $data['prev_packing_cost']=array();
-            foreach($results as $result)
+            $result=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id,'variety_id ='.$variety_id),1);
+            if($result)
             {
-                $data['prev_packing_cost'][$result['packing_item_id']]=$result;
+                $data['hom_budget']=$result['year0_budget_quantity'];
             }
-            $data['packing_items']=Query_helper::get_info($this->config->item('table_setup_packing_material_items'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));*/
+            else
+            {
+                $data['hom_budget']=0;
+            }
+            $current_stock=System_helper::get_stocks(0,0,$variety_id);
+            if($current_stock)
+            {
+                $data['current_stock']=$current_stock[$variety_id]['current_stock'];
+            }
+            else
+            {
+                $data['current_stock']=0;
+            }
+            $result=Query_helper::get_info($this->config->item('table_hom_bud_variance'),'*',array('year0_id ='.$year0_id,'variety_id ='.$variety_id),1);
+            if($result)
+            {
+                $data['final_variance']=$result['year0_variance_quantity'];
+            }
+            else
+            {
+                $data['final_variance']=0;
+            }
+            $data['quantity_needed']=$data['hom_budget']-$data['final_variance'];
+            if($data['quantity_needed']<0)
+            {
+                $data['quantity_needed']=0;
+            }
+            $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
+            //get already saved items
+            $data['quantity_purchased']=0;
+            $data['quantity_1']=0;
+            $data['quantity_2']=0;
+            $data['quantity_3']=0;
+            $data['quantity_4']=0;
+            $data['quantity_5']=0;
+            $data['quantity_6']=0;
+            $data['quantity_7']=0;
+            $data['quantity_8']=0;
+            $data['quantity_9']=0;
+            $data['quantity_10']=0;
+            $data['quantity_11']=0;
+            $data['quantity_12']=0;
+
             $variety=Query_helper::get_info($this->config->item('ems_setup_classification_varieties'),array('id value','name text'),array('id ='.$variety_id),1);
             $year=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('id ='.$year0_id),1);
             $data['year0_id']=$year0_id;
