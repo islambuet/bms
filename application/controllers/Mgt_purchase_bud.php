@@ -93,8 +93,10 @@ class Mgt_purchase_bud extends Root_Controller
         $this->db->select('v.id,v.name variety_name,v.status,v.ordering,v.whose,v.stock_id');
         $this->db->select('crop.name crop_name');
         $this->db->select('type.name type_name');
+        $this->db->select('pb.quantity_total quantity_total');
         $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
         $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
+        $this->db->join($this->config->item('table_mgt_purchase_budget').' pb','pb.variety_id = v.id and year0_id ='.$year0_id,'LEFT');
         $this->db->where('v.whose','ARM');
         $this->db->order_by('crop.ordering');
         $this->db->order_by('type.ordering');
@@ -103,29 +105,6 @@ class Mgt_purchase_bud extends Root_Controller
 
         $this->db->where('v.status',$this->config->item('system_status_active'));
         $items=$this->db->get()->result_array();
-        /*$packing_items=Query_helper::get_info($this->config->item('table_setup_packing_material_items'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
-
-        $results=Query_helper::get_info($this->config->item('table_mgt_packing_cost_kg'),array('variety_id variety_id','packing_item_id packing_item_id','cost cost'),array('year0_id ='.$year0_id));
-        $prev_packing_cost=array();
-        foreach($results as $result)
-        {
-            $prev_packing_cost[$result['variety_id']][$result['packing_item_id']]=$result;
-        }
-        foreach($items as &$item)
-        {
-            foreach($packing_items as &$pack_item)
-            {
-                if(isset($prev_packing_cost[$item['id']][$pack_item['value']]))
-                {
-                    $item['item_'.$pack_item['value']]=number_format($prev_packing_cost[$item['id']][$pack_item['value']]['cost'],2);
-                }
-                else
-                {
-                    $item['item_'.$pack_item['value']]='';
-                }
-            }
-        }*/
-
         $this->jsonReturn($items);
     }
 
@@ -137,6 +116,8 @@ class Mgt_purchase_bud extends Root_Controller
             {
                 $variety_id=$this->input->post('id');
             }
+            //initialize with previous data
+            $data=Query_helper::get_info($this->config->item('table_mgt_purchase_budget'),'*',array('year0_id ='.$year0_id,'variety_id ='.$variety_id),1);
             $result=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id,'variety_id ='.$variety_id),1);
             if($result)
             {
@@ -171,8 +152,9 @@ class Mgt_purchase_bud extends Root_Controller
             }
             $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             //get already saved items
-            $data['quantity_purchased']=0;
-            $data['quantity_1']=0;
+
+            //$data['quantity_purchased']=0;
+            /*$data['quantity_1']=0;
             $data['quantity_2']=0;
             $data['quantity_3']=0;
             $data['quantity_4']=0;
@@ -183,7 +165,51 @@ class Mgt_purchase_bud extends Root_Controller
             $data['quantity_9']=0;
             $data['quantity_10']=0;
             $data['quantity_11']=0;
-            $data['quantity_12']=0;
+            $data['quantity_12']=0;*/
+
+            //additional infos
+            //currency rates
+            $rates=Query_helper::get_info($this->config->item('table_mgt_currency_rate'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$year0_id));
+            $data['currency_rates']=array();
+            foreach($rates as $rate)
+            {
+                $data['currency_rates'][$rate['currency_id']]=$rate['rate'];
+            }
+            //total direct costs
+            $result=$results=Query_helper::get_info($this->config->item('table_mgt_direct_cost_percentage'),array('SUM(percentage) total_percentage'),array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$year0_id),1);
+            if($result)
+            {
+                if(strlen($result['total_percentage'])>0)
+                {
+                    $data['direct_costs_percentage']=number_format($result['total_percentage']/100,5,'.','');
+                }
+                else
+                {
+                    $data['direct_costs_percentage']=0;
+                }
+
+            }
+            else
+            {
+                $data['direct_costs_percentage']=0;
+            }
+            $result=Query_helper::get_info($this->config->item('table_mgt_packing_cost_kg'),array('SUM(cost) total_cost'),array('year0_id ='.$year0_id,'variety_id ='.$variety_id),1);
+            if($result)
+            {
+                if(strlen($result['total_cost'])>0)
+                {
+                    $data['packing_cost']=$result['total_cost'];
+                }
+                else
+                {
+                    $data['packing_cost']=0;
+                }
+
+            }
+            else
+            {
+                $data['packing_cost']=0;
+            }
 
             $variety=Query_helper::get_info($this->config->item('ems_setup_classification_varieties'),array('id value','name text'),array('id ='.$variety_id),1);
             $year=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('id ='.$year0_id),1);
@@ -207,7 +233,6 @@ class Mgt_purchase_bud extends Root_Controller
     }
     private function system_save()
     {
-        die();
         $user = User_helper::get_user();
         $time=time();
         $year0_id=$this->input->post('year0_id');
@@ -219,59 +244,78 @@ class Mgt_purchase_bud extends Root_Controller
             $this->jsonReturn($ajax);
             die();
         }
-
-        $items=$this->input->post('items');
-        $this->db->trans_start();
-        if(sizeof($items)>0)
+        if(!$this->check_validation())
         {
-            $results=Query_helper::get_info($this->config->item('table_mgt_packing_cost_kg'),array('id value','packing_item_id packing_item_id','cost cost'),array('year0_id ='.$year0_id,'variety_id ='.$variety_id));
-            $prev_packing_cost=array();
-            foreach($results as $result)
-            {
-                $prev_packing_cost[$result['packing_item_id']]=$result;
-            }
-
-            foreach($items as $packing_item_id=>$cost)
-            {
-                $data=array();
-                {
-                    $data['year0_id']=$year0_id;
-                    $data['variety_id']=$variety_id;
-                    if(strlen($cost==0))
-                    {
-                        $data['cost']=0;
-                    }
-                    else
-                    {
-                        $data['cost']=$cost;
-                    }
-                    if(isset($prev_packing_cost[$packing_item_id]))
-                    {
-                        $data['user_updated'] = $user->user_id;
-                        $data['date_updated'] = $time;
-                        Query_helper::update($this->config->item('table_mgt_packing_cost_kg'),$data,array("id = ".$prev_packing_cost[$packing_item_id]['value']));
-                    }
-                    else
-                    {
-                        $data['packing_item_id'] = $packing_item_id;
-                        $data['user_created'] = $user->user_id;
-                        $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_mgt_packing_cost_kg'),$data);
-                    }
-                }
-            }
-        }
-        $this->db->trans_complete();   //DB Transaction Handle END
-        if ($this->db->trans_status() === TRUE)
-        {
-            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-            $this->system_search();
+            $ajax['status']=false;
+            $ajax['system_message']=$this->message;
+            $this->jsonReturn($ajax);
         }
         else
         {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
-            $this->jsonReturn($ajax);
+
+            $data=$this->input->post('purchase');
+            $data['quantity_total']=0;
+            for($i=1;$i<13;$i++)
+            {
+                if(($data['quantity_'.$i])>0)
+                {
+                    $data['quantity_total']+=$data['quantity_'.$i];
+                }
+                else
+                {
+                    $data['quantity_'.$i]=0;
+                }
+            }
+            if($data['quantity_total']>0)
+            {
+                $this->db->trans_start();
+                $result=Query_helper::get_info($this->config->item('table_mgt_purchase_budget'),'*',array('year0_id ='.$year0_id,'variety_id ='.$variety_id),1);
+                if($result)
+                {
+                    $data['user_updated'] = $user->user_id;
+                    $data['date_updated'] = $time;
+                    Query_helper::update($this->config->item('table_mgt_purchase_budget'),$data,array("id = ".$result['id']));
+                }
+                else
+                {
+                    $data['year0_id']=$year0_id;
+                    $data['variety_id']=$variety_id;
+                    $data['user_created'] = $user->user_id;
+                    $data['date_created'] = $time;
+                    Query_helper::add($this->config->item('table_mgt_purchase_budget'),$data);
+                }
+                $this->db->trans_complete();   //DB Transaction Handle END
+                if ($this->db->trans_status() === TRUE)
+                {
+                    $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+                    $this->system_search();
+                }
+                else
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+                    $this->jsonReturn($ajax);
+                }
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']="Purchase Quantity Cannot be 0";
+                $this->jsonReturn($ajax);
+            }
         }
+    }
+    private function check_validation()
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('purchase[currency_id]','Currency','required');
+        $this->form_validation->set_rules('purchase[unit_price]','Unit Price','required');
+
+        if($this->form_validation->run() == FALSE)
+        {
+            $this->message=validation_errors();
+            return false;
+        }
+        return true;
     }
 }

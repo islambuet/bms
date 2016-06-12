@@ -97,6 +97,8 @@ class Mgt_packing_material_cost extends Root_Controller
         $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
         $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
         $this->db->where('v.whose','ARM');
+        $this->db->order_by('crop.ordering');
+        $this->db->order_by('type.ordering');
         $this->db->order_by('v.ordering');
         $this->db->where('v.status',$this->config->item('system_status_active'));
         $items=$this->db->get()->result_array();

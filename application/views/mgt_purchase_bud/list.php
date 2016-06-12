@@ -33,7 +33,7 @@
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="purchase_quantity">Purchase Quantity</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="quantity_total">Purchase Quantity</label>
         </div>
         <?php
     }
@@ -57,7 +57,7 @@
                 { name: 'crop_name', type: 'string' },
                 { name: 'type_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
-                { name: 'purchase_quantity', type: 'string' }
+                { name: 'quantity_total', type: 'string' }
             ],
             id: 'id',
             url: url
@@ -86,7 +86,7 @@
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>',pinned:true, dataField: 'crop_name',filtertype:'list',width:100},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:100},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:150},
-                    { text: 'Purchase Quantity',dataField: 'purchase_quantity',width:150}
+                    { text: 'Purchase Quantity',dataField: 'quantity_total',width:150}
 
                 ]
             });
