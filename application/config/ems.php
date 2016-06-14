@@ -38,6 +38,8 @@ $config['ems_basic_setup_fiscal_year'] = 'ems_basic_setup_fiscal_year';
 $config['ems_basic_setup_competitor'] = 'ems_basic_setup_competitor';
 $config['ems_basic_setup_couriers'] = 'ems_basic_setup_couriers';
 $config['ems_basic_setup_vcolors'] = 'ems_basic_setup_vcolors';
+$config['ems_basic_setup_vcolors'] = 'ems_basic_setup_vcolors';
+$config['ems_basic_setup_principal'] = 'ems_basic_setup_principal';
 //customer setup
 $config['ems_csetup_customers'] = 'ems_csetup_customers';
 $config['ems_csetup_other_customers'] = 'ems_csetup_other_customers';

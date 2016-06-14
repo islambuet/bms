@@ -130,7 +130,7 @@ class Mgt_purchase_bud extends Root_Controller
             $current_stock=System_helper::get_stocks(0,0,$variety_id);
             if($current_stock)
             {
-                $data['current_stock']=$current_stock[$variety_id]['current_stock'];
+                $data['current_stock']=number_format($current_stock[$variety_id]['current_stock']/1000,3,'.','');
             }
             else
             {
@@ -211,10 +211,17 @@ class Mgt_purchase_bud extends Root_Controller
                 $data['packing_cost']=0;
             }
 
-            $variety=Query_helper::get_info($this->config->item('ems_setup_classification_varieties'),array('id value','name text'),array('id ='.$variety_id),1);
+            $variety=Query_helper::get_info($this->config->item('ems_setup_classification_varieties'),array('id value','name text','name_import','principal_id'),array('id ='.$variety_id),1);
             $year=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('id ='.$year0_id),1);
             $data['year0_id']=$year0_id;
             $data['variety_id']=$variety_id;
+            $data['variety_info']=$variety;
+            $data['variety_info']['principal_name']='-';
+            if($variety['principal_id']>0)
+            {
+                $result=Query_helper::get_info($this->config->item('ems_basic_setup_principal'),array('name text'),array('id ='.$variety['principal_id']),1);
+                $data['variety_info']['principal_name']=$result['text'];
+            }
             $data['title']="Purchase Budget For ".$variety['text'].'('.$year['text'].')';
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_purchase_bud/add_edit",$data,true));
             if($this->message)

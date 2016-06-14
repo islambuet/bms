@@ -49,6 +49,30 @@
         </div>
         <div style="" class="row show-grid">
             <div class="col-xs-4">
+                <label class="control-label pull-right">Variety Name</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <label class="control-label"><?php echo $variety_info['text'];?></label>
+            </div>
+        </div>
+        <div style="" class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Import Name</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <label class="control-label"><?php echo $variety_info['name_import'];?></label>
+            </div>
+        </div>
+        <div style="" class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Principal Name</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <label class="control-label"><?php echo $variety_info['principal_name'];?></label>
+            </div>
+        </div>
+        <div style="" class="row show-grid">
+            <div class="col-xs-4">
                 <label class="control-label pull-right">Purchase Quantity(kg)</label>
             </div>
             <div class="col-sm-4 col-xs-8">
