@@ -210,13 +210,13 @@ class Hom_bud_target_finalize extends Root_Controller
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
         $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
-        $budgets=array();//hom budget
+        $budgets=array();//hom budget and target
         foreach($results as $result)
         {
             $budgets[$result['variety_id']]=$result;
         }
         $results=Query_helper::get_info($this->config->item('table_hom_bud_variance'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
-        $final_variances=array();//hom budget
+        $final_variances=array();//hom variance
         foreach($results as $result)
         {
             $final_variances[$result['variety_id']]=$result;
@@ -233,13 +233,6 @@ class Hom_bud_target_finalize extends Root_Controller
         foreach($results as $result)
         {
             $purchases[$result['variety_id']]=$result;
-        }
-
-        $results=Query_helper::get_info($this->config->item('table_hom_bud_target'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
-        $targeted=array();//hom already targeted
-        foreach($results as $result)
-        {
-            $targeted[$result['variety_id']]=$result;
         }
 
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
@@ -360,11 +353,11 @@ class Hom_bud_target_finalize extends Root_Controller
             {
                 $item['pq_fv_min']='-';
             }
-            if(isset($targeted[$item['variety_id']]))
+            if(isset($budgets[$item['variety_id']]))
             {
-                if($targeted[$item['variety_id']]['year0_target_quantity']!=0)
+                if($budgets[$item['variety_id']]['year0_target_quantity']!=0)
                 {
-                    $item['year0_target_quantity']=$targeted[$item['variety_id']]['year0_target_quantity'];
+                    $item['year0_target_quantity']=$budgets[$item['variety_id']]['year0_target_quantity'];
                 }
                 else
                 {
@@ -467,11 +460,11 @@ class Hom_bud_target_finalize extends Root_Controller
         $this->db->trans_start();
         if(sizeof($items)>0)
         {
-            $results=Query_helper::get_info($this->config->item('table_hom_bud_target'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
-            $targeted=array();//hom budget
+            $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
+            $budgets=array();//hom budget
             foreach($results as $result)
             {
-                $targeted[$result['variety_id']]=$result;
+                $budgets[$result['variety_id']]=$result;
             }
 
             foreach($items as $variety_id=>$quantity)
@@ -487,13 +480,15 @@ class Hom_bud_target_finalize extends Root_Controller
                         $data['year0_target_quantity']=$quantity;
                     }
 
-                    if(isset($targeted[$variety_id]))
+                    if(isset($budgets[$variety_id]))
                     {
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        if($quantity!=$targeted[$variety_id]['year0_target_quantity'])
+                        $data['user_budgeted'] = $user->user_id;
+                        $data['date_budgeted'] = $time;
+                        if($quantity!=$budgets[$variety_id]['year0_target_quantity'])
                         {
-                            Query_helper::update($this->config->item('table_hom_bud_target'),$data,array("id = ".$targeted[$variety_id]['id']));
+                            Query_helper::update($this->config->item('table_hom_bud_hom_bt'),$data,array("id = ".$budgets[$variety_id]['id']));
                         }
                     }
                     else
@@ -502,7 +497,13 @@ class Hom_bud_target_finalize extends Root_Controller
                         $data['variety_id']=$variety_id;
                         $data['user_created'] = $user->user_id;
                         $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_hom_bud_target'),$data);
+                        $data['user_budgeted'] = $user->user_id;
+                        $data['date_budgeted'] = $time;
+                        if($quantity!=0)
+                        {
+                            Query_helper::add($this->config->item('table_hom_bud_hom_bt'),$data);
+                        }
+
                     }
                 }
             }
