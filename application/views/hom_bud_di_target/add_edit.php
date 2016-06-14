@@ -33,14 +33,23 @@ $action_data["action_save_jqx"]='#save_form_jqx';
         {
             $("#system_loading").show();
             var data=$('#system_jqx_container').jqxGrid('getrows');
-            console.log('hi');
-            /*for(var i=0;i<data.length;i++)
+            for(var i=0;i<data.length;i++)
             {
+            <?php
+                foreach($areas as $area)
+                {?>
+                if(data[i]['year0_target_quantity_<?php echo $area['value']; ?>_editable'])
+                {
+                    $('#save_form_jqx').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_year0_target_quantity_<?php echo $area['value']; ?>" name="items[<?php echo $area['value']; ?>]['+data[i]['variety_id']+']" value="'+data[i]['year0_target_quantity_<?php echo $area['value']; ?>']+'">');
+                }
+                <?php
+                }
+            ?>
                 if(data[i]['year0_target_quantity_editable'])
                 {
                     $('#save_form_jqx').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_year0_target_quantity" name="items['+data[i]['variety_id']+']" value="'+data[i]['year0_target_quantity']+'">');
                 }
-            }*/
+            }
             $("#save_form_jqx").submit();
 
         });

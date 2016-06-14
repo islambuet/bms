@@ -167,9 +167,28 @@ class Hom_bud_di_target extends Root_Controller
             {
                 $crop_id=$this->input->post('id');
             }
+            //only for HOM target finalized is in same table
+            $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+            if($info)
+            {
+                if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                    $this->jsonReturn($ajax);
+                    die();
+                }
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
+            }
             if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+                //$info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
 
                 if($info)
                 {
@@ -290,9 +309,24 @@ class Hom_bud_di_target extends Root_Controller
             {
                 if(isset($area_budget_target[$area['value']][$item['variety_id']]))
                 {
-                    //check 0 or null
-                    $item['year0_budget_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity'];
-                    $item['year0_target_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity'];
+                    if($area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity']==null ||$area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity']==0)
+                    {
+                        $item['year0_budget_quantity_'.$area['value']]='';
+                    }
+                    else
+                    {
+                        $item['year0_budget_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity'];
+                    }
+                    if($area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity']==null ||$area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity']==0)
+                    {
+                        $item['year0_target_quantity_'.$area['value']]='';
+                    }
+                    else
+                    {
+                        $item['year0_target_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity'];
+                    }
+
+
                 }
                 else
                 {

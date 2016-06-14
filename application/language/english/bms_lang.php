@@ -102,6 +102,7 @@ $lang['LABEL_CUSTOMER_NAME'] = 'Customer';
 //
 $lang['MSG_SETUP_MORE_FISCAL_YEAR'] = 'Please contact with admin to setup more fiscal years.';
 $lang['MSG_ALREADY_FORWARDED'] = 'Already Forwarded.';
+$lang['MSG_TARGET_NOT_FINALIZED'] = 'Target Not Finalized.';
 $lang['MSG_SUCCESSFULLY_FORWARDED'] = 'Forwarded Successfully.';
 $lang['LABEL_FORWARDED'] = 'Forwarded';
 $lang['LABEL_BUDGETED_YEAR'] = 'Budgeting Year';
