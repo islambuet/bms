@@ -41,11 +41,14 @@
                 { name: 'variety_id', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'year0_budget_quantity', type: 'string' },
-                { name: 'cur_stock', type: 'string' },
+                { name: 'year0_variance_quantity', type: 'string' },
                 { name: 'min_stock', type: 'string' },
-                { name: 'cur_variance', type: 'string' },
-                { name: 'variance', type: 'string' },
-                { name: 'variance_editable', type: 'string' }
+                { name: 'quantity_needed', type: 'string' },
+                { name: 'year0_purchase_quantity', type: 'string' },
+                { name: 'pq_fv', type: 'string' },
+                { name: 'pq_fv_min', type: 'string' },
+                { name: 'year0_target_quantity', type: 'string' },
+                { name: 'year0_target_quantity_editable', type: 'string' }
 
             ],
             id: 'id',
@@ -90,15 +93,17 @@
                 altrows: true,
                 rowsheight: 35,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center'},
-                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
-                    { text: 'HOM BUD',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
-                    { text: 'Cur Stock',dataField: 'cur_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
-                    { text: 'Min Stock',dataField: 'min_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
-                    { text: 'Cur Variance',dataField: 'cur_variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
-                    { text: 'Final Variance',dataField: 'variance',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'}
-                ]
+                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
+                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
+                    { text: 'HOM BUD',dataField: 'year0_budget_quantity',width:'100',pinned:true,cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Final Variance',dataField: 'year0_variance_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Min Stock',dataField: 'min_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Quantity Needed',dataField: 'quantity_needed',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Purchase Quantity',dataField: 'year0_purchase_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'PQ+FV',dataField: 'pq_fv',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'PQ+FV+MIN Stock',dataField: 'pq_fv_min',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Target Quantity',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false}                ]
             });
 
     });

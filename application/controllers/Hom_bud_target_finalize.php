@@ -58,23 +58,22 @@ class Hom_bud_target_finalize extends Root_Controller
         {
             $this->system_get_edit_items();
         }
-        /*elseif($action=="get_detail_items")
+        elseif($action=="get_detail_items")
         {
             $this->system_get_edit_items('details');
-        }*/
+        }
         elseif($action=="save")
         {
             $this->system_save();
         }
-        /*elseif($action=="details")
+        elseif($action=="details")
         {
             $this->system_details($id1,$id2);
         }
-
         elseif($action=="forward")
         {
             $this->system_forward($id1,$id2);
-        }*/
+        }
         else
         {
             $this->system_search();
@@ -211,7 +210,7 @@ class Hom_bud_target_finalize extends Root_Controller
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
         $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
-        $budgets=array();//hom budget--old_items will be replaced
+        $budgets=array();//hom budget
         foreach($results as $result)
         {
             $budgets[$result['variety_id']]=$result;
@@ -222,13 +221,27 @@ class Hom_bud_target_finalize extends Root_Controller
         {
             $final_variances[$result['variety_id']]=$result;
         }
+        $results=Query_helper::get_info($this->config->item('table_variety_min_stock'),'*',array('revision =1'));//only for this crop could be done
+        $min_stocks=array();//min stock
+        foreach($results as $result)
+        {
+            $min_stocks[$result['variety_id']]=$result['quantity'];
+        }
 
         $results=Query_helper::get_info($this->config->item('table_mgt_purchase_budget'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
-        $purchases=array();//hom budget
+        $purchases=array();//mgt purchase
         foreach($results as $result)
         {
             $purchases[$result['variety_id']]=$result;
         }
+
+        $results=Query_helper::get_info($this->config->item('table_hom_bud_target'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
+        $targeted=array();//hom already targeted
+        foreach($results as $result)
+        {
+            $targeted[$result['variety_id']]=$result;
+        }
+
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id,v.name');
         $this->db->select('type.name type_name');
@@ -269,6 +282,8 @@ class Hom_bud_target_finalize extends Root_Controller
                     }
 
                     $total_item['year0_purchase_quantity']='';
+                    $total_item['pq_fv']='';
+                    $total_item['pq_fv_min']='';
                     $total_item['year0_target_quantity']='';
                     $total_item['year0_target_quantity_editable']=false;
                     $items[]=$total_item;
@@ -302,21 +317,32 @@ class Hom_bud_target_finalize extends Root_Controller
             {
                 $item['year0_budget_quantity']='-';
             }
-            $item['year0_variance_quantity']='0';
+            $item['year0_variance_quantity']=0;
             if(isset($final_variances[$item['variety_id']]))
             {
                 $item['year0_variance_quantity']=$final_variances[$item['variety_id']]['year0_variance_quantity'];
             }
+            $item['min_stock']=0;
+            if(isset($min_stocks[$item['variety_id']]))
+            {
+                $item['min_stock']=$min_stocks[$item['variety_id']];
+            }
+
             $item['quantity_needed']=$item['year0_budget_quantity']-$item['year0_variance_quantity'];
-            $item['year0_purchase_quantity']='0';
+            $item['year0_purchase_quantity']=0;
             if(isset($purchases[$item['variety_id']]))
             {
                 $item['year0_purchase_quantity']=$purchases[$item['variety_id']]['quantity_total'];
             }
-
+            $item['pq_fv']=$item['year0_purchase_quantity']+$item['year0_variance_quantity'];
+            $item['pq_fv_min']=$item['year0_purchase_quantity']+$item['year0_variance_quantity']+$item['min_stock'];
             if($item['year0_variance_quantity']==0)
             {
                 $item['year0_variance_quantity']='-';
+            }
+            if($item['min_stock']==0)
+            {
+                $item['min_stock']='-';
             }
             if($item['quantity_needed']<=0)
             {
@@ -326,9 +352,46 @@ class Hom_bud_target_finalize extends Root_Controller
             {
                 $item['year0_purchase_quantity']='-';
             }
+            if($item['pq_fv']==0)
+            {
+                $item['pq_fv']='-';
+            }
+            if($item['pq_fv_min']==0)
+            {
+                $item['pq_fv_min']='-';
+            }
+            if(isset($targeted[$item['variety_id']]))
+            {
+                if($targeted[$item['variety_id']]['year0_target_quantity']!=0)
+                {
+                    $item['year0_target_quantity']=$targeted[$item['variety_id']]['year0_target_quantity'];
+                }
+                else
+                {
+                    if($task_purpose=='edit')
+                    {
+                        $item['year0_target_quantity']='';
+                    }
+                    else
+                    {
+                        $item['year0_target_quantity']='-';
+                    }
+                }
 
-            //need to check already saved
-            $item['year0_target_quantity']='';
+            }
+            else
+            {
+                if($task_purpose=='edit')
+                {
+                    $item['year0_target_quantity']='';
+                }
+                else
+                {
+                    $item['year0_target_quantity']='-';
+                }
+            }
+
+
 
             $item['year0_target_quantity_editable']=true;
             $items[]=$item;
@@ -348,6 +411,8 @@ class Hom_bud_target_finalize extends Root_Controller
             $total_item['year0_budget_quantity']='';
         }
         $total_item['year0_purchase_quantity']='';
+        $total_item['pq_fv']='';
+        $total_item['pq_fv_min']='';
         $total_item['year0_target_quantity']='';
         $total_item['year0_target_quantity_editable']=false;
         $items[]=$total_item;
@@ -366,6 +431,8 @@ class Hom_bud_target_finalize extends Root_Controller
             $total_item['year0_budget_quantity']='';
         }
         $total_item['year0_purchase_quantity']='';
+        $total_item['pq_fv']='';
+        $total_item['pq_fv_min']='';
         $total_item['year0_target_quantity']='';
         $total_item['year0_target_quantity_editable']=false;
         $items[]=$total_item;
@@ -375,10 +442,6 @@ class Hom_bud_target_finalize extends Root_Controller
 
     private function system_save()
     {
-        echo '<PRE>';
-        print_r($this->input->post());
-        echo '</PRE>';
-        die();
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
         if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
@@ -387,7 +450,7 @@ class Hom_bud_target_finalize extends Root_Controller
 
             if($info)
             {
-                if($info['status_variance_finalize']===$this->config->item('system_status_yes'))
+                if($info['status_target_finalize']===$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
                     $ajax['system_message']=$this->lang->line("MSG_ALREADY_FINALIZED");
@@ -404,34 +467,42 @@ class Hom_bud_target_finalize extends Root_Controller
         $this->db->trans_start();
         if(sizeof($items)>0)
         {
-            $results=Query_helper::get_info($this->config->item('table_hom_bud_variance'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
-            $old_items=array();//hom budget
+            $results=Query_helper::get_info($this->config->item('table_hom_bud_target'),'*',array('year0_id ='.$year0_id));//can filter by crop id to increase runtime
+            $targeted=array();//hom budget
             foreach($results as $result)
             {
-                $old_items[$result['variety_id']]=$result;
+                $targeted[$result['variety_id']]=$result;
             }
 
             foreach($items as $variety_id=>$quantity)
             {
                 $data=array();
                 {
-                    $data['year0_id']=$year0_id;
-                    $data['variety_id']=$variety_id;
-                    $data['year0_variance_quantity']=$quantity;
-                    if(isset($old_items[$variety_id]))
+                    if(strlen($quantity)==0)
+                    {
+                        $data['year0_target_quantity']=0;
+                    }
+                    else
+                    {
+                        $data['year0_target_quantity']=$quantity;
+                    }
+
+                    if(isset($targeted[$variety_id]))
                     {
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        if($quantity!=$old_items[$variety_id]['year0_variance_quantity'])
+                        if($quantity!=$targeted[$variety_id]['year0_target_quantity'])
                         {
-                            Query_helper::update($this->config->item('table_hom_bud_variance'),$data,array("id = ".$old_items[$variety_id]['id']));
+                            Query_helper::update($this->config->item('table_hom_bud_target'),$data,array("id = ".$targeted[$variety_id]['id']));
                         }
                     }
                     else
                     {
+                        $data['year0_id']=$year0_id;
+                        $data['variety_id']=$variety_id;
                         $data['user_created'] = $user->user_id;
                         $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_hom_bud_variance'),$data);
+                        Query_helper::add($this->config->item('table_hom_bud_target'),$data);
                     }
                 }
             }
@@ -471,7 +542,7 @@ class Hom_bud_target_finalize extends Root_Controller
 
 
             $data['title']="Variance Finalize For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_variance_finalize/details",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_target_finalize/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -499,7 +570,7 @@ class Hom_bud_target_finalize extends Root_Controller
         $this->db->trans_start();
         if($info)
         {
-            if($info['status_variance_finalize']===$this->config->item('system_status_yes'))
+            if($info['status_target_finalize']===$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
@@ -509,24 +580,24 @@ class Hom_bud_target_finalize extends Root_Controller
             else
             {
                 $data=array();
-                $data['status_variance_finalize']=$this->config->item('system_status_yes');
+                $data['status_target_finalize']=$this->config->item('system_status_yes');
                 $data['user_updated'] = $user->user_id;
                 $data['date_updated'] = $time;
-                $data['user_variance_finalized'] = $user->user_id;
-                $data['date_variance_finalized'] = $time;
+                $data['user_target_finalized'] = $user->user_id;
+                $data['date_target_finalized'] = $time;
                 Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
             }
         }
         else
         {
             $data=array();
-            $data['status_variance_finalize']=$this->config->item('system_status_yes');
+            $data['status_target_finalize']=$this->config->item('system_status_yes');
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
-            $data['user_variance_finalized'] = $user->user_id;
-            $data['date_variance_finalized'] = $time;
+            $data['user_target_finalized'] = $user->user_id;
+            $data['date_target_finalized'] = $time;
             Query_helper::add($this->config->item('table_forward_hom'),$data);
         }
         $this->db->trans_complete();   //DB Transaction Handle END
