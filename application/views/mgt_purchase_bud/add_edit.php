@@ -86,7 +86,7 @@
             <div class="col-xs-8">
                 <div class="row">
                 <?php
-                for($i=5;$i<17;$i++)
+                for($i=0;$i<12;$i++)
                 {
                     $quantity=0;
                     $variable='quantity_'.(($i%12)+1);
