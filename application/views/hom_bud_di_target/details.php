@@ -38,18 +38,16 @@
                 { name: 'type_name', type: 'string' },
                 { name: 'variety_id', type: 'string' },
                 { name: 'variety_name', type: 'string' },
+                { name: 'year0_budget_quantity', type: 'string' },
+                { name: 'year0_target_quantity', type: 'string' },
                     <?php
                         foreach($areas as $area)
-                        {?>{ name: '<?php echo 'area_quantity_'.$area['value'];?>', type: 'string' },
-                    <?php
-                        }
-                        for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ name: '<?php echo 'year'.$i.'_area_total_quantity';?>', type: 'string' },
-                { name: '<?php echo 'year'.$i.'_budget_quantity';?>', type: 'string' },
-                { name: '<?php echo 'year'.$i.'_budget_quantity_editable';?>', type: 'string' },
+                        {?>{ name: '<?php echo 'year0_budget_quantity_'.$area['value'];?>', type: 'string' },
+                { name: '<?php echo 'year0_target_quantity_'.$area['value'];?>', type: 'string' },
+                { name: '<?php echo 'year0_target_quantity_'.$area['value'].'_editable';?>', type: 'string' },
                 <?php
                     }
-                ?>
+            ?>
                 { name: 'sl_no', type: 'int' }
             ],
             id: 'id',
@@ -76,6 +74,39 @@
 
                 }
             }
+            else if((column=='allocation_variance'))
+            {
+                var variance=0;
+                if(!isNaN(parseFloat(record['year0_target_quantity'])))
+                {
+                    variance=parseFloat(record['year0_target_quantity']);
+                }
+                <?php
+                    foreach($areas as $area)
+                    {
+                        ?>
+                if(!isNaN(parseFloat(record['<?php echo 'year0_target_quantity_'.$area['value'];?>'])))
+                {
+                    variance-=parseFloat(record['<?php echo 'year0_target_quantity_'.$area['value'];?>']);
+                }
+                <?php
+            }
+            ?>
+
+                if(variance==0)
+                {
+                    element.html('');
+                    element.css({ 'background-color': '#00FF00','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+                else
+                {
+                    element.html(variance);
+                    element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+                //$("#system_jqx_container").jqxGrid('setcellvalue', row, "allocation_variance", variance);
+                //console.log(selectedRowData['year0_target_quantity']);
+
+            }
             else
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
@@ -97,34 +128,26 @@
                     { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center'},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
+                    { columngroup: 'incharge',text: 'Budget',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'incharge',text: 'Target',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
                         <?php
                             foreach($areas as $area)
-                            {?>{ columngroup: 'area',text: '<?php echo $area['text'];?>', dataField: '<?php echo 'area_quantity_'.$area['value'];?>',align:'center',width:'90',cellsrenderer: cellsrenderer,cellsAlign:'right'},
+                            {?>{ columngroup: '<?php echo 'area_'.$area['value'];?>',text: 'Budget',dataField: '<?php echo 'year0_budget_quantity_'.$area['value'];?>',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: '<?php echo 'area_'.$area['value'];?>',text: 'Target',dataField: '<?php echo 'year0_target_quantity_'.$area['value'];?>',width:'110',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
                     <?php
-                        }
-                    ?>
-                        <?php
-                            for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'DI', dataField: '<?php echo 'year'.$i.'_area_total_quantity';?>',align:'center',width:'80',cellsrenderer: cellsrenderer,cellsAlign:'right',editable:false},
-                    {
-                        columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'HOM', dataField: '<?php echo 'year'.$i.'_budget_quantity';?>',align:'center',width:'80',cellsrenderer: cellsrenderer,cellsAlign:'right',columntype:'custom'},
-                    <?php
-                        }
-                    ?>
-
+                }
+            ?>
+                    { text: 'Variance', dataField: 'allocation_variance',cellsrenderer: cellsrenderer,align:'center'}
                 ],
                 columngroups:
                     [
-                        { text: 'Divisions', align: 'center', name: 'area' },
-                        { text: '<?php echo $CI->lang->line('LABEL_BUDGETED_YEAR'); ?>', align: 'center', name: 'budgeted_year' },
-                        { text: '<?php echo $CI->lang->line('LABEL_NEXT_YEARS'); ?>', align: 'center', name: 'next_years' },
+                        { text: 'HOM',align: 'center',name:'incharge'},
                             <?php
-                            for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
-                            {?>{ text: '<?php echo $years[$i]['text']; ?>', align: 'center',parentgroup:'next_years', name: '<?php echo 'year'.$i.'_id'; ?>' },
+                                foreach($areas as $area)
+                                {?>{ text: '<?php echo $area['text'];?>',align:'center',name:'<?php echo 'area_'.$area['value'];?>' },
                         <?php
                             }
-                        ?>
-                        { text: '<?php echo $years[0]['text']; ?>', align: 'center',parentgroup:'budgeted_year', name: 'year0_id' }
+                    ?>
 
                     ]
             });

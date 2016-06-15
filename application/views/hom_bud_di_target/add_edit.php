@@ -2,7 +2,7 @@
     $CI = & get_instance();
     $action_data=array();
     $action_data["action_back"]=base_url($CI->controller_url);
-$action_data["action_save_jqx"]='#save_form_jqx';
+    $action_data["action_save_jqx"]='#save_form_jqx';
     if(isset($CI->permissions['view'])&&($CI->permissions['view']==1))
     {
         $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$year0_id.'/'.$crop_id);
@@ -102,12 +102,6 @@ $action_data["action_save_jqx"]='#save_form_jqx';
             }
             else if((column=='allocation_variance'))
             {
-
-
-                //element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-                //element.html('5');
-                //console.log('hi'+row);
-                //var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
                 var variance=0;
                 if(!isNaN(parseFloat(record['year0_target_quantity'])))
                 {

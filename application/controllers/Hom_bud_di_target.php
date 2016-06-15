@@ -62,23 +62,14 @@ class Hom_bud_di_target extends Root_Controller
         {
             $this->system_save();
         }
-        /*elseif($action=="details")
+        elseif($action=="details")
         {
             $this->system_details($id1,$id2);
-        }*/
-        //details are same from edit
-        /*elseif($action=="get_details_form")
-        {
-            $this->system_get_details_form();
         }
-        elseif($action=="get_details_items")
-        {
-            $this->system_get_details_items();
-        }*/
-        /*elseif($action=="forward")
+        elseif($action=="forward")
         {
             $this->system_forward($id1,$id2);
-        }*/
+        }
         else
         {
             $this->system_search();
@@ -253,7 +244,7 @@ class Hom_bud_di_target extends Root_Controller
 
         //my be short less by crop_id
         $results=Query_helper::get_info($this->config->item('table_di_bud_di_bt'),'*',array('year0_id ='.$year0_id));
-        $area_budget_target=array();//hom budget and target
+        $area_budget_target=array();//di budget and target
         foreach($results as $result)
         {
             $area_budget_target[$result['division_id']][$result['variety_id']]=$result;
@@ -345,141 +336,117 @@ class Hom_bud_di_target extends Root_Controller
         $this->jsonReturn($items);
 
     }
-    private function get_edit_row($item,$row_quantity)
-    {
-
-        $row=array();
-        $row['sl_no']=$item['sl_no'];
-        $row['type_name']=$item['type_name'];
-        $row['variety_name']=$item['variety_name'];
-        $row['variety_id']=$item['variety_id'];
-
-        foreach($row_quantity['area'] as $id=>$quantity)
-        {
-            if($quantity>0)
-            {
-                $row['area_quantity_'.$id]=$quantity;
-            }
-            else
-            {
-                $row['area_quantity_'.$id]='';
-            }
-
-        }
-        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-        {
-            if($row_quantity['year'.$i.'_area_total_quantity']>0)
-            {
-                $row['year'.$i.'_area_total_quantity']=$row_quantity['year'.$i.'_area_total_quantity'];
-            }
-            else
-            {
-                $row['year'.$i.'_area_total_quantity']='';
-            }
-            if($row_quantity['year'.$i.'_budget_quantity']>0)
-            {
-                $row['year'.$i.'_budget_quantity']=$row_quantity['year'.$i.'_budget_quantity'];
-            }
-            else
-            {
-                $row['year'.$i.'_budget_quantity']='';
-            }
-            if(isset($row_quantity['year'.$i.'_budget_quantity_editable']))
-            {
-                $row['year'.$i.'_budget_quantity_editable']=$row_quantity['year'.$i.'_budget_quantity_editable'];
-            }
-            else
-            {
-                $row['year'.$i.'_budget_quantity_editable']=false;
-            }
-
-
-        }
-
-        return $row;
-
-    }
     private function system_save()
     {
-        echo '<PRE>';
-        print_r($this->input->post());
-        echo '</PRE>';
-        die();
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
-        if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
+        $user = User_helper::get_user();
+        $time=time();
+        if((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1)))
         {
+            //only for HOM target finalized is in same table
             $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
-
             if($info)
             {
-                if($info['status_forward']===$this->config->item('system_status_yes'))
+                if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                    $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
                     $this->jsonReturn($ajax);
                     die();
                 }
             }
-        }
-        $user = User_helper::get_user();
-        $time=time();
-        //check forward status if has only add permission but not edit permission
-        $items=$this->input->post('items');
-        $this->db->trans_start();
-        if(sizeof($items)>0)
-        {
-            $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
-            $old_items=array();//hom budget
-            foreach($results as $result)
+            else
             {
-                $old_items[$result['variety_id']]=$result;
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
             }
-
-            foreach($items as $variety_id=>$item)
+            if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                $data=array();
-                for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+                //$info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+
+                if($info)
                 {
-                    if((isset($item['year'.$i.'_budget_quantity']))&&($item['year'.$i.'_budget_quantity']>0))
+                    if($info['status_assign']===$this->config->item('system_status_yes'))
                     {
-                        $data['year'.$i.'_budget_quantity']=$item['year'.$i.'_budget_quantity'];
-                    }
-                }
-                if($data)
-                {
-                    $data['year0_id']=$year0_id;
-                    $data['variety_id']=$variety_id;
-                    $data['user_budgeted'] = $user->user_id;
-                    $data['date_budgeted'] = $time;
-                    if(isset($old_items[$variety_id]))
-                    {
-                        $data['user_updated'] = $user->user_id;
-                        $data['date_updated'] = $time;
-                        Query_helper::update($this->config->item('table_hom_bud_hom_bt'),$data,array("id = ".$old_items[$variety_id]['id']));
-                    }
-                    else
-                    {
-                        $data['user_created'] = $user->user_id;
-                        $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_hom_bud_hom_bt'),$data);
+                        $ajax['status']=false;
+                        $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                        $this->jsonReturn($ajax);
+                        die();
                     }
                 }
             }
-        }
+            $items=$this->input->post('items');
+            $this->db->trans_start();
+            if(sizeof($items)>0)
+            {
+                $results=Query_helper::get_info($this->config->item('table_di_bud_di_bt'),'*',array('year0_id ='.$year0_id));
+                $area_budget_target=array();//di bud and target
+                foreach($results as $result)
+                {
+                    $area_budget_target[$result['division_id']][$result['variety_id']]=$result;
+                }
 
-        $this->db->trans_complete();   //DB Transaction Handle END
-        if ($this->db->trans_status() === TRUE)
-        {
-            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-            $this->system_edit($year0_id,$crop_id);
+                foreach($items as $division_id=>$item)
+                {
+                    foreach($item as $variety_id=> $year0_target_quantity)
+                    {
+                        $data=array();
+                        if(isset($area_budget_target[$division_id][$variety_id]))
+                        {
+                            $data['year0_target_quantity']=$year0_target_quantity;
+                            $data['user_updated'] = $user->user_id;
+                            $data['date_updated'] = $time;
+                            $data['user_targeted'] = $user->user_id;
+                            $data['date_targeted'] = $time;
+                            if($year0_target_quantity!=$area_budget_target[$division_id][$variety_id]['year0_target_quantity'])
+                            {
+                                Query_helper::update($this->config->item('table_di_bud_di_bt'),$data,array("id = ".$area_budget_target[$division_id][$variety_id]['id']));
+                            }
+
+                        }
+                        else
+                        {
+                            $data['division_id'] = $division_id;
+                            $data['year0_id'] = $year0_id;
+                            $data['variety_id'] = $variety_id;
+                            $data['year0_target_quantity']=$year0_target_quantity;
+                            $data['user_created'] = $user->user_id;
+                            $data['date_created'] = $time;
+                            $data['user_targeted'] = $user->user_id;
+                            $data['date_targeted'] = $time;
+                            if(!empty($year0_target_quantity))
+                            {
+                                Query_helper::add($this->config->item('table_di_bud_di_bt'),$data);
+                            }
+                        }
+
+
+                    }
+                }
+            }
+            $this->db->trans_complete();   //DB Transaction Handle END
+            if ($this->db->trans_status() === TRUE)
+            {
+                $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+                $this->system_edit($year0_id,$crop_id);
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+                $this->jsonReturn($ajax);
+            }
         }
         else
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->jsonReturn($ajax);
         }
+
     }
     private function system_details($year0_id,$crop_id)
     {
@@ -504,7 +471,7 @@ class Hom_bud_di_target extends Root_Controller
 
 
             $data['title']="HOM Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_budget/details",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_di_target/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -528,11 +495,38 @@ class Hom_bud_di_target extends Root_Controller
         {
             $crop_id=$this->input->post('id');
         }
+        //only for HOM target finalized is in same table
+        $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+        if($info)
+        {
+            if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
+            }
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+            $this->jsonReturn($ajax);
+            die();
+        }
+
         $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
         $this->db->trans_start();
         if($info)
         {
-            if($info['status_forward']===$this->config->item('system_status_yes'))
+            if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
+            }
+            else if($info['status_assign']===$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
@@ -542,7 +536,9 @@ class Hom_bud_di_target extends Root_Controller
             else
             {
                 $data=array();
-                $data['status_forward']=$this->config->item('system_status_yes');
+                $data['status_assign']=$this->config->item('system_status_yes');
+                $data['user_assigned'] = $user->user_id;
+                $data['date_assigned'] = $time;
                 $data['user_updated'] = $user->user_id;
                 $data['date_updated'] = $time;
                 Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
@@ -551,13 +547,13 @@ class Hom_bud_di_target extends Root_Controller
         else
         {
             $data=array();
-            $data['status_forward']=$this->config->item('system_status_yes');
+            $data['status_assign']=$this->config->item('system_status_yes');
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
-            $data['user_forwarded'] = $user->user_id;
-            $data['date_forwarded'] = $time;
+            $data['user_assigned'] = $user->user_id;
+            $data['date_assigned'] = $time;
             Query_helper::add($this->config->item('table_forward_hom'),$data);
         }
         $this->db->trans_complete();   //DB Transaction Handle END
