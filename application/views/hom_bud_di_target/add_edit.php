@@ -100,6 +100,45 @@ $action_data["action_save_jqx"]='#save_form_jqx';
 
                 }
             }
+            else if((column=='allocation_variance'))
+            {
+
+
+                //element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                //element.html('5');
+                //console.log('hi'+row);
+                //var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                var variance=0;
+                if(!isNaN(parseFloat(record['year0_target_quantity'])))
+                {
+                    variance=parseFloat(record['year0_target_quantity']);
+                }
+                <?php
+                    foreach($areas as $area)
+                    {
+                        ?>
+                if(!isNaN(parseFloat(record['<?php echo 'year0_target_quantity_'.$area['value'];?>'])))
+                {
+                    variance-=parseFloat(record['<?php echo 'year0_target_quantity_'.$area['value'];?>']);
+                }
+                <?php
+            }
+            ?>
+
+                if(variance==0)
+                {
+                    element.html('');
+                    element.css({ 'background-color': '#00FF00','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+                else
+                {
+                    element.html(variance);
+                    element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+                //$("#system_jqx_container").jqxGrid('setcellvalue', row, "allocation_variance", variance);
+                //console.log(selectedRowData['year0_target_quantity']);
+
+            }
             else
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
@@ -146,10 +185,12 @@ $action_data["action_save_jqx"]='#save_form_jqx';
                                 var value=editor.find('input').val();
                                 var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
                                 return editor.find('input').val();
-                            }},
+                            }
+                        },
                             <?php
                         }
                     ?>
+                    { text: 'Variance', dataField: 'allocation_variance',cellsrenderer: cellsrenderer,align:'center',editable:false}
                 ],
                 columngroups:
                     [

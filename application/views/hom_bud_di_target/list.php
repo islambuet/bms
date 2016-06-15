@@ -35,7 +35,8 @@
         ?>
         <div class="col-xs-12" style="margin-bottom: 20px;">
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="status_forward"><?php echo $CI->lang->line('LABEL_FORWARDED'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="status_target_finalize"><?php echo $CI->lang->line('LABEL_ALLOCATED'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="status_assign"><?php echo $CI->lang->line('LABEL_DISTRIBUTED'); ?></label>
         </div>
         <?php
     }
@@ -57,6 +58,7 @@
             dataFields: [
                 { name: 'id', type: 'int' },
                 { name: 'crop_name', type: 'string' },
+                { name: 'status_target_finalize', type: 'string' },
                 { name: 'status_assign', type: 'string' }
             ],
             id: 'id',
@@ -84,7 +86,8 @@
                 enabletooltips: true,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name'},
-                    { text: '<?php echo $CI->lang->line('LABEL_FORWARDED'); ?>', dataField: 'status_assign'}
+                    { text: '<?php echo $CI->lang->line('LABEL_ALLOCATED'); ?>', dataField: 'status_target_finalize'},
+                    { text: '<?php echo $CI->lang->line('LABEL_DISTRIBUTED'); ?>', dataField: 'status_assign'}
 
                 ]
             });

@@ -142,7 +142,7 @@ class Hom_bud_di_target extends Root_Controller
 
         $this->db->from($this->config->item('ems_setup_classification_crops').' crop');
         $this->db->select('crop.id,crop.name crop_name');
-        $this->db->select('fhom.status_assign');
+        $this->db->select('fhom.status_assign,fhom.status_target_finalize');
         $this->db->join($this->config->item('table_forward_hom').' fhom','fhom.crop_id = crop.id and year0_id ='.$year0_id,'LEFT');
         //$this->db->where('d.territory_id',$territory_id);
 
@@ -154,6 +154,10 @@ class Hom_bud_di_target extends Root_Controller
             if(!$item['status_assign'])
             {
                 $item['status_assign']=$this->config->item('system_status_no');
+            }
+            if(!$item['status_target_finalize'])
+            {
+                $item['status_target_finalize']=$this->config->item('system_status_no');
             }
         }
         $this->jsonReturn($items);
