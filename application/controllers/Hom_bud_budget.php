@@ -320,6 +320,12 @@ class Hom_bud_budget extends Root_Controller
             {
                 if(isset($prev_area_items[$result['id']][$area['value']]))
                 {
+                    //fixed for not set
+                    if(!isset($row_quantity['area'][$area['value']]))
+                    {
+                        $row_quantity['area'][$area['value']]=0;
+                    }
+                    //fixing for not set finish
                     if($prev_area_items[$result['id']][$area['value']]['year0_budget_quantity']>0)
                     {
                         $row_quantity['area'][$area['value']]=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
@@ -387,7 +393,6 @@ class Hom_bud_budget extends Root_Controller
     }
     private function get_edit_row($item,$row_quantity)
     {
-
         $row=array();
         $row['sl_no']=$item['sl_no'];
         $row['type_name']=$item['type_name'];
