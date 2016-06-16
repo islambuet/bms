@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Di_bud_budget extends Root_Controller
+class Di_bud_zi_target extends Root_Controller
 {
     private  $message;
     public $permissions;
@@ -10,7 +10,7 @@ class Di_bud_budget extends Root_Controller
     {
         parent::__construct();
         $this->message="";
-        $this->permissions=User_helper::get_permission('Di_bud_budget');
+        $this->permissions=User_helper::get_permission('Di_bud_zi_target');
         $this->locations=User_helper::get_locations();
         if(!is_array($this->locations))
         {
@@ -32,10 +32,12 @@ class Di_bud_budget extends Root_Controller
         {
             $this->permissions['forward']=1;
         }
-        $this->controller_url='di_bud_budget';
+        $this->controller_url='di_bud_zi_target';
 
     }
-
+    //$id1--division id
+    //$id2--year0
+    //$id3--crop_id
     public function index($action="search",$id1=0,$id2=0,$id3=0)
     {
         if($action=="search")
@@ -66,15 +68,6 @@ class Di_bud_budget extends Root_Controller
         {
             $this->system_details($id1,$id2,$id3);
         }
-        //details are same from edit
-        /*elseif($action=="get_details_form")
-        {
-            $this->system_get_details_form();
-        }
-        elseif($action=="get_details_items")
-        {
-            $this->system_get_details_items();
-        }*/
         elseif($action=="forward")
         {
             $this->system_forward($id1,$id2,$id3);
@@ -96,10 +89,9 @@ class Di_bud_budget extends Root_Controller
             $data['budget']['division_id']=$this->locations['division_id'];
             $data['budget']['zone_id']=$this->locations['zone_id'];
             $data['divisions']=Query_helper::get_info($this->config->item('ems_setup_location_divisions'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
-
-            $data['title']="DI Budget";
+            $data['title']="Assign ZI Target";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_budget/search",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_zi_target/search",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -126,7 +118,7 @@ class Di_bud_budget extends Root_Controller
             $data['keys']=trim($keys,',');
             $data['title']="Crop List";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("di_bud_budget/list",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("di_bud_zi_target/list",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -146,18 +138,24 @@ class Di_bud_budget extends Root_Controller
 
         $this->db->from($this->config->item('ems_setup_classification_crops').' crop');
         $this->db->select('crop.id,crop.name crop_name');
-        $this->db->select('fdi.status_forward');
-        $this->db->join($this->config->item('table_forward_di').' fdi','fdi.crop_id = crop.id and year0_id ='.$year0_id.' and division_id ='.$division_id,'LEFT');
-        //$this->db->where('d.territory_id',$territory_id);
+        $this->db->select('fhom.status_assign status_target_finalize');//,fhom.status_target_finalize');
+        $this->db->select('fdi.status_assign status_assign');
+
+        $this->db->join($this->config->item('table_forward_hom').' fhom','fhom.crop_id = crop.id and fhom.year0_id ='.$year0_id,'LEFT');
+        $this->db->join($this->config->item('table_forward_di').' fdi','fdi.crop_id = crop.id and fdi.year0_id ='.$year0_id.' and division_id ='.$division_id,'LEFT');
 
         $this->db->order_by('crop.ordering','ASC');
         $this->db->where('crop.status',$this->config->item('system_status_active'));
         $items=$this->db->get()->result_array();
         foreach($items as &$item)
         {
-            if(!$item['status_forward'])
+            if(!$item['status_assign'])
             {
-                $item['status_forward']=$this->config->item('system_status_no');
+                $item['status_assign']=$this->config->item('system_status_no');
+            }
+            if(!$item['status_target_finalize'])
+            {
+                $item['status_target_finalize']=$this->config->item('system_status_no');
             }
         }
         $this->jsonReturn($items);
@@ -171,13 +169,31 @@ class Di_bud_budget extends Root_Controller
             {
                 $crop_id=$this->input->post('id');
             }
+            $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+            if($info)
+            {
+                if($info['status_assign']!==$this->config->item('system_status_yes'))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                    $this->jsonReturn($ajax);
+                    die();
+                }
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
+            }
             if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                $info=Query_helper::get_info($this->config->item('table_forward_di'),'*',array('division_id ='.$division_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+                $info=Query_helper::get_info($this->config->item('table_forward_di'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'division_id ='.$division_id),1);
 
                 if($info)
                 {
-                    if($info['status_forward']===$this->config->item('system_status_yes'))
+                    if($info['status_assign']===$this->config->item('system_status_yes'))
                     {
                         $ajax['status']=false;
                         $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
@@ -201,8 +217,8 @@ class Di_bud_budget extends Root_Controller
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="DI Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_budget/add_edit",$data,true));
+            $data['title']="Assign ZI Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_zi_target/add_edit",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -219,33 +235,33 @@ class Di_bud_budget extends Root_Controller
     }
     private function system_get_edit_items()
     {
+        $items=array();
         $division_id=$this->input->post('division_id');
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
-        $results=Query_helper::get_info($this->config->item('table_di_bud_di_bt'),'*',array('division_id ='.$division_id,'year0_id ='.$year0_id));
-        $old_items=array();//di budget
+
+        //may be need to check if already forwarded
+        //may be short out with crops
+        $results=Query_helper::get_info($this->config->item('table_di_bud_di_bt'),'*',array('year0_id ='.$year0_id,'division_id ='.$division_id));
+        $incharge_budget_target=array();//DI budget and target
         foreach($results as $result)
         {
-            $old_items[$result['variety_id']]=$result;
+            $incharge_budget_target[$result['variety_id']]=$result;
         }
-        //zones
+
         $areas=Query_helper::get_info($this->config->item('ems_setup_location_zones'),array('id value','name text'),array('division_id ='.$division_id,'status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
 
-
+        //my be short less by crop_id
         $this->db->from($this->config->item('table_zi_bud_zi_bt').' zbt');
         $this->db->select('zbt.*');
         $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = zbt.zone_id','INNER');
-        $this->db->join($this->config->item('table_forward_zi').' fzi','fzi.zone_id = zbt.zone_id','INNER');
-        $this->db->where('fzi.crop_id',$crop_id);
-        $this->db->where('fzi.status_forward',$this->config->item('system_status_yes'));
+        $this->db->where('year0_id',$year0_id);
         $this->db->where('zone.division_id',$division_id);
-        $this->db->where('zbt.year0_id',$year0_id);
         $results=$this->db->get()->result_array();
-        $prev_area_items=array();//zones
-
+        $area_budget_target=array();//zi budget and target
         foreach($results as $result)
         {
-            $prev_area_items[$result['variety_id']][$result['zone_id']]=$result;
+            $area_budget_target[$result['zone_id']][$result['variety_id']]=$result;
         }
 
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
@@ -260,23 +276,7 @@ class Di_bud_budget extends Root_Controller
 
         $results=$this->db->get()->result_array();
 
-
-        $total_types=array();
-        $total_crop=array();
-        foreach($areas as $area)
-        {
-            $total_types['area'][$area['value']]=0;
-            $total_crop['area'][$area['value']]=0;
-        }
-        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-        {
-            $total_types['year'.$i.'_area_total_quantity']=0;
-            $total_types['year'.$i.'_budget_quantity']=0;
-            $total_crop['year'.$i.'_area_total_quantity']=0;
-            $total_crop['year'.$i.'_budget_quantity']=0;
-        }
         $count=0;
-        $items=array();
         $prev_type='';
         foreach($results as $index=>$result)
         {
@@ -285,20 +285,6 @@ class Di_bud_budget extends Root_Controller
             {
                 if($prev_type!=$result['type_name'])
                 {
-                    $total_item=array();
-                    $total_item['sl_no']='';
-                    $total_item['type_name']='';
-                    $total_item['variety_name']='Total Type';
-                    $total_item['variety_id']='';
-                    $items[]=$this->get_edit_row($total_item,$total_types);
-                    foreach($areas as $area)
-                    {
-                        $total_types['area'][$area['value']]=0;
-                    }
-                    for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-                    {
-                        $total_types['year'.$i.'_area_total_quantity']=0;;
-                    }
                     $count=0;
                     $item['type_name']=$result['type_name'];
                     $prev_type=$result['type_name'];
@@ -318,140 +304,50 @@ class Di_bud_budget extends Root_Controller
             $item['sl_no']=$count;
             $item['variety_id']=$result['id'];
             $item['variety_name']=$result['name'];
-
-            $row_quantity=array();
-            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
+            if(isset($incharge_budget_target[$item['variety_id']]))
             {
-                $row_quantity['year'.$i.'_area_total_quantity']=0;
-                $row_quantity['year'.$i.'_budget_quantity']=0;
+                $item['year0_budget_quantity']=$incharge_budget_target[$item['variety_id']]['year0_budget_quantity'];
+                $item['year0_target_quantity']=$incharge_budget_target[$item['variety_id']]['year0_target_quantity'];
+            }
+            else
+            {
+                $item['year0_budget_quantity']=0;
+                $item['year0_target_quantity']=0;
             }
             foreach($areas as $area)
             {
-                //fixed for not set
-                if(!isset($row_quantity['area'][$area['value']]))
+                if(isset($area_budget_target[$area['value']][$item['variety_id']]))
                 {
-                    $row_quantity['area'][$area['value']]=0;
-                }
-                //fixing for not set finish
-                if(isset($prev_area_items[$result['id']][$area['value']]))
-                {
-                    if($prev_area_items[$result['id']][$area['value']]['year0_budget_quantity']>0)
+                    if($area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity']==null ||$area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity']==0)
                     {
-                        $row_quantity['area'][$area['value']]=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
-                        $total_types['area'][$area['value']]+=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
-                        $total_crop['area'][$area['value']]+=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];
-                    }
-                    for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-                    {
-                        if($prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity']>0)
-                        {
-                            $row_quantity['year'.$i.'_area_total_quantity']+=$prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity'];
-                            $total_types['year'.$i.'_area_total_quantity']+=$prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity'];
-                            $total_crop['year'.$i.'_area_total_quantity']+=$prev_area_items[$result['id']][$area['value']]['year'.$i.'_budget_quantity'];
-                        }
-                    }
-                }
-                else
-                {
-                    $row_quantity['area'][$area['value']]=0;
-                }
-
-            }
-            for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-            {
-                $quantity='';
-                $editable=false;
-                if((isset($old_items[$result['id']]['year'.$i.'_budget_quantity']))&&(($old_items[$result['id']]['year'.$i.'_budget_quantity'])>0))
-                {
-                    $quantity=$old_items[$result['id']]['year'.$i.'_budget_quantity'];
-                    if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
-                    {
-                        $editable=true;
+                        $item['year0_budget_quantity_'.$area['value']]='';
                     }
                     else
                     {
-                        $editable=false;
+                        $item['year0_budget_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity'];
                     }
+                    if($area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity']==null ||$area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity']==0)
+                    {
+                        $item['year0_target_quantity_'.$area['value']]='';
+                    }
+                    else
+                    {
+                        $item['year0_target_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity'];
+                    }
+
+
                 }
                 else
                 {
-                    $editable=true;
+                    $item['year0_budget_quantity_'.$area['value']]='-';
+                    $item['year0_target_quantity_'.$area['value']]='';
                 }
-                $row_quantity['year'.$i.'_budget_quantity']=$quantity;
-                $row_quantity['year'.$i.'_budget_quantity_editable']=$editable;
+                $item['year0_target_quantity_'.$area['value'].'_editable']=true;
             }
-
-            $items[]=$this->get_edit_row($item,$row_quantity);
-
+            $items[]=$item;
         }
-        $total_item=array();
-        $total_item['sl_no']='';
-        $total_item['type_name']='';
-        $total_item['variety_name']='Total Type';
-        $total_item['variety_id']='';
-        $items[]=$this->get_edit_row($total_item,$total_types);
-        $total_item=array();
-        $total_item['sl_no']='';
-        $total_item['type_name']='Total Crop';
-        $total_item['variety_name']='';
-        $total_item['variety_id']='';
-        $items[]=$this->get_edit_row($total_item,$total_crop);
 
         $this->jsonReturn($items);
-
-    }
-    private function get_edit_row($item,$row_quantity)
-    {
-
-        $row=array();
-        $row['sl_no']=$item['sl_no'];
-        $row['type_name']=$item['type_name'];
-        $row['variety_name']=$item['variety_name'];
-        $row['variety_id']=$item['variety_id'];
-
-        foreach($row_quantity['area'] as $id=>$quantity)
-        {
-            if($quantity>0)
-            {
-                $row['area_quantity_'.$id]=$quantity;
-            }
-            else
-            {
-                $row['area_quantity_'.$id]='';
-            }
-
-        }
-        for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-        {
-            if($row_quantity['year'.$i.'_area_total_quantity']>0)
-            {
-                $row['year'.$i.'_area_total_quantity']=$row_quantity['year'.$i.'_area_total_quantity'];
-            }
-            else
-            {
-                $row['year'.$i.'_area_total_quantity']='';
-            }
-            if($row_quantity['year'.$i.'_budget_quantity']>0)
-            {
-                $row['year'.$i.'_budget_quantity']=$row_quantity['year'.$i.'_budget_quantity'];
-            }
-            else
-            {
-                $row['year'.$i.'_budget_quantity']='';
-            }
-            if(isset($row_quantity['year'.$i.'_budget_quantity_editable']))
-            {
-                $row['year'.$i.'_budget_quantity_editable']=$row_quantity['year'.$i.'_budget_quantity_editable'];
-            }
-            else
-            {
-                $row['year'.$i.'_budget_quantity_editable']=false;
-            }
-
-
-        }
-
-        return $row;
 
     }
     private function system_save()
@@ -459,81 +355,118 @@ class Di_bud_budget extends Root_Controller
         $division_id=$this->input->post('division_id');
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
-        if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
+        $user = User_helper::get_user();
+        $time=time();
+        if((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1)))
         {
-            $info=Query_helper::get_info($this->config->item('table_forward_di'),'*',array('division_id ='.$division_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
-
+            //only for HOM target finalized is in same table
+            $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
             if($info)
             {
-                if($info['status_forward']===$this->config->item('system_status_yes'))
+                if($info['status_assign']!==$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                    $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
                     $this->jsonReturn($ajax);
                     die();
                 }
             }
-        }
-        $user = User_helper::get_user();
-        $time=time();
-        //check forward status if has only add permission but not edit permission
-        $items=$this->input->post('items');
-        $this->db->trans_start();
-        if(sizeof($items)>0)
-        {
-            $results=Query_helper::get_info($this->config->item('table_di_bud_di_bt'),'*',array('division_id ='.$division_id,'year0_id ='.$year0_id));
-            $old_items=array();//di budget
-            foreach($results as $result)
+            else
             {
-                $old_items[$result['variety_id']]=$result;
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
             }
-
-            foreach($items as $variety_id=>$item)
+            if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                $data=array();
-                for($i=0;$i<=$this->config->item('num_year_prediction');$i++)
-                {
-                    if((isset($item['year'.$i.'_budget_quantity']))&&($item['year'.$i.'_budget_quantity']>0))
-                    {
-                        $data['year'.$i.'_budget_quantity']=$item['year'.$i.'_budget_quantity'];
-                    }
-                }
-                if($data)
-                {
+                $info=Query_helper::get_info($this->config->item('table_forward_di'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'division_id ='.$division_id),1);
 
-                    $data['division_id']=$division_id;
-                    $data['year0_id']=$year0_id;
-                    $data['variety_id']=$variety_id;
-                    $data['user_budgeted'] = $user->user_id;
-                    $data['date_budgeted'] = $time;
-                    if(isset($old_items[$variety_id]))
+                if($info)
+                {
+                    if($info['status_assign']===$this->config->item('system_status_yes'))
                     {
-                        $data['user_updated'] = $user->user_id;
-                        $data['date_updated'] = $time;
-                        Query_helper::update($this->config->item('table_di_bud_di_bt'),$data,array("id = ".$old_items[$variety_id]['id']));
-                    }
-                    else
-                    {
-                        $data['user_created'] = $user->user_id;
-                        $data['date_created'] = $time;
-                        Query_helper::add($this->config->item('table_di_bud_di_bt'),$data);
+                        $ajax['status']=false;
+                        $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
+                        $this->jsonReturn($ajax);
+                        die();
                     }
                 }
             }
-        }
+            $items=$this->input->post('items');
+            $this->db->trans_start();
+            if(sizeof($items)>0)
+            {
+                $this->db->from($this->config->item('table_zi_bud_zi_bt').' zbt');
+                $this->db->select('zbt.*');
+                $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = zbt.zone_id','INNER');
+                $this->db->where('year0_id',$year0_id);
+                $this->db->where('zone.division_id',$division_id);
+                $results=$this->db->get()->result_array();
+                $area_budget_target=array();//zi budget and target
+                foreach($results as $result)
+                {
+                    $area_budget_target[$result['zone_id']][$result['variety_id']]=$result;
+                }
 
-        $this->db->trans_complete();   //DB Transaction Handle END
-        if ($this->db->trans_status() === TRUE)
-        {
-            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-            $this->system_edit($division_id,$year0_id,$crop_id);
+                foreach($items as $zone_id=>$item)
+                {
+                    foreach($item as $variety_id=> $year0_target_quantity)
+                    {
+                        $data=array();
+                        if(isset($area_budget_target[$zone_id][$variety_id]))
+                        {
+                            $data['year0_target_quantity']=$year0_target_quantity;
+                            $data['user_updated'] = $user->user_id;
+                            $data['date_updated'] = $time;
+                            $data['user_targeted'] = $user->user_id;
+                            $data['date_targeted'] = $time;
+                            if($year0_target_quantity!=$area_budget_target[$zone_id][$variety_id]['year0_target_quantity'])
+                            {
+                                Query_helper::update($this->config->item('table_zi_bud_zi_bt'),$data,array("id = ".$area_budget_target[$zone_id][$variety_id]['id']));
+                            }
+
+                        }
+                        else
+                        {
+                            $data['zone_id'] = $zone_id;
+                            $data['year0_id'] = $year0_id;
+                            $data['variety_id'] = $variety_id;
+                            $data['year0_target_quantity']=$year0_target_quantity;
+                            $data['user_created'] = $user->user_id;
+                            $data['date_created'] = $time;
+                            $data['user_targeted'] = $user->user_id;
+                            $data['date_targeted'] = $time;
+                            if(!empty($year0_target_quantity))
+                            {
+                                Query_helper::add($this->config->item('table_zi_bud_zi_bt'),$data);
+                            }
+                        }
+
+
+                    }
+                }
+            }
+            $this->db->trans_complete();   //DB Transaction Handle END
+            if ($this->db->trans_status() === TRUE)
+            {
+                $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+                $this->system_edit($division_id,$year0_id,$crop_id);
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+                $this->jsonReturn($ajax);
+            }
         }
         else
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->jsonReturn($ajax);
         }
+
     }
     private function system_details($division_id,$year0_id,$crop_id)
     {
@@ -548,7 +481,7 @@ class Di_bud_budget extends Root_Controller
             $data['division_id']=$division_id;
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
-            //zones
+            //divisions
             $data['areas']=Query_helper::get_info($this->config->item('ems_setup_location_zones'),array('id value','name text'),array('division_id ='.$division_id,'status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
 
 
@@ -559,8 +492,8 @@ class Di_bud_budget extends Root_Controller
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="DI Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_budget/details",$data,true));
+            $data['title']="HOM Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_zi_target/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -584,11 +517,31 @@ class Di_bud_budget extends Root_Controller
         {
             $crop_id=$this->input->post('id');
         }
-        $info=Query_helper::get_info($this->config->item('table_forward_di'),'*',array('division_id ='.$division_id,'year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+        //only for HOM target finalized is in same table
+        $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+        if($info)
+        {
+            if($info['status_assign']!==$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
+            }
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+            $this->jsonReturn($ajax);
+            die();
+        }
+
+        $info=Query_helper::get_info($this->config->item('table_forward_di'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'division_id ='.$division_id),1);
         $this->db->trans_start();
         if($info)
         {
-            if($info['status_forward']===$this->config->item('system_status_yes'))
+            if($info['status_assign']===$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
@@ -598,7 +551,9 @@ class Di_bud_budget extends Root_Controller
             else
             {
                 $data=array();
-                $data['status_forward']=$this->config->item('system_status_yes');
+                $data['status_assign']=$this->config->item('system_status_yes');
+                $data['user_assigned'] = $user->user_id;
+                $data['date_assigned'] = $time;
                 $data['user_updated'] = $user->user_id;
                 $data['date_updated'] = $time;
                 Query_helper::update($this->config->item('table_forward_di'),$data,array("id = ".$info['id']));
@@ -607,14 +562,14 @@ class Di_bud_budget extends Root_Controller
         else
         {
             $data=array();
-            $data['status_forward']=$this->config->item('system_status_yes');
+            $data['status_assign']=$this->config->item('system_status_yes');
             $data['division_id']=$division_id;
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
-            $data['user_forwarded'] = $user->user_id;
-            $data['date_forwarded'] = $time;
+            $data['user_assigned'] = $user->user_id;
+            $data['date_assigned'] = $time;
             Query_helper::add($this->config->item('table_forward_di'),$data);
         }
         $this->db->trans_complete();   //DB Transaction Handle END

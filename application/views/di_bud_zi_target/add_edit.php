@@ -5,11 +5,12 @@
     $action_data["action_save_jqx"]='#save_form_jqx';
     if(isset($CI->permissions['view'])&&($CI->permissions['view']==1))
     {
-        $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$year0_id.'/'.$crop_id);
+        $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$division_id.'/'.$year0_id.'/'.$crop_id);
     }
     $CI->load->view("action_buttons",$action_data);
 ?>
 <form class="form_valid" id="save_form_jqx" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
+    <input type="hidden" name="division_id" value="<?php echo $division_id; ?>" />
     <input type="hidden" name="year0_id" value="<?php echo $year0_id; ?>" />
     <input type="hidden" name="crop_id" value="<?php echo $crop_id; ?>" />
 </form>
@@ -184,7 +185,7 @@
                 ],
                 columngroups:
                     [
-                        { text: 'HOM',align: 'center',name:'incharge'},
+                        { text: 'DI',align: 'center',name:'incharge'},
                             <?php
                                 foreach($areas as $area)
                                 {?>{ text: '<?php echo $area['text'];?>',align:'center',name:'<?php echo 'area_'.$area['value'];?>' },
