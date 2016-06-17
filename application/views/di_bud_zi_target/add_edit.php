@@ -13,6 +13,8 @@
     <input type="hidden" name="division_id" value="<?php echo $division_id; ?>" />
     <input type="hidden" name="year0_id" value="<?php echo $year0_id; ?>" />
     <input type="hidden" name="crop_id" value="<?php echo $crop_id; ?>" />
+    <div id="jqx_inputs">
+    </div>
 </form>
 <div class="row widget">
     <div class="widget-header">
@@ -33,6 +35,7 @@
         $(document).on("click", "#button_action_save_jqx", function(event)
         {
             $("#system_loading").show();
+            $('#save_form_jqx #jqx_inputs').html('');
             var data=$('#system_jqx_container').jqxGrid('getrows');
             for(var i=0;i<data.length;i++)
             {
@@ -41,7 +44,7 @@
                 {?>
                 if(data[i]['year0_target_quantity_<?php echo $area['value']; ?>_editable'])
                 {
-                    $('#save_form_jqx').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_year0_target_quantity_<?php echo $area['value']; ?>" name="items[<?php echo $area['value']; ?>]['+data[i]['variety_id']+']" value="'+data[i]['year0_target_quantity_<?php echo $area['value']; ?>']+'">');
+                    $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_year0_target_quantity_<?php echo $area['value']; ?>" name="items[<?php echo $area['value']; ?>]['+data[i]['variety_id']+']" value="'+data[i]['year0_target_quantity_<?php echo $area['value']; ?>']+'">');
                 }
                 <?php
                 }
