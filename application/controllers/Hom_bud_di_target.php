@@ -470,7 +470,7 @@ class Hom_bud_di_target extends Root_Controller
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="HOM Budget For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $data['title']="DI Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_di_target/details",$data,true));
             if($this->message)
             {

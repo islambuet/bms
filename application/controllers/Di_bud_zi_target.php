@@ -492,7 +492,7 @@ class Di_bud_zi_target extends Root_Controller
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="DI Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
+            $data['title']="ZI Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("di_bud_zi_target/details",$data,true));
             if($this->message)
             {
