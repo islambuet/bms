@@ -5,14 +5,14 @@
     $action_data["action_save_jqx"]='#save_form_jqx';
     if(isset($CI->permissions['view'])&&($CI->permissions['view']==1))
     {
-        $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$crop_id);
+        $action_data["action_details_get"]=site_url($CI->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$type_id);
     }
     $CI->load->view("action_buttons",$action_data);
 ?>
 <form class="form_valid" id="save_form_jqx" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
     <input type="hidden" name="territory_id" value="<?php echo $territory_id; ?>" />
     <input type="hidden" name="year0_id" value="<?php echo $year0_id; ?>" />
-    <input type="hidden" name="crop_id" value="<?php echo $crop_id; ?>" />
+    <input type="hidden" name="type_id" value="<?php echo $type_id; ?>" />
     <div id="jqx_inputs">
     </div>
 </form>
@@ -40,11 +40,11 @@
             for(var i=0;i<data.length;i++)
             {
             <?php
-                foreach($areas as $area)
+                for($i=1;$i<13;$i++)
                 {?>
-                if(data[i]['year0_target_quantity_<?php echo $area['value']; ?>_editable'])
+                if(data[i]['target_quantity_<?php echo $i; ?>_editable'])
                 {
-                    $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_year0_target_quantity_<?php echo $area['value']; ?>" name="items[<?php echo $area['value']; ?>]['+data[i]['variety_id']+']" value="'+data[i]['year0_target_quantity_<?php echo $area['value']; ?>']+'">');
+                    $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_target_quantity_<?php echo $i; ?>" name="items['+data[i]['variety_id']+'][<?php echo $i; ?>]" value="'+data[i]['target_quantity_<?php echo $i; ?>']+'">');
                 }
                 <?php
                 }
@@ -61,16 +61,14 @@
             dataType: "json",
             dataFields: [
                 { name: 'id', type: 'int' },
-                { name: 'type_name', type: 'string' },
                 { name: 'variety_id', type: 'string' },
                 { name: 'variety_name', type: 'string' },
-                { name: 'year0_budget_quantity', type: 'string' },
                 { name: 'year0_target_quantity', type: 'string' },
                     <?php
-                        foreach($areas as $area)
-                        {?>{ name: '<?php echo 'year0_budget_quantity_'.$area['value'];?>', type: 'string' },
-                { name: '<?php echo 'year0_target_quantity_'.$area['value'];?>', type: 'string' },
-                { name: '<?php echo 'year0_target_quantity_'.$area['value'].'_editable';?>', type: 'string' },
+                        for($i=1;$i<13;$i++)
+                        {?>
+                { name: '<?php echo 'target_quantity_'.$i;?>', type: 'string' },
+                { name: '<?php echo 'target_quantity_'.$i.'_editable';?>', type: 'string' },
                     <?php
                         }
                 ?>
@@ -108,12 +106,12 @@
                     variance=parseFloat(record['year0_target_quantity']);
                 }
                 <?php
-                    foreach($areas as $area)
+                    for($i=1;$i<13;$i++)
                     {
                         ?>
-                if(!isNaN(parseFloat(record['<?php echo 'year0_target_quantity_'.$area['value'];?>'])))
+                if(!isNaN(parseFloat(record['<?php echo 'target_quantity_'.$i;?>'])))
                 {
-                    variance-=parseFloat(record['<?php echo 'year0_target_quantity_'.$area['value'];?>']);
+                    variance-=parseFloat(record['<?php echo 'target_quantity_'.$i;?>']);
                 }
                 <?php
             }
@@ -129,8 +127,6 @@
                     element.html(variance);
                     element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
                 }
-                //$("#system_jqx_container").jqxGrid('setcellvalue', row, "allocation_variance", variance);
-                //console.log(selectedRowData['year0_target_quantity']);
 
             }
             else
@@ -159,16 +155,14 @@
                     { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { columngroup: 'incharge',text: 'Budget',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { columngroup: 'incharge',text: 'Target',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Total Target',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     <?php
-                        foreach($areas as $area)
-                        {?>{ columngroup: '<?php echo 'area_'.$area['value'];?>',text: 'Budget',dataField: '<?php echo 'year0_budget_quantity_'.$area['value'];?>',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                        { columngroup: '<?php echo 'area_'.$area['value'];?>',text: 'Target',dataField: '<?php echo 'year0_target_quantity_'.$area['value'];?>',width:'110',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
+                        for($i=1;$i<13;$i++)
+                        {?>{text: '<?php echo date("M", mktime(0, 0, 0,  $i,1, 2000));?>',dataField: '<?php echo 'target_quantity_'.$i;?>',width:'110',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
                             cellbeginedit: function (row)
                             {
                                 var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
-                                return selectedRowData['year0_target_quantity_editable'];
+                                return selectedRowData['target_quantity_<?php echo $i; ?>_editable'];
                             },
                             initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
 
@@ -185,18 +179,7 @@
                         }
                     ?>
                     { text: 'Variance', dataField: 'allocation_variance',cellsrenderer: cellsrenderer,align:'center',editable:false}
-                ],
-                columngroups:
-                    [
-                        { text: 'TI',align: 'center',name:'incharge'},
-                            <?php
-                                foreach($areas as $area)
-                                {?>{ text: '<?php echo $area['text'];?>',align:'center',name:'<?php echo 'area_'.$area['value'];?>' },
-                            <?php
-                                }
-                        ?>
-
-                    ]
+                ]
             });
 
     });

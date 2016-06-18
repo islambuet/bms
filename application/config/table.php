@@ -27,7 +27,9 @@ $config['table_setup_packing_material_items'] = 'bms_setup_packing_material_item
 
 $config['table_ti_bud_customer_bt'] = 'bms_ti_bud_customer_bt';
 $config['table_ti_bud_ti_bt'] = 'bms_ti_bud_ti_bt';
+$config['table_ti_bud_month_bt'] = 'bms_ti_bud_month_bt';
 $config['table_forward_ti'] = 'bms_forward_ti';
+$config['table_forward_ti_month_target'] = 'bms_forward_ti_month_target';
 
 $config['table_zi_bud_zi_bt'] = 'bms_zi_bud_zi_bt';
 $config['table_forward_zi'] = 'bms_forward_zi';

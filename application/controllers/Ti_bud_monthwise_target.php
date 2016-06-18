@@ -52,7 +52,7 @@ class Ti_bud_monthwise_target extends Root_Controller
         {
             $this->get_items($id1,$id2);
         }
-        /*elseif($action=="edit")
+        elseif($action=="edit")
         {
             $this->system_edit($id1,$id2,$id3);
         }
@@ -64,7 +64,7 @@ class Ti_bud_monthwise_target extends Root_Controller
         {
             $this->system_save();
         }
-        elseif($action=="details")
+        /*elseif($action=="details")
         {
             $this->system_details($id1,$id2,$id3);
         }
@@ -179,16 +179,18 @@ class Ti_bud_monthwise_target extends Root_Controller
         $this->jsonReturn($items);
     }
 
-    private function system_edit($territory_id,$year0_id,$crop_id)
+    private function system_edit($territory_id,$year0_id,$type_id)
     {
         $territory_info=Query_helper::get_info($this->config->item('ems_setup_location_territories'),'*',array('id ='.$territory_id),1);
+
         if((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1)))
         {
             if(($this->input->post('id')))
             {
-                $crop_id=$this->input->post('id');
+                $type_id=$this->input->post('id');
             }
-            $info=Query_helper::get_info($this->config->item('table_forward_zi'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'zone_id ='.$territory_info['zone_id']),1);
+            $type_info=Query_helper::get_info($this->config->item('ems_setup_classification_crop_types'),'*',array('id ='.$type_id),1);
+            $info=Query_helper::get_info($this->config->item('table_forward_zi'),'*',array('year0_id ='.$year0_id,'crop_id ='.$type_info['crop_id'],'zone_id ='.$territory_info['zone_id']),1);
             if($info)
             {
                 if($info['status_assign']!==$this->config->item('system_status_yes'))
@@ -208,7 +210,7 @@ class Ti_bud_monthwise_target extends Root_Controller
             }
             if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'territory_id ='.$territory_id),1);
+                $info=Query_helper::get_info($this->config->item('table_forward_ti_month_target'),'*',array('year0_id ='.$year0_id,'type_id ='.$type_id,'territory_id ='.$territory_id),1);
 
                 if($info)
                 {
@@ -221,35 +223,26 @@ class Ti_bud_monthwise_target extends Root_Controller
                     }
                 }
             }
-            $crop=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array('id ='.$crop_id),1);
+
             $data['years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
             $data['territory_id']=$territory_id;
             $data['year0_id']=$year0_id;
-            $data['crop_id']=$crop_id;
-            //customers
-            $this->db->from($this->config->item('ems_csetup_customers').' cus');
-            $this->db->select('cus.id value');
-            $this->db->select('CONCAT(cus.customer_code," - ",cus.name) text');
-            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
-            $this->db->where('d.territory_id',$territory_id);
-            $this->db->order_by('cus.ordering','ASC');
-            $this->db->where('cus.status',$this->config->item('system_status_active'));
-            $data['areas']=$this->db->get()->result_array();//customers
+            $data['type_id']=$type_id;
 
             $keys=',';
             $keys.="territory_id:'".$territory_id."',";
             $keys.="year0_id:'".$year0_id."',";
-            $keys.="crop_id:'".$crop_id."',";
+            $keys.="type_id:'".$type_id."',";
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="Assign Customers Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_target/add_edit",$data,true));
+            $data['title']="Assign Month wise Target For ".$type_info['name'].'('.$data['years'][0]['text'].')';
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_monthwise_target/add_edit",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url."/index/edit/".$territory_id.'/'.$year0_id.'/'.$crop_id);
+            $ajax['system_page_url']=site_url($this->controller_url."/index/edit/".$territory_id.'/'.$year0_id.'/'.$type_id);
             $this->jsonReturn($ajax);
         }
         else
@@ -264,7 +257,7 @@ class Ti_bud_monthwise_target extends Root_Controller
         $items=array();
         $territory_id=$this->input->post('territory_id');
         $year0_id=$this->input->post('year0_id');
-        $crop_id=$this->input->post('crop_id');
+        $type_id=$this->input->post('type_id');
 
         //may be need to check if already forwarded
         //may be short out with crops
@@ -274,60 +267,26 @@ class Ti_bud_monthwise_target extends Root_Controller
         {
             $incharge_budget_target[$result['variety_id']]=$result;
         }
-        $this->db->from($this->config->item('ems_csetup_customers').' cus');
-        $this->db->select('cus.id value');
-        $this->db->select('CONCAT(cus.customer_code," - ",cus.name) text');
-        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
-        $this->db->where('d.territory_id',$territory_id);
-        $this->db->order_by('cus.ordering','ASC');
-        $this->db->where('cus.status',$this->config->item('system_status_active'));
-        $areas=$this->db->get()->result_array();//customers
-
-        //my be short less by crop_id
-        $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_bt'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id));
-        $area_budget_target=array();//ti budget and target
+        $results=Query_helper::get_info($this->config->item('table_ti_bud_month_bt'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id));
+        $month_budget_target=array();//ti budget and target
         foreach($results as $result)
         {
-            $area_budget_target[$result['customer_id']][$result['variety_id']]=$result;
+            $month_budget_target[$result['variety_id']]=$result;
         }
-
-
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id,v.name');
-        $this->db->select('type.name type_name');
-        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
         $this->db->where('v.whose','ARM');
         $this->db->where('v.status =',$this->config->item('system_status_active'));
-        $this->db->where('type.crop_id',$crop_id);
-        $this->db->order_by('type.ordering','ASC');
+        $this->db->where('v.crop_type_id',$type_id);
         $this->db->order_by('v.ordering','ASC');
 
         $results=$this->db->get()->result_array();
 
         $count=0;
-        $prev_type='';
+
         foreach($results as $index=>$result)
         {
             $item=array();
-            if($index>0)
-            {
-                if($prev_type!=$result['type_name'])
-                {
-                    $count=0;
-                    $item['type_name']=$result['type_name'];
-                    $prev_type=$result['type_name'];
-                }
-                else
-                {
-                    $item['type_name']='';
-                }
-            }
-            else
-            {
-                $prev_type=$result['type_name'];
-                $item['type_name']=$result['type_name'];
-            }
-
             $count++;
             $item['sl_no']=$count;
             $item['variety_id']=$result['id'];
@@ -335,14 +294,14 @@ class Ti_bud_monthwise_target extends Root_Controller
             if(isset($incharge_budget_target[$item['variety_id']]))
             {
 
-                if(($incharge_budget_target[$item['variety_id']]['year0_budget_quantity']==null) ||($incharge_budget_target[$item['variety_id']]['year0_budget_quantity']==0))
+                /*if(($incharge_budget_target[$item['variety_id']]['year0_budget_quantity']==null) ||($incharge_budget_target[$item['variety_id']]['year0_budget_quantity']==0))
                 {
                     $item['year0_budget_quantity']='-';
                 }
                 else
                 {
                     $item['year0_budget_quantity']=$incharge_budget_target[$item['variety_id']]['year0_budget_quantity'];
-                }
+                }*/
                 if(($incharge_budget_target[$item['variety_id']]['year0_target_quantity']==null) ||($incharge_budget_target[$item['variety_id']]['year0_target_quantity']==0))
                 {
                     $item['year0_target_quantity']='-';
@@ -357,35 +316,31 @@ class Ti_bud_monthwise_target extends Root_Controller
                 $item['year0_budget_quantity']='-';
                 $item['year0_target_quantity']='-';
             }
-            foreach($areas as $area)
+            if(isset($month_budget_target[$item['variety_id']]))
             {
-                if(isset($area_budget_target[$area['value']][$item['variety_id']]))
+                for($i=1;$i<13;$i++)
                 {
-                    if(($area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity']==null) ||($area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity']==0))
+                    if($month_budget_target[$item['variety_id']]['target_quantity_'.$i])
                     {
-                        $item['year0_budget_quantity_'.$area['value']]='';
+                        $item['target_quantity_'.$i]=$month_budget_target[$item['variety_id']]['target_quantity_'.$i];
                     }
                     else
                     {
-                        $item['year0_budget_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_budget_quantity'];
+                        $item['target_quantity_'.$i]='';
                     }
-                    if(($area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity']==null) ||($area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity']==0))
-                    {
-                        $item['year0_target_quantity_'.$area['value']]='';
-                    }
-                    else
-                    {
-                        $item['year0_target_quantity_'.$area['value']]=$area_budget_target[$area['value']][$item['variety_id']]['year0_target_quantity'];
-                    }
-
 
                 }
-                else
+            }
+            else
+            {
+                for($i=1;$i<13;$i++)
                 {
-                    $item['year0_budget_quantity_'.$area['value']]='-';
-                    $item['year0_target_quantity_'.$area['value']]='';
+                    $item['target_quantity_'.$i]='';
                 }
-                $item['year0_target_quantity_'.$area['value'].'_editable']=true;
+            }
+            for($i=1;$i<13;$i++)
+            {
+                $item['target_quantity_'.$i.'_editable']=true;
             }
             $items[]=$item;
         }
@@ -397,13 +352,14 @@ class Ti_bud_monthwise_target extends Root_Controller
     {
         $territory_id=$this->input->post('territory_id');
         $year0_id=$this->input->post('year0_id');
-        $crop_id=$this->input->post('crop_id');
+        $type_id=$this->input->post('type_id');
         $territory_info=Query_helper::get_info($this->config->item('ems_setup_location_territories'),'*',array('id ='.$territory_id),1);
         $user = User_helper::get_user();
         $time=time();
         if((isset($this->permissions['edit'])&&($this->permissions['edit']==1))||(isset($this->permissions['add'])&&($this->permissions['add']==1)))
         {
-            $info=Query_helper::get_info($this->config->item('table_forward_zi'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'zone_id ='.$territory_info['zone_id']),1);
+            $type_info=Query_helper::get_info($this->config->item('ems_setup_classification_crop_types'),'*',array('id ='.$type_id),1);
+            $info=Query_helper::get_info($this->config->item('table_forward_zi'),'*',array('year0_id ='.$year0_id,'crop_id ='.$type_info['crop_id'],'zone_id ='.$territory_info['zone_id']),1);
             if($info)
             {
                 if($info['status_assign']!==$this->config->item('system_status_yes'))
@@ -423,7 +379,7 @@ class Ti_bud_monthwise_target extends Root_Controller
             }
             if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
             {
-                $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'territory_id ='.$territory_id),1);
+                $info=Query_helper::get_info($this->config->item('table_forward_ti_month_target'),'*',array('year0_id ='.$year0_id,'type_id ='.$type_id,'territory_id ='.$territory_id),1);
 
                 if($info)
                 {
@@ -440,56 +396,54 @@ class Ti_bud_monthwise_target extends Root_Controller
             $this->db->trans_start();
             if(sizeof($items)>0)
             {
-                $results=Query_helper::get_info($this->config->item('table_ti_bud_customer_bt'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id));
-                $area_budget_target=array();//ti budget and target
+                $results=Query_helper::get_info($this->config->item('table_ti_bud_month_bt'),'*',array('territory_id ='.$territory_id,'year0_id ='.$year0_id));
+                $month_budget_target=array();//ti budget and target
                 foreach($results as $result)
                 {
-                    $area_budget_target[$result['customer_id']][$result['variety_id']]=$result;
+                    $month_budget_target[$result['variety_id']]=$result;
                 }
-                foreach($items as $customer_id=>$item)
+                foreach($items as $variety_id=>$months)
                 {
-                    foreach($item as $variety_id=> $year0_target_quantity)
-                    {
-                        $data=array();
-                        if(isset($area_budget_target[$customer_id][$variety_id]))
-                        {
-                            $data['year0_target_quantity']=$year0_target_quantity;
-                            $data['user_updated'] = $user->user_id;
-                            $data['date_updated'] = $time;
-                            $data['user_targeted'] = $user->user_id;
-                            $data['date_targeted'] = $time;
-                            if($year0_target_quantity!=$area_budget_target[$customer_id][$variety_id]['year0_target_quantity'])
-                            {
-                                Query_helper::update($this->config->item('table_ti_bud_customer_bt'),$data,array("id = ".$area_budget_target[$customer_id][$variety_id]['id']));
-                            }
+                    $data=array();
 
+                    foreach($months as $month_id=> $quantity)
+                    {
+                        if(strlen(trim($quantity))==0)
+                        {
+                            $data['target_quantity_'.$month_id]=0;
                         }
                         else
                         {
-                            $data['territory_id'] = $territory_id;
-                            $data['customer_id'] = $customer_id;
-                            $data['year0_id'] = $year0_id;
-                            $data['variety_id'] = $variety_id;
-                            $data['year0_target_quantity']=$year0_target_quantity;
-                            $data['user_created'] = $user->user_id;
-                            $data['date_created'] = $time;
-                            $data['user_targeted'] = $user->user_id;
-                            $data['date_targeted'] = $time;
-                            if(!empty($year0_target_quantity))
-                            {
-                                Query_helper::add($this->config->item('table_ti_bud_customer_bt'),$data);
-                            }
+                            $data['target_quantity_'.$month_id]=$quantity;
                         }
-
-
                     }
+                    if(isset($month_budget_target[$variety_id]))
+                    {
+                        $data['user_updated'] = $user->user_id;
+                        $data['date_updated'] = $time;
+                        $data['user_targeted'] = $user->user_id;
+                        $data['date_targeted'] = $time;
+                        Query_helper::update($this->config->item('table_ti_bud_month_bt'),$data,array("id = ".$month_budget_target[$variety_id]['id']));
+                    }
+                    else
+                    {
+                        $data['territory_id'] = $territory_id;
+                        $data['year0_id'] = $year0_id;
+                        $data['variety_id'] = $variety_id;
+                        $data['user_created'] = $user->user_id;
+                        $data['date_created'] = $time;
+                        $data['user_targeted'] = $user->user_id;
+                        $data['date_targeted'] = $time;
+                        Query_helper::add($this->config->item('table_ti_bud_month_bt'),$data);
+                    }
+
                 }
             }
             $this->db->trans_complete();   //DB Transaction Handle END
             if ($this->db->trans_status() === TRUE)
             {
                 $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-                $this->system_edit($territory_id,$year0_id,$crop_id);
+                $this->system_edit($territory_id,$year0_id,$type_id);
             }
             else
             {
