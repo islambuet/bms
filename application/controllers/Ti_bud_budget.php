@@ -348,6 +348,12 @@ class Ti_bud_budget extends Root_Controller
             {
                 if(isset($prev_area_items[$result['id']][$area['value']]))
                 {
+                    //fixed for not set
+                    if(!isset($row_quantity['area'][$area['value']]))
+                    {
+                        $row_quantity['area'][$area['value']]=0;
+                    }
+                    //fixing for not set finish
                     if($prev_area_items[$result['id']][$area['value']]['year0_budget_quantity']>0)
                     {
                         $row_quantity['area'][$area['value']]=$prev_area_items[$result['id']][$area['value']]['year0_budget_quantity'];

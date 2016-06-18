@@ -333,6 +333,7 @@ class Ti_bud_customer_target extends Root_Controller
             $item['variety_name']=$result['name'];
             if(isset($incharge_budget_target[$item['variety_id']]))
             {
+
                 if(($incharge_budget_target[$item['variety_id']]['year0_budget_quantity']==null) ||($incharge_budget_target[$item['variety_id']]['year0_budget_quantity']==0))
                 {
                     $item['year0_budget_quantity']='-';
@@ -343,7 +344,7 @@ class Ti_bud_customer_target extends Root_Controller
                 }
                 if(($incharge_budget_target[$item['variety_id']]['year0_target_quantity']==null) ||($incharge_budget_target[$item['variety_id']]['year0_target_quantity']==0))
                 {
-                    $item['year0_budget_quantity']='-';
+                    $item['year0_target_quantity']='-';
                 }
                 else
                 {

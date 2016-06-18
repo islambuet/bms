@@ -141,7 +141,7 @@
                 ],
                 columngroups:
                     [
-                        { text: 'ZI',align: 'center',name:'incharge'},
+                        { text: 'TI',align: 'center',name:'incharge'},
                             <?php
                                 foreach($areas as $area)
                                 {?>{ text: '<?php echo $area['text'];?>',align:'center',name:'<?php echo 'area_'.$area['value'];?>' },
