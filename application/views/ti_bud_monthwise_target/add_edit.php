@@ -69,6 +69,7 @@
                         {?>
                 { name: '<?php echo 'target_quantity_'.$i;?>', type: 'string' },
                 { name: '<?php echo 'target_quantity_'.$i.'_editable';?>', type: 'string' },
+                { name: '<?php echo 'target_quantity_'.$i.'_pick_month';?>', type: 'string' },
                     <?php
                         }
                 ?>
@@ -136,6 +137,10 @@
             if(record[column+'_editable'])
             {
                 element.html('<div class="jqxgrid_input">'+value+'</div>');
+            }
+            if(record[column+'_pick_month'])
+            {
+                element.css({ 'background-color': '#00FF00'});
             }
             return element[0].outerHTML;
 

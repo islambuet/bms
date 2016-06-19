@@ -64,14 +64,14 @@ class Ti_bud_monthwise_target extends Root_Controller
         {
             $this->system_save();
         }
-        /*elseif($action=="details")
+        elseif($action=="details")
         {
             $this->system_details($id1,$id2,$id3);
         }
         elseif($action=="forward")
         {
             $this->system_forward($id1,$id2,$id3);
-        }*/
+        }
         else
         {
             $this->system_search();
@@ -160,7 +160,7 @@ class Ti_bud_monthwise_target extends Root_Controller
 
         //$this->db->join($this->config->item('table_forward_di').' fdi','fdi.crop_id = crop.id and fdi.year0_id ='.$year0_id.' and division_id ='.$zone_info['division_id'],'LEFT');
         $this->db->join($this->config->item('table_forward_zi').' fzi','fzi.crop_id = crop.id and fzi.year0_id ='.$year0_id.' and zone_id ='.$territory_info['zone_id'],'LEFT');
-        $this->db->join($this->config->item('table_forward_ti').' fti','fti.crop_id = crop.id and fti.year0_id ='.$year0_id.' and territory_id ='.$territory_id,'LEFT');
+        $this->db->join($this->config->item('table_forward_ti_month_target').' fti','fti.type_id = type.id and fti.year0_id ='.$year0_id.' and territory_id ='.$territory_id,'LEFT');
 
         $this->db->order_by('crop.ordering','ASC');
         $this->db->where('crop.status',$this->config->item('system_status_active'));
@@ -259,6 +259,32 @@ class Ti_bud_monthwise_target extends Root_Controller
         $year0_id=$this->input->post('year0_id');
         $type_id=$this->input->post('type_id');
 
+
+        $pick_months=array();
+        $result=Query_helper::get_info($this->config->item('ems_setup_classification_variety_time'),array('date_start','date_end'),array('crop_type_id ='.$type_id,'territory_id ='.$territory_id,'revision =1'),1);
+        if($result)
+        {
+            $start_month=date('n',$result['date_start']);
+            $end_month=date('n',$result['date_end']);
+            if($start_month>$end_month)
+            {
+                $end_month+=12;
+            }
+            for($m=$start_month;$m<=$end_month;$m++)
+            {
+                if($m%12)
+                {
+                    $pick_months[]=($m%12);
+                }
+                else
+                {
+                    $pick_months[]=12;
+                }
+
+            }
+
+        }
+
         //may be need to check if already forwarded
         //may be short out with crops
         $results=Query_helper::get_info($this->config->item('table_ti_bud_ti_bt'),'*',array('year0_id ='.$year0_id,'territory_id ='.$territory_id));
@@ -341,6 +367,14 @@ class Ti_bud_monthwise_target extends Root_Controller
             for($i=1;$i<13;$i++)
             {
                 $item['target_quantity_'.$i.'_editable']=true;
+                if(in_array($i,$pick_months))
+                {
+                    $item['target_quantity_'.$i.'_pick_month']=true;
+                }
+                else
+                {
+                    $item['target_quantity_'.$i.'_pick_month']=false;
+                }
             }
             $items[]=$item;
         }
@@ -460,45 +494,35 @@ class Ti_bud_monthwise_target extends Root_Controller
         }
 
     }
-    private function system_details($territory_id,$year0_id,$crop_id)
+    private function system_details($territory_id,$year0_id,$type_id)
     {
         $territory_info=Query_helper::get_info($this->config->item('ems_setup_location_territories'),'*',array('id ='.$territory_id),1);
         if(isset($this->permissions['view'])&&($this->permissions['view']==1))
         {
             if(($this->input->post('id')))
             {
-                $crop_id=$this->input->post('id');
+                $type_id=$this->input->post('id');
             }
-            $crop=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array('id ='.$crop_id),1);
+            $type_info=Query_helper::get_info($this->config->item('ems_setup_classification_crop_types'),'*',array('id ='.$type_id),1);
             $data['years']=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id >='.$year0_id),$this->config->item('num_year_prediction')+1,0,array('id ASC'));
             $data['territory_id']=$territory_id;
             $data['year0_id']=$year0_id;
-            $data['crop_id']=$crop_id;
-            //Customers
-            $this->db->from($this->config->item('ems_csetup_customers').' cus');
-            $this->db->select('cus.id value');
-            $this->db->select('CONCAT(cus.customer_code," - ",cus.name) text');
-            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
-            $this->db->where('d.territory_id',$territory_id);
-            $this->db->order_by('cus.ordering','ASC');
-            $this->db->where('cus.status',$this->config->item('system_status_active'));
-            $data['areas']=$this->db->get()->result_array();//customers
-
+            $data['type_id']=$type_id;
 
             $keys=',';
             $keys.="territory_id:'".$territory_id."',";
             $keys.="year0_id:'".$year0_id."',";
-            $keys.="crop_id:'".$crop_id."',";
+            $keys.="type_id:'".$type_id."',";
             $data['keys']=trim($keys,',');
 
 
-            $data['title']="Customers Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_customer_target/details",$data,true));
+            $data['title']="Month Wise Target For ".$type_info['name'].'('.$data['years'][0]['text'].')';
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("ti_bud_monthwise_target/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$crop_id);
+            $ajax['system_page_url']=site_url($this->controller_url."/index/details/".$territory_id.'/'.$year0_id.'/'.$type_id);
             $this->jsonReturn($ajax);
         }
         else
@@ -509,16 +533,17 @@ class Ti_bud_monthwise_target extends Root_Controller
         }
     }
 
-    private function system_forward($territory_id,$year0_id,$crop_id)
+    private function system_forward($territory_id,$year0_id,$type_id)
     {
         $territory_info=Query_helper::get_info($this->config->item('ems_setup_location_territories'),'*',array('id ='.$territory_id),1);
         $user = User_helper::get_user();
         $time=time();
         if(($this->input->post('id')))
         {
-            $crop_id=$this->input->post('id');
+            $type_id=$this->input->post('id');
         }
-        $info=Query_helper::get_info($this->config->item('table_forward_zi'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'zone_id ='.$territory_info['zone_id']),1);
+        $type_info=Query_helper::get_info($this->config->item('ems_setup_classification_crop_types'),'*',array('id ='.$type_id),1);
+        $info=Query_helper::get_info($this->config->item('table_forward_zi'),'*',array('year0_id ='.$year0_id,'crop_id ='.$type_info['crop_id'],'zone_id ='.$territory_info['zone_id']),1);
         if($info)
         {
             if($info['status_assign']!==$this->config->item('system_status_yes'))
@@ -536,7 +561,7 @@ class Ti_bud_monthwise_target extends Root_Controller
             $this->jsonReturn($ajax);
             die();
         }
-        $info=Query_helper::get_info($this->config->item('table_forward_ti'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id,'territory_id ='.$territory_id),1);
+        $info=Query_helper::get_info($this->config->item('table_forward_ti_month_target'),'*',array('year0_id ='.$year0_id,'type_id ='.$type_id,'territory_id ='.$territory_id),1);
         $this->db->trans_start();
         if($info)
         {
@@ -555,21 +580,21 @@ class Ti_bud_monthwise_target extends Root_Controller
                 $data['date_assigned'] = $time;
                 $data['user_updated'] = $user->user_id;
                 $data['date_updated'] = $time;
-                Query_helper::update($this->config->item('table_forward_ti'),$data,array("id = ".$info['id']));
+                Query_helper::update($this->config->item('table_forward_ti_month_target'),$data,array("id = ".$info['id']));
             }
         }
         else
         {
             $data=array();
             $data['status_assign']=$this->config->item('system_status_yes');
-            $data['zone_id']=$territory_id;
+            $data['territory_id']=$territory_id;
             $data['year0_id']=$year0_id;
-            $data['crop_id']=$crop_id;
+            $data['type_id']=$type_id;
             $data['user_created'] = $user->user_id;
             $data['date_created'] = $time;
             $data['user_assigned'] = $user->user_id;
             $data['date_assigned'] = $time;
-            Query_helper::add($this->config->item('table_forward_ti'),$data);
+            Query_helper::add($this->config->item('table_forward_ti_month_target'),$data);
         }
         $this->db->trans_complete();   //DB Transaction Handle END
         if ($this->db->trans_status() === TRUE)

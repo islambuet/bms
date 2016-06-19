@@ -607,7 +607,7 @@ class Ti_bud_customer_target extends Root_Controller
         {
             $data=array();
             $data['status_assign']=$this->config->item('system_status_yes');
-            $data['zone_id']=$territory_id;
+            $data['territory_id']=$territory_id;
             $data['year0_id']=$year0_id;
             $data['crop_id']=$crop_id;
             $data['user_created'] = $user->user_id;
