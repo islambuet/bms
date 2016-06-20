@@ -24,7 +24,9 @@ $lang['LABEL_VARIETY_NAME'] = 'Variety';
 //date
 $lang['LABEL_DATE']='Date';
 $lang['LABEL_DATE_START'] = 'Starting Date';
+$lang['LABEL_MONTH_START'] = 'Starting Month';
 $lang['LABEL_DATE_END'] = 'End Date';
+$lang['LABEL_MONTH_END'] = 'End Month';
 $lang['LABEL_YEAR'] = 'Year';
 $lang['LABEL_FISCAL_YEAR'] = 'Fiscal Year';
 $lang['LABEL_SEASON'] = 'Season';
