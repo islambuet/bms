@@ -160,7 +160,7 @@
                     { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: 'Total Target',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { text: 'Total Target',dataField: 'year0_target_quantity',pinned:true,width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     <?php
                         for($i=1;$i<13;$i++)
                         {?>{text: '<?php echo date("M", mktime(0, 0, 0,  $i,1, 2000));?>',dataField: '<?php echo 'target_quantity_'.$i;?>',width:'110',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
