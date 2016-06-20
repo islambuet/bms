@@ -31,6 +31,16 @@
         <div class="col-xs-12" style="margin-bottom: 20px;">
             <div class="col-xs-12" style="margin-bottom: 20px;">
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sl_no"><?php echo $CI->lang->line('LABEL_SL_NO'); ?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
+                <?php
+                foreach($months as $month)
+                {?>
+                    <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column month_header"  checked value="<?php echo $month; ?>"><?php echo date("M", mktime(0, 0, 0,  $month,1, 2000));?></label>
+                <?php
+                }
+                ?>
             </div>
         </div>
     <?php
@@ -44,6 +54,29 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
+        $(document).off("click", ".month_header");
+        $(document).on("click", ".month_header", function(event)
+        {
+            var jqxgrid_id='#system_jqx_container';
+            $(jqxgrid_id).jqxGrid('beginupdate');
+            var month_id=$(this).val();
+            if($(this).is(':checked'))
+            {
+                $(jqxgrid_id).jqxGrid('showcolumn', 'target_'+month_id);
+                $(jqxgrid_id).jqxGrid('showcolumn', 'achieve_'+month_id);
+                $(jqxgrid_id).jqxGrid('showcolumn', 'variance_'+month_id);
+                $(jqxgrid_id).jqxGrid('showcolumn', 'net_'+month_id);
+            }
+            else
+            {
+                $(jqxgrid_id).jqxGrid('hidecolumn', 'target_'+month_id);
+                $(jqxgrid_id).jqxGrid('hidecolumn', 'achieve_'+month_id);
+                $(jqxgrid_id).jqxGrid('hidecolumn', 'variance_'+month_id);
+                $(jqxgrid_id).jqxGrid('hidecolumn', 'net_'+month_id);
+            }
+            $(jqxgrid_id).jqxGrid('endupdate');
+
+        });
         //var grand_total_color='#AEC2DD';
         var grand_total_color='#AEC2DD';
 
