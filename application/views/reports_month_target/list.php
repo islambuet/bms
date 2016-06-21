@@ -112,21 +112,13 @@
         var cellsrenderer = function(row, column, value, defaultHtml, columnSettings, record)
         {
             var element = $(defaultHtml);
-            if (record.areas=="Total")
+            if (record.variety_name=="Total")
             {
                 element.css({ 'background-color': grand_total_color,'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             else
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
-            }
-            if(column=='sl')
-            {
-                if (record.areas!="Total")
-                {
-                    element.html(value+1);
-                }
-
             }
             return element[0].outerHTML;
 
@@ -155,14 +147,14 @@
                             {?>{ columngroup: 'month_<?php echo $month; ?>',text: 'Target', dataField: 'target_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
                     { columngroup: 'month_<?php echo $month; ?>',text: 'Achieved', dataField: 'achieve_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
                     { columngroup: 'month_<?php echo $month; ?>',text: 'Variance', dataField: 'variance_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'month_<?php echo $month; ?>',text: 'Net Price', dataField: 'net_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    { columngroup: 'month_<?php echo $month; ?>',text: 'Net Sales', dataField: 'net_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
                     <?php
                         }
                     ?>
                     { columngroup: 'total',text: 'Target', dataField: 'target_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
                     { columngroup: 'total',text: 'Achieved', dataField: 'achieve_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
                     { columngroup: 'total',text: 'Variance', dataField: 'variance_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'total',text: 'Net Price', dataField: 'net_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
+                    { columngroup: 'total',text: 'Net Sales', dataField: 'net_total',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
                 ],
                 columngroups:
                 [

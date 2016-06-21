@@ -194,6 +194,8 @@ class Reports_month_target extends Root_Controller
     {
         $items=array();
         $year0_id=$this->input->post('year0_id');
+        $year_info=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('id ='.$year0_id),1);
+
 
         $crop_id=$this->input->post('crop_id');
         $crop_type_id=$this->input->post('crop_type_id');
@@ -202,12 +204,36 @@ class Reports_month_target extends Root_Controller
         $division_id=$this->input->post('division_id');
         $zone_id=$this->input->post('zone_id');
         $territory_id=$this->input->post('territory_id');
+
         $month_start=$this->input->post('month_start');
+        if($month_start<6)
+        {
+            $date_start=mktime(0,0,0,$month_start,1,date('Y',$year_info['date_end']));
+        }
+        else
+        {
+            $date_start=mktime(0,0,0,$month_start,1,date('Y',$year_info['date_start']));
+        }
+
         $month_end=$this->input->post('month_end');
+        if($month_end==12)
+        {
+            $date_end=mktime(0,0,0,1,1,date('Y',$year_info['date_end']))-1;
+        }
+        else if($month_end<6)
+        {
+            $date_end=mktime(0,0,0,$month_end+1,1,date('Y',$year_info['date_end']))-1;
+        }
+        else
+        {
+            $date_end=mktime(0,0,0,$month_end+1,1,date('Y',$year_info['date_start']))-1;
+        }
         if($month_end<$month_start)
         {
             $month_end+=12;
         }
+
+
         //month total
         $month_total=array();
         $this->db->from($this->config->item('table_ti_bud_month_bt').' timbt');
@@ -249,6 +275,62 @@ class Reports_month_target extends Root_Controller
         {
             $month_total[$result['variety_id']]=$result;
         }
+        //total sales
+        $sales_total=array();
+        $this->db->from($this->config->item('ems_sales_po_details').' pod');
+
+        $this->db->select('pod.*');
+        $this->db->select('po.date_approved');
+
+        //$this->db->select('(pod.pack_size * pod.quantity) sales_quantity');
+        //$this->db->select('(pod.bonus_pack_size * pod.quantity_bonus) bonus_quantity');
+        //$this->db->select('(pod.variety_price_net * pod.quantity) net_sales');
+
+        $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+
+        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id =pod.variety_id','INNER');
+
+        $this->db->where('pod.revision',1);
+        $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
+        $this->db->where('po.date_approved >=',$date_start);
+        $this->db->where('po.date_approved <=',$date_end);
+        $this->db->where('v.crop_type_id',$crop_type_id);
+        if($variety_id>0)
+        {
+            $this->db->where('pod.variety_id',$variety_id);
+        }
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                }
+            }
+        }
+        $results=$this->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $m=date('n',$result['date_approved']);
+            if(isset($sales_total[$result['variety_id']][$m]))
+            {
+                $sales_total[$result['variety_id']][$m]['quantity']+=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
+                $sales_total[$result['variety_id']][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+            }
+            else
+            {
+                $sales_total[$result['variety_id']][$m]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
+                $sales_total[$result['variety_id']][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+
+            }
+        }
         //variety list
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id variety_id,v.name variety_name');
@@ -267,6 +349,27 @@ class Reports_month_target extends Root_Controller
         $this->db->order_by('v.ordering','ASC');
         $results=$this->db->get()->result_array();
         $count=0;
+        $crop_total=array();
+        $crop_total['crop_name']='';
+        $crop_total['crop_type_name']='';
+        $crop_total['variety_name']='Total';
+        for($month=$month_start;$month<=$month_end;$month++)
+        {
+            if($month%12)
+            {
+                $m=$month%12;
+            }
+            else
+            {
+                $m=12;
+            }
+            $crop_total['target_'.$m]=0;
+            $crop_total['achieve_'.$m]=0;
+            $crop_total['net_'.$m]=0;
+        }
+        $crop_total['target_total']=0;
+        $crop_total['achieve_total']=0;
+        $crop_total['net_total']=0;
         foreach($results as $index=>$result)
         {
             $item=array();
@@ -283,6 +386,9 @@ class Reports_month_target extends Root_Controller
             $count++;
             $item['variety_name']=$result['variety_name'];
             $item['target_total']=0;//initialization
+            $item['achieve_total']=0;//initialization
+            $item['variance_total']=0;//initialization
+            $item['net_total']=0;//initialization
             for($month=$month_start;$month<=$month_end;$month++)
             {
                 if($month%12)
@@ -297,25 +403,129 @@ class Reports_month_target extends Root_Controller
                 {
                     $item['target_'.$m]=$month_total[$result['variety_id']]['target_quantity_'.$m];
                     $item['target_total']+=$item['target_'.$m];
+                    $crop_total['target_'.$m]+=$item['target_'.$m];
+                    $crop_total['target_total']+=$item['target_'.$m];
                 }
                 else
                 {
                     $item['target_'.$m]=0;
                 }
+                if((isset($sales_total[$result['variety_id']][$m]))&&($sales_total[$result['variety_id']][$m]['quantity']!=null))
+                {
+                    $item['achieve_'.$m]=$sales_total[$result['variety_id']][$m]['quantity']/1000;
+                    $item['achieve_total']+=$item['achieve_'.$m];
+                    $crop_total['achieve_'.$m]+=$item['achieve_'.$m];
+                    $crop_total['achieve_total']+=$item['achieve_'.$m];
+
+                    $item['net_'.$m]=$sales_total[$result['variety_id']][$m]['net_sales'];
+                    $item['net_total']+=$item['net_'.$m];
+                    $crop_total['net_'.$m]+=$item['net_'.$m];
+                    $crop_total['net_total']+=$item['net_'.$m];
+
+                }
+                else
+                {
+                    $item['achieve_'.$m]=0;
+                    $item['net_'.$m]=0;
+
+                }
             }
-            $items[]=$this->item_row($item);
+            $items[]=$this->get_report_row($item,$month_start,$month_end);
+
             //$item['sl_no']=$count;
         }
+        $items[]=$this->get_report_row($crop_total,$month_start,$month_end);
         $this->jsonReturn($items);
     }
-    public function item_row($item_info)
+    private function get_report_row($item,$month_start,$month_end)
     {
-        $row=array();
-        $row=$item_info;
-        /*$row['crop_name']=$item_info['crop_name'];
-        $row['crop_type_name']=$item_info['crop_type_name'];
-        $row['variety_name']=$item_info['variety_name'];*/
+        $info=array();
+        $info['crop_name']=$item['crop_name'];
+        $info['crop_type_name']=$item['crop_type_name'];
+        $info['variety_name']=$item['variety_name'];
+        for($month=$month_start;$month<=$month_end;$month++)
+        {
 
-        return $row;
+            if($month%12)
+            {
+                $m=$month%12;
+            }
+            else
+            {
+                $m=12;
+            }
+            if(isset($item['target_'.$m]) && $item['target_'.$m]!=0)
+            {
+                $info['target_'.$m]=number_format($item['target_'.$m],3,'.','');
+                $info['variance_'.$m]=$item['target_'.$m];
+            }
+            else
+            {
+                $info['target_'.$m]='';
+                $info['variance_'.$m]=0;
+            }
+            if(isset($item['achieve_'.$m]) && $item['achieve_'.$m]!=0)
+            {
+                $info['achieve_'.$m]=number_format($item['achieve_'.$m],3,'.','');
+                $info['variance_'.$m]-=$item['achieve_'.$m];
+            }
+            else
+            {
+                $info['achieve_'.$m]='';
+            }
+            if($info['variance_'.$m]==0)
+            {
+                $info['variance_'.$m]='';
+            }
+            else
+            {
+                $info['variance_'.$m]=number_format($info['variance_'.$m],3,'.','');
+            }
+            if(isset($item['net_'.$m]) && $item['net_'.$m]!=0)
+            {
+                $info['net_'.$m]=number_format($item['net_'.$m],2);
+            }
+            else
+            {
+                $info['net_'.$m]='';
+            }
+        }
+        if(isset($item['target_total']) && $item['target_total']!=0)
+        {
+            $info['target_total']=number_format($item['target_total'],3,'.','');
+            $info['variance_total']=$item['target_total'];
+        }
+        else
+        {
+            $info['target_total']='';
+            $info['variance_total']=0;
+        }
+        if(isset($item['achieve_total']) && $item['achieve_total']!=0)
+        {
+            $info['achieve_total']=number_format($item['achieve_total'],3,'.','');
+            $info['variance_total']-=$item['achieve_total'];
+        }
+        else
+        {
+            $info['achieve_total']='';
+        }
+        if($info['variance_total']==0)
+        {
+            $info['variance_total']='';
+        }
+        else
+        {
+            $info['variance_total']=number_format($info['variance_total'],3,'.','');
+        }
+        if(isset($item['net_total']) && $item['net_total']!=0)
+        {
+            $info['net_total']=number_format($item['net_total'],2);
+        }
+        else
+        {
+            $info['net_total']='';
+        }
+        return $info;
     }
+
 }
