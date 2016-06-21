@@ -193,6 +193,129 @@ class Reports_month_target extends Root_Controller
     public function get_items()
     {
         $items=array();
+        $year0_id=$this->input->post('year0_id');
+
+        $crop_id=$this->input->post('crop_id');
+        $crop_type_id=$this->input->post('crop_type_id');
+        $variety_id=$this->input->post('variety_id');
+
+        $division_id=$this->input->post('division_id');
+        $zone_id=$this->input->post('zone_id');
+        $territory_id=$this->input->post('territory_id');
+        $month_start=$this->input->post('month_start');
+        $month_end=$this->input->post('month_end');
+        if($month_end<$month_start)
+        {
+            $month_end+=12;
+        }
+        //month total
+        $month_total=array();
+        $this->db->from($this->config->item('table_ti_bud_month_bt').' timbt');
+        $this->db->select('timbt.variety_id');
+        for($month=$month_start;$month<=$month_end;$month++)
+        {
+            if($month%12)
+            {
+                $this->db->select('SUM(target_quantity_'.($month%12).') target_quantity_'.($month%12));
+            }
+            else
+            {
+                $this->db->select('SUM(target_quantity_12) target_quantity_12');
+            }
+        }
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = timbt.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+
+        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id = timbt.variety_id','INNER');
+        $this->db->join($this->config->item('table_forward_ti_month_target').' ftimt','ftimt.territory_id = timbt.territory_id and ftimt.year0_id=timbt.year0_id and ftimt.type_id=v.crop_type_id','INNER');
+
+        $this->db->where('timbt.year0_id',$year0_id);
+        $this->db->where('ftimt.status_assign',$this->config->item('system_status_yes'));
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                }
+            }
+        }
+        $this->db->group_by('timbt.variety_id');
+        $results=$this->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $month_total[$result['variety_id']]=$result;
+        }
+        //variety list
+        $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
+        $this->db->select('v.id variety_id,v.name variety_name');
+        $this->db->select('type.name crop_type_name');
+        $this->db->select('crop.name crop_name');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
+        $this->db->where('v.whose','ARM');
+        $this->db->where('v.status =',$this->config->item('system_status_active'));
+        $this->db->where('type.id',$crop_type_id);
+        if($variety_id>0)
+        {
+            $this->db->where('v.id',$variety_id);
+        }
+        $this->db->order_by('type.ordering','ASC');
+        $this->db->order_by('v.ordering','ASC');
+        $results=$this->db->get()->result_array();
+        $count=0;
+        foreach($results as $index=>$result)
+        {
+            $item=array();
+            if($count==0)
+            {
+                $item['crop_name']=$result['crop_name'];
+                $item['crop_type_name']=$result['crop_type_name'];
+            }
+            else
+            {
+                $item['crop_name']='';
+                $item['crop_type_name']='';
+            }
+            $count++;
+            $item['variety_name']=$result['variety_name'];
+            $item['target_total']=0;//initialization
+            for($month=$month_start;$month<=$month_end;$month++)
+            {
+                if($month%12)
+                {
+                    $m=$month%12;
+                }
+                else
+                {
+                    $m=12;
+                }
+                if((isset($month_total[$result['variety_id']]['target_quantity_'.$m]))&&($month_total[$result['variety_id']]['target_quantity_'.$m]!=null))
+                {
+                    $item['target_'.$m]=$month_total[$result['variety_id']]['target_quantity_'.$m];
+                    $item['target_total']+=$item['target_'.$m];
+                }
+                else
+                {
+                    $item['target_'.$m]=0;
+                }
+            }
+            $items[]=$this->item_row($item);
+            //$item['sl_no']=$count;
+        }
         $this->jsonReturn($items);
+    }
+    public function item_row($item_info)
+    {
+        $row=array();
+        $row=$item_info;
+        /*$row['crop_name']=$item_info['crop_name'];
+        $row['crop_type_name']=$item_info['crop_type_name'];
+        $row['variety_name']=$item_info['variety_name'];*/
+
+        return $row;
     }
 }
