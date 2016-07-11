@@ -79,14 +79,132 @@
         <?php
         }
         ?>
+        <div class="widget-header">
+            <div class="title">
+                Varieties
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="col-xs-12" id="system_jqx_container">
+
+        </div>
     </div>
 
     <div class="clearfix"></div>
 <script type="text/javascript">
+    $(document).ready(function ()
+    {
+        turn_off_triggers();
+        //var grand_total_color='#AEC2DD';
+        var grand_total_color='#AEC2DD';
+
+        var url = "<?php echo base_url($CI->controller_url.'/index/get_varieties');?>";
+
+        // prepare the data
+        var source =
+        {
+            dataType: "json",
+            dataFields: [
+                { name: 'id', type: 'int' },
+                { name: 'crop_name', type: 'string' },
+                { name: 'crop_type_name', type: 'string' },
+                { name: 'variety_name', type: 'string' },
+                { name: 'quantity', type: 'string' },
+                { name: 'price', type: 'string' },
+                    <?php
+                        foreach($direct_cost_items as $item)
+                        {?>{ name: '<?php echo 'dc_'.$item['value'];?>', type: 'string' },
+                <?php
+                    }
+                    foreach($packing_items as $item)
+                        {?>{ name: '<?php echo 'pack_'.$item['value'];?>', type: 'string' },
+                <?php
+                    }
+                ?>
+
+                { name: 'total_cogs', type: 'string' },
+                { name: 'cogs', type: 'string' }
+            ],
+            id: 'id',
+            url: url,
+            type: 'POST',
+            data:{consignment_id:'<?php echo $consignment['id']; ?>'}
+        };
+        var cellsrenderer = function(row, column, value, defaultHtml, columnSettings, record)
+        {
+            var element = $(defaultHtml);
+            // console.log(defaultHtml);
+
+            if (record.crop_type_name=="Total Crop")
+            {
+                if(column!='crop_name')
+                {
+                    element.css({ 'background-color': '#6CAB44','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+            }
+            else if (record.crop_name=="Grand Total")
+            {
+
+                element.css({ 'background-color': grand_total_color,'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+
+            }
+            else
+            {
+                element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+            }
+
+            return element[0].outerHTML;
+
+        };
+        var tooltiprenderer = function (element) {
+            $(element).jqxTooltip({position: 'mouse', content: $(element).text() });
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        // create jqxgrid.
+        $("#system_jqx_container").jqxGrid(
+            {
+                width: '100%',
+                height:'350px',
+                source: dataAdapter,
+                columnsresize: true,
+                columnsreorder: true,
+                altrows: true,
+                enabletooltips: true,
+                rowsheight: 35,
+                columns: [
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',align:'center',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,pinned:true},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'crop_type_name',align:'center',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,pinned:true},
+                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',align:'center',width:'100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,pinned:true},
+                    { text: '<?php echo $CI->lang->line('LABEL_QUANTITY'); ?>', dataField: 'quantity',align:'center',width:'100',cellsalign: 'right',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    { text: 'PI Value', dataField: 'price',align:'center',width:'100',cellsalign: 'right',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                        <?php
+                            foreach($direct_cost_items as $item)
+                            {?>{ columngroup: 'direct_cost',text: '<?php echo $item['text']; ?>', dataField: '<?php echo 'dc_'.$item['value'];?>',align:'center',cellsalign: 'right',width:'100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    <?php
+                        }
+                        foreach($packing_items as $item)
+                        {?>{ columngroup: 'packing_cost',text: '<?php echo $item['text']; ?>', dataField: '<?php echo 'pack_'.$item['value'];?>',align:'center',cellsalign: 'right',width:'100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    <?php
+                        }
+                        ?>
+                    { text: 'Total COGS', dataField: 'total_cogs',align:'center',cellsalign: 'right',width:'100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    { text: 'COGS', dataField: 'cogs',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
+                ],
+                columngroups:
+                    [
+                        { text: 'Direct Cost', align: 'center', name: 'direct_cost' },
+                        { text: 'Packing Material Cost', align: 'center', name: 'packing_cost' }
+                    ]
+
+
+            });
+    });
+</script>
+<script type="text/javascript">
 
     jQuery(document).ready(function()
     {
-        turn_off_triggers();
+
 
     });
 </script>
