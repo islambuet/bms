@@ -114,3 +114,8 @@ $lang['LABEL_NEXT_YEARS'] = 'Next Years';
 $lang['MSG_ALREADY_FINALIZED'] = 'Already Finalized.';
 //setup
 $lang['LABEL_CURRENCY_SYMBOL'] = 'Currency Symbol';
+$lang['LABEL_CURRENCY_RATE'] = 'Rate';
+$lang['LABEL_CURRENCY_NAME'] = 'Currency';
+$lang['LABEL_CONSIGNMENT_NAME'] = 'Consignment';
+$lang['LABEL_MONTH_PURCHASE'] = 'Purchase Month';
+$lang['LABEL_DATE_PURCHASE'] = 'Purchase Date';

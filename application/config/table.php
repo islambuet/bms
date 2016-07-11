@@ -48,3 +48,6 @@ $config['table_mgt_currency_rate'] = 'bms_mgt_currency_rate';
 $config['table_mgt_direct_cost_percentage'] = 'bms_mgt_direct_cost_percentage';
 $config['table_mgt_packing_cost_kg'] = 'bms_mgt_packing_cost_kg';
 $config['table_mgt_purchase_budget'] = 'bms_mgt_purchase_budget';
+$config['table_mgt_purchase_consignments'] = 'bms_mgt_purchase_consignments';
+$config['table_mgt_purchase_consignment_costs'] = 'bms_mgt_purchase_consignment_costs';
+$config['table_mgt_purchase_consignment_varieties'] = 'bms_mgt_purchase_consignment_varieties';
