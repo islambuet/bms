@@ -119,3 +119,4 @@ $lang['LABEL_CURRENCY_NAME'] = 'Currency';
 $lang['LABEL_CONSIGNMENT_NAME'] = 'Consignment';
 $lang['LABEL_MONTH_PURCHASE'] = 'Purchase Month';
 $lang['LABEL_DATE_PURCHASE'] = 'Purchase Date';
+$lang['LABEL_PRINCIPAL_NAME'] = 'PRINCIPAL';

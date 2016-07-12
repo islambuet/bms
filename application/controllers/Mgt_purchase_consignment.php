@@ -69,7 +69,9 @@ class Mgt_purchase_consignment extends Root_Controller
         //$this->db->select('classifications.id id,classifications.name classification_name');
         $this->db->select('consignments.*');
         $this->db->select('fy.name fiscal_year_name');
+        $this->db->select('principal.name principal_name');
         $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = consignments.year0_id','INNER');
+        $this->db->join($this->config->item('ems_basic_setup_principal').' principal','principal.id = consignments.principal_id','INNER');
         //$this->db->where('classifications.status !=',$this->config->item('system_status_delete'));
         $this->db->order_by('consignments.year0_id','DESC');
         $this->db->order_by('consignments.id','DESC');
@@ -80,6 +82,7 @@ class Mgt_purchase_consignment extends Root_Controller
             $item=array();
             $item['id']=$result['id'];
             $item['fiscal_year_name']=$result['fiscal_year_name'];
+            $item['principal_name']=$result['principal_name'];
             $item['name']=$result['name'];
             $item['month']=date("M", mktime(0, 0, 0,  $result['month'],1, 2000));
             $item['date_purchase']=System_helper::display_date($result['date_purchase']);
@@ -103,9 +106,11 @@ class Mgt_purchase_consignment extends Root_Controller
             $data['consignment']['name']='';
             $data['consignment']['date_purchase']=time();
             $data['consignment']['currency_id']=0;
+            $data['consignment']['principal_id']=0;
             $data['consignment']['rate']='';
 
             $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
+            $data['principals']=Query_helper::get_info($this->config->item('ems_basic_setup_principal'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['direct_cost_items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['direct_costs']=array();
 
@@ -141,6 +146,7 @@ class Mgt_purchase_consignment extends Root_Controller
             $fy_info=System_helper::get_fiscal_years();
             $data['fiscal_years']=$fy_info['years'];
             $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
+            $data['principals']=Query_helper::get_info($this->config->item('ems_basic_setup_principal'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['direct_cost_items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['direct_costs']=array();
             $results=Query_helper::get_info($this->config->item('table_mgt_purchase_consignment_costs'),array('item_id','cost'),array('consignment_id ='.$consignment_id,'revision =1'));
@@ -272,6 +278,7 @@ class Mgt_purchase_consignment extends Root_Controller
         $this->form_validation->set_rules('consignment[month]',$this->lang->line('LABEL_MONTH_PURCHASE'),'required');
         $this->form_validation->set_rules('consignment[date_purchase]',$this->lang->line('LABEL_DATE_PURCHASE'),'required');
         $this->form_validation->set_rules('consignment[currency_id]',$this->lang->line('LABEL_CURRENCY_NAME'),'required');
+        $this->form_validation->set_rules('consignment[principal_id]',$this->lang->line('LABEL_PRINCIPAL_NAME'),'required');
         $this->form_validation->set_rules('consignment[name]',$this->lang->line('LABEL_CONSIGNMENT_NAME'),'required');
 
         if($this->form_validation->run() == FALSE)

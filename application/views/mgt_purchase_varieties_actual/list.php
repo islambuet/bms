@@ -35,6 +35,7 @@
         <div class="col-xs-12" style="margin-bottom: 20px;">
             <div class="col-xs-12" style="margin-bottom: 20px;">
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="fiscal_year_name"><?php echo $CI->lang->line('LABEL_FISCAL_YEAR'); ?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="principal_name"><?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="name"><?php echo $CI->lang->line('LABEL_CONSIGNMENT_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="month"><?php echo $CI->lang->line('LABEL_MONTH_PURCHASE'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="date_purchase"><?php echo $CI->lang->line('LABEL_DATE_PURCHASE'); ?></label>
@@ -63,6 +64,7 @@
             dataFields: [
                 { name: 'id', type: 'int' },
                 { name: 'fiscal_year_name', type: 'string' },
+                { name: 'principal_name', type: 'string' },
                 { name: 'name', type: 'string' },
                 { name: 'month', type: 'string' },
                 { name: 'date_purchase', type: 'string' },
@@ -93,6 +95,7 @@
                 columnsreorder: true,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_FISCAL_YEAR'); ?>', dataField: 'fiscal_year_name',width:'100',filtertype: 'list'},
+                    { text: '<?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?>', dataField: 'principal_name',width:'200',filtertype: 'list'},
                     { text: '<?php echo $CI->lang->line('LABEL_CONSIGNMENT_NAME'); ?>', dataField: 'name',width:'150'},
                     { text: '<?php echo $CI->lang->line('LABEL_MONTH_PURCHASE'); ?>', dataField: 'month',width:'150'},
                     { text: '<?php echo $CI->lang->line('LABEL_DATE_PURCHASE'); ?>', dataField: 'date_purchase',width:'150'},

@@ -72,9 +72,11 @@ class Mgt_purchase_varieties_actual extends Root_Controller
         $this->db->from($this->config->item('table_mgt_purchase_consignments').' consignments');
         $this->db->select('consignments.*');
         $this->db->select('fy.name fiscal_year_name');
+        $this->db->select('principal.name principal_name');
         $this->db->select('Count(cv.variety_id) num_varieties');
         $this->db->select('SUM(cv.quantity) total_quantity');
         $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = consignments.year0_id','INNER');
+        $this->db->join($this->config->item('ems_basic_setup_principal').' principal','principal.id = consignments.principal_id','INNER');
         $this->db->join($this->config->item('table_mgt_purchase_consignment_varieties').' cv','consignments.id = cv.consignment_id and cv.revision =1','LEFT');
 
         $this->db->order_by('consignments.year0_id','DESC');
@@ -87,6 +89,7 @@ class Mgt_purchase_varieties_actual extends Root_Controller
             $item=array();
             $item['id']=$result['id'];
             $item['fiscal_year_name']=$result['fiscal_year_name'];
+            $item['principal_name']=$result['principal_name'];
             $item['name']=$result['name'];
             $item['month']=date("M", mktime(0, 0, 0,  $result['month'],1, 2000));
             $item['date_purchase']=System_helper::display_date($result['date_purchase']);
@@ -112,11 +115,13 @@ class Mgt_purchase_varieties_actual extends Root_Controller
             $this->db->from($this->config->item('table_mgt_purchase_consignments').' consignments');
             $this->db->select('consignments.*');
             $this->db->select('fy.name fiscal_year_name');
+            $this->db->select('principal.name principal_name');
             $this->db->select('cur.name currency_name');
             $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = consignments.year0_id','INNER');
             $this->db->join($this->config->item('table_setup_currency').' cur','cur.id = consignments.currency_id','INNER');
+            $this->db->join($this->config->item('ems_basic_setup_principal').' principal','principal.id = consignments.principal_id','INNER');
             $this->db->where('consignments.id',$consignment_id);
-            //$this->db->join($this->config->item('table_mgt_purchase_consignment_varieties').' cv','consignments.id = cv.consignment_id and cv.revision =1','LEFT');
+
             $data['consignment']=$this->db->get()->row_array();
             $data['direct_cost_items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['direct_costs']=array();
@@ -170,11 +175,13 @@ class Mgt_purchase_varieties_actual extends Root_Controller
             $this->db->from($this->config->item('table_mgt_purchase_consignments').' consignments');
             $this->db->select('consignments.*');
             $this->db->select('fy.name fiscal_year_name');
+            $this->db->select('principal.name principal_name');
             $this->db->select('cur.name currency_name');
             $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = consignments.year0_id','INNER');
             $this->db->join($this->config->item('table_setup_currency').' cur','cur.id = consignments.currency_id','INNER');
+            $this->db->join($this->config->item('ems_basic_setup_principal').' principal','principal.id = consignments.principal_id','INNER');
             $this->db->where('consignments.id',$consignment_id);
-            //$this->db->join($this->config->item('table_mgt_purchase_consignment_varieties').' cv','consignments.id = cv.consignment_id and cv.revision =1','LEFT');
+
             $data['consignment']=$this->db->get()->row_array();
             $data['direct_cost_items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['direct_costs']=array();
@@ -227,11 +234,13 @@ class Mgt_purchase_varieties_actual extends Root_Controller
             $this->db->from($this->config->item('table_mgt_purchase_consignments').' consignments');
             $this->db->select('consignments.*');
             $this->db->select('fy.name fiscal_year_name');
+            $this->db->select('principal.name principal_name');
             $this->db->select('cur.name currency_name');
             $this->db->join($this->config->item('ems_basic_setup_fiscal_year').' fy','fy.id = consignments.year0_id','INNER');
             $this->db->join($this->config->item('table_setup_currency').' cur','cur.id = consignments.currency_id','INNER');
+            $this->db->join($this->config->item('ems_basic_setup_principal').' principal','principal.id = consignments.principal_id','INNER');
             $this->db->where('consignments.id',$consignment_id);
-            //$this->db->join($this->config->item('table_mgt_purchase_consignment_varieties').' cv','consignments.id = cv.consignment_id and cv.revision =1','LEFT');
+
             $consignment=$this->db->get()->row_array();
             $direct_cost_items=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $direct_costs=array();
@@ -241,6 +250,12 @@ class Mgt_purchase_varieties_actual extends Root_Controller
                 $direct_costs[$result['item_id']]=$result;
             }
             $packing_items=Query_helper::get_info($this->config->item('table_setup_packing_material_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
+            $packing_costs=array();
+            $results=Query_helper::get_info($this->config->item('table_mgt_packing_cost_kg'),'*',array('year0_id ='.$consignment['year0_id']));
+            foreach($results as $result)
+            {
+                $packing_costs[$result['variety_id']][$result['packing_item_id']]=$result['cost'];
+            }
             $total_weight=0;
             foreach($varieties as $result)
             {
@@ -248,20 +263,35 @@ class Mgt_purchase_varieties_actual extends Root_Controller
             }
             foreach($varieties as $result)
             {
+                $total=0;
                 $item=array();
                 $item['crop_name']=$result['crop_name'];
                 $item['crop_type_name']=$result['crop_type_name'];
                 $item['variety_name']=$result['variety_name'];
                 $item['quantity']=$result['quantity'];
                 $item['price']=$result['price'];
+                $total+=$result['price']*$result['quantity']*$consignment['rate'];
                 foreach($direct_cost_items as $dc_items)
                 {
                     $item['dc_'.$dc_items['value']]='';
                     if(($total_weight>0)&& isset($direct_costs[$dc_items['value']]))
                     {
                         $item['dc_'.$dc_items['value']]=number_format(($direct_costs[$dc_items['value']]['cost']*$result['quantity']*$result['price']/$total_weight),2);
+                        $total+=($direct_costs[$dc_items['value']]['cost']*$result['quantity']*$result['price']/$total_weight);
                     }
                 }
+                foreach($packing_items as $pack_item)
+                {
+                    $item['pack_'.$pack_item['value']]='';
+                    if((isset($packing_costs[$result['variety_id']][$pack_item['value']]))&&(($packing_costs[$result['variety_id']][$pack_item['value']])>0))
+                    {
+                        //$item['pack_'.$pack_item['value']]=number_format(($direct_costs[$dc_items['value']]['cost']*$result['quantity']*$result['price']/$total_weight),2);
+                        $item['pack_'.$pack_item['value']]=number_format($packing_costs[$result['variety_id']][$pack_item['value']]*$result['quantity'],2);
+                        $total+=$packing_costs[$result['variety_id']][$pack_item['value']]*$result['quantity'];
+                    }
+                }
+                $item['total_cogs']=number_format($total,2);
+                $item['cogs']=number_format($total/$result['quantity'],2);
                 $items[]=$item;
             }
         }
