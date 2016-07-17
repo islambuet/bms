@@ -112,7 +112,7 @@ class Reports_month_target extends Root_Controller
                 $ajax['system_message']='Please Select End month';
                 $this->jsonReturn($ajax);
             }
-            if(!($reports['crop_id']>0))
+            /*if(!($reports['crop_id']>0))
             {
                 $ajax['status']=false;
                 $ajax['system_message']='Please Select a Crop';
@@ -123,7 +123,7 @@ class Reports_month_target extends Root_Controller
                 $ajax['status']=false;
                 $ajax['system_message']='Please Select a Crop Type';
                 $this->jsonReturn($ajax);
-            }
+            }*/
             /* month validation check spliting month may-june*/
             if($reports['month_start']<6 && $reports['month_end']>5)
             {
@@ -293,16 +293,25 @@ class Reports_month_target extends Root_Controller
         $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
 
         $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id =pod.variety_id','INNER');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id =v.crop_type_id','INNER');
 
         $this->db->where('pod.revision',1);
         $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
         $this->db->where('po.date_approved >=',$date_start);
         $this->db->where('po.date_approved <=',$date_end);
-        $this->db->where('v.crop_type_id',$crop_type_id);
-        if($variety_id>0)
+        if($crop_id>0)
         {
-            $this->db->where('pod.variety_id',$variety_id);
+            $this->db->where('type.crop_id',$crop_id);
+            if($crop_type_id>0)
+            {
+                $this->db->where('type.id',$crop_type_id);
+                if($variety_id>0)
+                {
+                    $this->db->where('pod.variety_id',$variety_id);
+                }
+            }
         }
+        //$this->db->where('v.crop_type_id',$crop_type_id);
         if($division_id>0)
         {
             $this->db->where('zone.division_id',$division_id);
@@ -340,19 +349,27 @@ class Reports_month_target extends Root_Controller
         $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
         $this->db->where('v.whose','ARM');
         $this->db->where('v.status =',$this->config->item('system_status_active'));
-        $this->db->where('type.id',$crop_type_id);
-        if($variety_id>0)
+        if($crop_id>0)
         {
-            $this->db->where('v.id',$variety_id);
+            $this->db->where('crop.id',$crop_id);
+            if($crop_type_id>0)
+            {
+                $this->db->where('type.id',$crop_type_id);
+                if($variety_id>0)
+                {
+                    $this->db->where('pod.variety_id',$variety_id);
+                }
+            }
         }
+        $this->db->order_by('crop.ordering','ASC');
         $this->db->order_by('type.ordering','ASC');
         $this->db->order_by('v.ordering','ASC');
         $results=$this->db->get()->result_array();
         $count=0;
         $crop_total=array();
-        $crop_total['crop_name']='';
+        /*$crop_total['crop_name']='';
         $crop_total['crop_type_name']='';
-        $crop_total['variety_name']='Total';
+        $crop_total['variety_name']='Total';*/
         for($month=$month_start;$month<=$month_end;$month++)
         {
             if($month%12)
@@ -363,17 +380,183 @@ class Reports_month_target extends Root_Controller
             {
                 $m=12;
             }
+            $type_total['target_'.$m]=0;
+            $type_total['achieve_'.$m]=0;
+            $type_total['net_'.$m]=0;
             $crop_total['target_'.$m]=0;
             $crop_total['achieve_'.$m]=0;
             $crop_total['net_'.$m]=0;
+            $grand_total['target_'.$m]=0;
+            $grand_total['achieve_'.$m]=0;
+            $grand_total['net_'.$m]=0;
         }
+        $type_total['target_total']=0;
+        $type_total['achieve_total']=0;
+        $type_total['net_total']=0;
         $crop_total['target_total']=0;
         $crop_total['achieve_total']=0;
         $crop_total['net_total']=0;
+        $grand_total['target_total']=0;
+        $grand_total['achieve_total']=0;
+        $grand_total['net_total']=0;
+
+        $prev_crop_name='';
+        $prev_crop_type_name='';
+
         foreach($results as $index=>$result)
         {
             $item=array();
-            if($count==0)
+            if($index>0)
+            {
+                if($prev_crop_name!=$result['crop_name'])
+                {
+                    //adding total type column
+                    $type_total['crop_name']='';
+                    $type_total['crop_type_name']='';
+                    $type_total['variety_name']='Total Type';
+                    $items[]=$this->get_report_row($type_total,$month_start,$month_end);
+                    //adding total crop column
+                    $crop_total['crop_name']='';
+                    $crop_total['crop_type_name']='Total Crop';
+                    $crop_total['variety_name']='';
+                    $items[]=$this->get_report_row($crop_total,$month_start,$month_end);
+                    //resetting crop and types
+                    for($month=$month_start;$month<=$month_end;$month++)
+                    {
+                        if($month%12)
+                        {
+                            $m=$month%12;
+                        }
+                        else
+                        {
+                            $m=12;
+                        }
+                        $type_total['target_'.$m]=0;
+                        $type_total['achieve_'.$m]=0;
+                        $type_total['net_'.$m]=0;
+                        $crop_total['target_'.$m]=0;
+                        $crop_total['achieve_'.$m]=0;
+                        $crop_total['net_'.$m]=0;
+                    }
+                    $type_total['target_total']=0;
+                    $type_total['achieve_total']=0;
+                    $type_total['net_total']=0;
+                    $crop_total['target_total']=0;
+                    $crop_total['achieve_total']=0;
+                    $crop_total['net_total']=0;
+                    //resetting types
+
+                    $item['crop_name']=$result['crop_name'];
+                    $prev_crop_name=$result['crop_name'];
+
+                    $item['crop_type_name']=$result['crop_type_name'];
+                    $prev_crop_type_name=$result['crop_type_name'];
+                }
+                elseif($prev_crop_type_name!=$result['crop_type_name'])
+                {
+                    //adding total column resetting types
+                    $type_total['crop_name']='';
+                    $type_total['crop_type_name']='';
+                    $type_total['variety_name']='Total Type';
+                    $items[]=$this->get_report_row($type_total,$month_start,$month_end);
+
+                    for($month=$month_start;$month<=$month_end;$month++)
+                    {
+                        if($month%12)
+                        {
+                            $m=$month%12;
+                        }
+                        else
+                        {
+                            $m=12;
+                        }
+                        $type_total['target_'.$m]=0;
+                        $type_total['achieve_'.$m]=0;
+                        $type_total['net_'.$m]=0;
+                    }
+                    $type_total['target_total']=0;
+                    $type_total['achieve_total']=0;
+                    $type_total['net_total']=0;
+                    //resetting types
+
+                    $item['crop_name']='';
+                    $item['crop_type_name']=$result['crop_type_name'];
+                    $prev_crop_type_name=$result['crop_type_name'];
+                }
+                else
+                {
+                    $item['crop_name']='';
+                    $item['crop_type_name']='';
+                }
+            }
+            else
+            {
+                $item['crop_name']=$result['crop_name'];
+                $prev_crop_name=$result['crop_name'];
+                $item['crop_type_name']=$result['crop_type_name'];
+                $prev_crop_type_name=$result['crop_type_name'];
+            }
+            $item['variety_name']=$result['variety_name'];
+
+            $item['target_total']=0;//initialization
+            $item['achieve_total']=0;//initialization
+            $item['variance_total']=0;//initialization
+            $item['net_total']=0;//initialization
+
+            for($month=$month_start;$month<=$month_end;$month++)
+            {
+                if($month%12)
+                {
+                    $m=$month%12;
+                }
+                else
+                {
+                    $m=12;
+                }
+                if((isset($month_total[$result['variety_id']]['target_quantity_'.$m]))&&($month_total[$result['variety_id']]['target_quantity_'.$m]!=null))
+                {
+                    $item['target_'.$m]=$month_total[$result['variety_id']]['target_quantity_'.$m];
+                    $item['target_total']+=$item['target_'.$m];
+                    $type_total['target_'.$m]+=$item['target_'.$m];
+                    $type_total['target_total']+=$item['target_'.$m];
+                    $crop_total['target_'.$m]+=$item['target_'.$m];
+                    $crop_total['target_total']+=$item['target_'.$m];
+                    $grand_total['target_'.$m]+=$item['target_'.$m];
+                    $grand_total['target_total']+=$item['target_'.$m];
+                }
+                else
+                {
+                    $item['target_'.$m]=0;
+                }
+                if((isset($sales_total[$result['variety_id']][$m]))&&($sales_total[$result['variety_id']][$m]['quantity']!=null))
+                {
+                    $item['achieve_'.$m]=$sales_total[$result['variety_id']][$m]['quantity']/1000;
+                    $item['achieve_total']+=$item['achieve_'.$m];
+                    $type_total['achieve_'.$m]+=$item['achieve_'.$m];
+                    $type_total['achieve_total']+=$item['achieve_'.$m];
+                    $crop_total['achieve_'.$m]+=$item['achieve_'.$m];
+                    $crop_total['achieve_total']+=$item['achieve_'.$m];
+                    $grand_total['achieve_'.$m]+=$item['achieve_'.$m];
+                    $grand_total['achieve_total']+=$item['achieve_'.$m];
+
+                    $item['net_'.$m]=$sales_total[$result['variety_id']][$m]['net_sales'];
+                    $item['net_total']+=$item['net_'.$m];
+                    $type_total['net_'.$m]+=$item['net_'.$m];
+                    $type_total['net_total']+=$item['net_'.$m];
+                    $crop_total['net_'.$m]+=$item['net_'.$m];
+                    $crop_total['net_total']+=$item['net_'.$m];
+                    $grand_total['net_'.$m]+=$item['net_'.$m];
+                    $grand_total['net_total']+=$item['net_'.$m];
+
+                }
+                else
+                {
+                    $item['achieve_'.$m]=0;
+                    $item['net_'.$m]=0;
+
+                }
+            }
+            /*if($count==0)
             {
                 $item['crop_name']=$result['crop_name'];
                 $item['crop_type_name']=$result['crop_type_name'];
@@ -433,8 +616,24 @@ class Reports_month_target extends Root_Controller
             $items[]=$this->get_report_row($item,$month_start,$month_end);
 
             //$item['sl_no']=$count;
+            */
+            //$items[]=$item;
+            $items[]=$this->get_report_row($item,$month_start,$month_end);
         }
+        $type_total['crop_name']='';
+        $type_total['crop_type_name']='';
+        $type_total['variety_name']='Total Type';
+        $items[]=$this->get_report_row($type_total,$month_start,$month_end);
+        //adding total crop column
+        $crop_total['crop_name']='';
+        $crop_total['crop_type_name']='Total Crop';
+        $crop_total['variety_name']='';
         $items[]=$this->get_report_row($crop_total,$month_start,$month_end);
+        //adding Grand crop column
+        $grand_total['crop_name']='Grand Total';
+        $grand_total['crop_type_name']='';
+        $grand_total['variety_name']='';
+        $items[]=$this->get_report_row($grand_total,$month_start,$month_end);
         $this->jsonReturn($items);
     }
     private function get_report_row($item,$month_start,$month_end)

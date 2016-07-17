@@ -112,19 +112,58 @@
         var cellsrenderer = function(row, column, value, defaultHtml, columnSettings, record)
         {
             var element = $(defaultHtml);
-            if (record.variety_name=="Total")
+            // console.log(defaultHtml);
+
+            if (record.variety_name=="Total Type")
             {
+                if(!((column=='crop_name')||(column=='crop_type_name')))
+                {
+                    element.css({ 'background-color': '#6CAB44','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                }
+            }
+            else if (record.crop_type_name=="Total Crop")
+            {
+
+
+                if((column!='crop_name'))
+                {
+                    element.css({ 'background-color': '#0CA2C5','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+
+                }
+
+            }
+            else if (record.crop_name=="Grand Total")
+            {
+
                 element.css({ 'background-color': grand_total_color,'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+
             }
             else
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
             }
+
             return element[0].outerHTML;
 
         };
         var tooltiprenderer = function (element) {
             $(element).jqxTooltip({position: 'mouse', content: $(element).text() });
+        };
+        var aggregates=function (total, column, element, record)
+        {
+            if(record.crop_name=="Grand Total")
+            {
+                //console.log(element);
+                return record[element];
+
+            }
+            return total;
+            //return grand_starting_stock;
+        };
+        var aggregatesrenderer=function (aggregates)
+        {
+            return '<div style="position: relative; margin: 0px;padding: 5px;width: 100%;height: 100%; overflow: hidden;background-color:'+grand_total_color+';">' +aggregates['total']+'</div>';
+
         };
         var dataAdapter = new $.jqx.dataAdapter(source);
         // create jqxgrid.
@@ -137,24 +176,26 @@
                 columnsreorder: true,
                 altrows: true,
                 enabletooltips: true,
+                showaggregates: true,
+                showstatusbar: true,
                 rowsheight: 35,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'crop_type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'crop_type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                         <?php
                             foreach($months as $month)
-                            {?>{ columngroup: 'month_<?php echo $month; ?>',text: 'Target', dataField: 'target_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'month_<?php echo $month; ?>',text: 'Achieved', dataField: 'achieve_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'month_<?php echo $month; ?>',text: 'Variance', dataField: 'variance_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'month_<?php echo $month; ?>',text: 'Net Sales', dataField: 'net_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                            {?>{ columngroup: 'month_<?php echo $month; ?>',text: 'Target', dataField: 'target_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'month_<?php echo $month; ?>',text: 'Achieved', dataField: 'achieve_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'month_<?php echo $month; ?>',text: 'Variance', dataField: 'variance_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'month_<?php echo $month; ?>',text: 'Net Sales', dataField: 'net_<?php echo $month;?>',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     <?php
                         }
                     ?>
-                    { columngroup: 'total',text: 'Target', dataField: 'target_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'total',text: 'Achieved', dataField: 'achieve_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'total',text: 'Variance', dataField: 'variance_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    { columngroup: 'total',text: 'Net Sales', dataField: 'net_total',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
+                    { columngroup: 'total',text: 'Target', dataField: 'target_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'total',text: 'Achieved', dataField: 'achieve_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'total',text: 'Variance', dataField: 'variance_total',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'total',text: 'Net Sales', dataField: 'net_total',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ],
                 columngroups:
                 [
