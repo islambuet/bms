@@ -11,7 +11,6 @@ class Mgt_purchase_consignment extends Root_Controller
         $this->message="";
         $this->permissions=User_helper::get_permission('Mgt_purchase_consignment');
         $this->controller_url='mgt_purchase_consignment';
-        //$this->load->model("sys_user_role_model");
     }
 
     public function index($action="list",$id=0)
@@ -108,11 +107,10 @@ class Mgt_purchase_consignment extends Root_Controller
             $data['consignment']['currency_id']=0;
             $data['consignment']['principal_id']=0;
             $data['consignment']['rate']='';
+            $data['consignment']['lc_number']='';
 
             $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['principals']=Query_helper::get_info($this->config->item('ems_basic_setup_principal'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
-            $data['direct_cost_items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
-            $data['direct_costs']=array();
 
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("mgt_purchase_consignment/add_edit",$data,true));
@@ -147,13 +145,6 @@ class Mgt_purchase_consignment extends Root_Controller
             $data['fiscal_years']=$fy_info['years'];
             $data['currencies']=Query_helper::get_info($this->config->item('table_setup_currency'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
             $data['principals']=Query_helper::get_info($this->config->item('ems_basic_setup_principal'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
-            $data['direct_cost_items']=Query_helper::get_info($this->config->item('table_setup_direct_cost_items'),array('id value','name text'),array('status !="'.$this->config->item('system_status_delete').'"'),0,0,array('ordering'));
-            $data['direct_costs']=array();
-            $results=Query_helper::get_info($this->config->item('table_mgt_purchase_consignment_costs'),array('item_id','cost'),array('consignment_id ='.$consignment_id,'revision =1'));
-            foreach($results as $result)
-            {
-                $data['direct_costs'][$result['item_id']]=$result;
-            }
 
             $data['title']="Edit consignment (".$data['consignment']['name'].')';
             $ajax['status']=true;
@@ -220,34 +211,7 @@ class Mgt_purchase_consignment extends Root_Controller
             {
                 $consignment['user_created'] = $user->user_id;
                 $consignment['date_created'] = $time;
-                $consignment_id=Query_helper::add($this->config->item('table_mgt_purchase_consignments'),$consignment);
-                if($consignment_id===false)
-                {
-                    $this->db->trans_complete();
-                    $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
-                    $this->jsonReturn($ajax);
-                    die();
-                }
-                else
-                {
-                    $id=$consignment_id;
-                }
-            }
-            $this->db->where('consignment_id',$id);
-            $this->db->set('revision', 'revision+1', FALSE);
-            $this->db->update($this->config->item('table_mgt_purchase_consignment_costs'));
-            $items=$this->input->post('items');
-            foreach($items as $item_id=>$cost)
-            {
-                $data=array();
-                $data['consignment_id']=$id;
-                $data['item_id']=$item_id;
-                $data['cost']=$cost;
-                $data['revision']=1;
-                $data['user_created'] = $user->user_id;
-                $data['date_created'] = $time;
-                Query_helper::add($this->config->item('table_mgt_purchase_consignment_costs'),$data);
+                Query_helper::add($this->config->item('table_mgt_purchase_consignments'),$consignment);
             }
             $this->db->trans_complete();   //DB Transaction Handle END
             if ($this->db->trans_status() === TRUE)
@@ -280,6 +244,7 @@ class Mgt_purchase_consignment extends Root_Controller
         $this->form_validation->set_rules('consignment[currency_id]',$this->lang->line('LABEL_CURRENCY_NAME'),'required');
         $this->form_validation->set_rules('consignment[principal_id]',$this->lang->line('LABEL_PRINCIPAL_NAME'),'required');
         $this->form_validation->set_rules('consignment[name]',$this->lang->line('LABEL_CONSIGNMENT_NAME'),'required');
+        $this->form_validation->set_rules('consignment[lc_number]',$this->lang->line('LABEL_LC_NUMBER'),'required');
 
         if($this->form_validation->run() == FALSE)
         {

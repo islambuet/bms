@@ -108,21 +108,14 @@
                 <input type="text" name="consignment[rate]" id="rate" class="form-control float_type_positive" style="text-align: left;" value="<?php echo $consignment['rate'];?>"/>
             </div>
         </div>
-        <?php
-        foreach($direct_cost_items as $item)
-        {
-            ?>
-            <div class="row show-grid">
-                <div class="col-xs-4">
-                    <label class="control-label pull-right"><?php  echo $item['text'];?><span style="color:#FF0000">*</span></label>
-                </div>
-                <div class="col-sm-4 col-xs-8">
-                    <input type="text" name="items[<?php echo $item['value']; ?>]" class="form-control float_type_positive" style="text-align: left;" value="<?php if(isset($direct_costs[$item['value']])){echo $direct_costs[$item['value']]['cost'];}?>"/>
-                </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right"><?php echo $this->lang->line('LABEL_LC_NUMBER');?><span style="color:#FF0000">*</span></label>
             </div>
-        <?php
-        }
-        ?>
+            <div class="col-sm-4 col-xs-8">
+                <input type="text" name="consignment[lc_number]" id="lc_number" class="form-control" value="<?php echo $consignment['lc_number'];?>"/>
+            </div>
+        </div>
     </div>
 
     <div class="clearfix"></div>
