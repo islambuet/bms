@@ -261,28 +261,16 @@ class Ti_bud_monthwise_target extends Root_Controller
 
 
         $pick_months=array();
-        $result=Query_helper::get_info($this->config->item('ems_setup_classification_variety_time'),array('date_start','date_end'),array('crop_type_id ='.$type_id,'territory_id ='.$territory_id,'revision =1'),1);
+        $result=Query_helper::get_info($this->config->item('ems_setup_classification_variety_time'),'*',array('crop_type_id ='.$type_id,'territory_id ='.$territory_id,'revision =1'),1);
         if($result)
         {
-            $start_month=date('n',$result['date_start']);
-            $end_month=date('n',$result['date_end']);
-            if($start_month>$end_month)
+            for($i=1;$i<13;$i++)
             {
-                $end_month+=12;
-            }
-            for($m=$start_month;$m<=$end_month;$m++)
-            {
-                if($m%12)
+                if($result['month_'.$i]>0)
                 {
-                    $pick_months[]=($m%12);
+                    $pick_months[]=$i;
                 }
-                else
-                {
-                    $pick_months[]=12;
-                }
-
             }
-
         }
 
         //may be need to check if already forwarded
