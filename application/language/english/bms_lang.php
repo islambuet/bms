@@ -121,3 +121,10 @@ $lang['LABEL_MONTH_PURCHASE'] = 'Purchase Month';
 $lang['LABEL_DATE_PURCHASE'] = 'Purchase Date';
 $lang['LABEL_PRINCIPAL_NAME'] = 'PRINCIPAL';
 $lang['LABEL_LC_NUMBER'] = 'LC Number';
+
+$lang['LABEL_GENERAL_EXPENSE'] = 'General Expense';
+$lang['LABEL_MARKETING_EXPENSE'] = 'Marketing Expense';
+$lang['LABEL_FINANCE_EXPENSE'] = 'Financial Expense';
+$lang['LABEL_PROFIT'] = 'Profit';
+$lang['LABEL_SALES_COMMISSION'] = 'Sales Commission';
+$lang['LABEL_INCENTIVE'] = 'Incentive';
