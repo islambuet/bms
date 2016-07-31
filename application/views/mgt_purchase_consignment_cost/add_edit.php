@@ -69,7 +69,7 @@
                 <label class="control-label pull-right"><?php echo $this->lang->line('LABEL_CURRENCY_RATE');?></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <label class="control-label"><?php echo $consignment['rate'];?></label>
+                <input type="text" name="consignment[rate]" id="rate" class="form-control float_type_positive" style="text-align: left;" value="<?php echo $consignment['rate'];?>"/>
             </div>
         </div>
         <div class="row show-grid">

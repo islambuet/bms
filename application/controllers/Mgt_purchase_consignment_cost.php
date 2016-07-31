@@ -157,9 +157,12 @@ class Mgt_purchase_consignment_cost extends Root_Controller
         }
         else
         {
-
-
+            $consignment = $this->input->post('consignment');
             $this->db->trans_start();  //DB Transaction Handle START
+            $consignment['user_updated'] = $user->user_id;
+            $consignment['date_updated'] = $time;
+            Query_helper::update($this->config->item('table_mgt_purchase_consignments'),$consignment,array("id = ".$id));
+
             $this->db->where('consignment_id',$id);
             $this->db->set('revision', 'revision+1', FALSE);
             $this->db->update($this->config->item('table_mgt_purchase_consignment_costs'));
