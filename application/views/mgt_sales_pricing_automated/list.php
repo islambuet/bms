@@ -35,6 +35,17 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="hom_target">Target</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs">COGS</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="general">General</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="marketing">Marketing</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="finance">Finance</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="profit">Profit</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="net_price">Net Price</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_commission">Sales Commission</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive">Incentive</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="trade_price">Trade Price</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_profit">Total Profit</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_net_price">Total Net Price</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="profit_percentage">Profit %</label>
             </div>
         </div>
     <?php
@@ -62,7 +73,18 @@
                 { name: 'crop_type_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'hom_target', type: 'string' },
-                { name: 'cogs', type: 'string' }
+                { name: 'cogs', type: 'string' },
+                { name: 'general', type: 'string' },
+                { name: 'marketing', type: 'string' },
+                { name: 'finance', type: 'string' },
+                { name: 'profit', type: 'string' },
+                { name: 'net_price', type: 'string' },
+                { name: 'sales_commission', type: 'string' },
+                { name: 'incentive', type: 'string' },
+                { name: 'trade_price', type: 'string' },
+                { name: 'total_profit', type: 'string' },
+                { name: 'total_net_price', type: 'string' },
+                { name: 'profit_percentage', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -120,15 +142,24 @@
                 columnsreorder: true,
                 altrows: true,
                 enabletooltips: true,
-                showaggregates: true,
-                showstatusbar: true,
                 rowsheight: 35,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'crop_type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     {text: 'Target', dataField: 'hom_target',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
-                    {text: 'COGS', dataField: 'cogs',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
+                    {text: 'COGS', dataField: 'cogs',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'General', dataField: 'general',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Marketing', dataField: 'marketing',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Finance', dataField: 'finance',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Profit', dataField: 'profit',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Net Price', dataField: 'net_price',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Commission', dataField: 'sales_commission',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Incentive', dataField: 'incentive',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Trade Price', dataField: 'trade_price',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Total Profit', dataField: 'total_profit',align:'center',cellsalign: 'right',width:'100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Total Net Price', dataField: 'total_net_price',align:'center',cellsalign: 'right',width:'130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
+                    {text: 'Profit %', dataField: 'profit_percentage',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
 
                 ]
 
