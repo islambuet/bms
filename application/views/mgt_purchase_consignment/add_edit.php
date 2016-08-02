@@ -61,7 +61,7 @@
                     <?php
                     for($i=1;$i<13;$i++)
                     {?>
-                        <option value="<?php echo $i;?>" <?php if($i==date("n")){echo 'selected';} ?>><?php echo date("M", mktime(0, 0, 0,  $i,1, 2000));?></option>
+                        <option value="<?php echo $i;?>" <?php if($i==$consignment['month']){echo 'selected';} ?>><?php echo date("M", mktime(0, 0, 0,  $i,1, 2000));?></option>
                     <?php
                     }
                     ?>

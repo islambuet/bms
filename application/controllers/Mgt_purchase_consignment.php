@@ -103,6 +103,7 @@ class Mgt_purchase_consignment extends Root_Controller
             $data['consignment']['id']=0;
             $data['consignment']['year0_id']=$fy_info['budget_year']['value']-1;//current fiscal year
             $data['consignment']['name']='';
+            $data['consignment']['month']=date('n');
             $data['consignment']['date_purchase']=time();
             $data['consignment']['currency_id']=0;
             $data['consignment']['principal_id']=0;
