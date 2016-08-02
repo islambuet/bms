@@ -36,6 +36,83 @@
 </div>
 <div class="clearfix"></div>
 <script type="text/javascript">
+    function calculate_total(row, tp_mgt, sales_commission_percentage,incentive_percentage)
+    {
+        var row_data = $('#system_jqx_container').jqxGrid('getrowdata', row);
+
+
+        var hom_target=0;
+        if(!isNaN(parseFloat(row_data.hom_target.replace(/,/g,''))))
+        {
+            hom_target=parseFloat(row_data.hom_target.replace(/,/g,''));
+        }
+        var sales_commission=tp_mgt*sales_commission_percentage/100;
+        var incentive=tp_mgt*incentive_percentage/100;
+
+        if(sales_commission!=0)
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'sales_commission', number_format(sales_commission,2));
+        }
+        else
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'sales_commission', '');
+        }
+        if(incentive!=0)
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'incentive', number_format(incentive,2));
+        }
+        else
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'incentive', '');
+        }
+        var net_price=tp_mgt-sales_commission-incentive;
+        if(net_price!=0)
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'net_price', number_format(net_price,2));
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'total_net_price', number_format(net_price*hom_target,2));
+        }
+        else
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'net_price', '');
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'total_net_price', '');
+        }
+        var general=0;
+        if(!isNaN(parseFloat(row_data.general.replace(/,/g,''))))
+        {
+            general=parseFloat(row_data.general.replace(/,/g,''));
+        }
+        var marketing=0;
+        if(!isNaN(parseFloat(row_data.marketing.replace(/,/g,''))))
+        {
+            marketing=parseFloat(row_data.marketing.replace(/,/g,''));
+        }
+        var finance=0;
+        if(!isNaN(parseFloat(row_data.finance.replace(/,/g,''))))
+        {
+            finance=parseFloat(row_data.finance.replace(/,/g,''));
+        }
+        var profit=net_price-general-marketing-finance;
+        if(profit!=0)
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'profit', number_format(profit,2));
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'total_profit', number_format(profit*hom_target,2));
+        }
+        else
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'profit', '');
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'total_profit', '');
+        }
+        if(net_price!=0)
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'profit_percentage', number_format(profit*100/net_price,2));
+        }
+        else
+        {
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'net_price', '');
+
+        }
+
+    }
     $(document).ready(function ()
     {
         var cellsrenderer = function(row, column, value, defaultHtml, columnSettings, record)
@@ -134,22 +211,88 @@
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer,editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer,editable:false},
                     {text: 'Target', dataField: 'hom_target',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Last Year TP', dataField: 'tp_last_year',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Automated TP', dataField: 'tp_automated',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Management TP', dataField: 'tp_mgt',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Commission %', dataField: 'sales_commission_percentage',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Commission', dataField: 'sales_commission',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Incentive %', dataField: 'incentive_percentage',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Incentive', dataField: 'incentive',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Net Price', dataField: 'net_price',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'COGS', dataField: 'cogs',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'General', dataField: 'general',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Marketing', dataField: 'marketing',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Finance', dataField: 'finance',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Profit', dataField: 'profit',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Total Net Price', dataField: 'total_net_price',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Total Profit', dataField: 'total_profit',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Profit %', dataField: 'profit_percentage',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false}
+                    {text: 'Last Year TP', dataField: 'tp_last_year',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Automated TP', dataField: 'tp_automated',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Management TP', dataField: 'tp_mgt',align:'center',cellsalign: 'right',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:true,columntype:'custom',
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
+                        },
+                        geteditorvalue: function (row, cellvalue, editor) {
+                            return editor.find('input').val();
+                        },
+                        cellendedit: function (row, column, editor,oldvalue,value)
+                        {
+                            var row_data = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                            var sales_commission_percentage=0;
+                            if(!isNaN(parseFloat(row_data['sales_commission_percentage'])))
+                            {
+                                sales_commission_percentage=parseFloat(row_data['sales_commission_percentage']);
+                            }
+                            var incentive_percentage=0;
+                            if(!isNaN(parseFloat(row_data['incentive_percentage'])))
+                            {
+                                incentive_percentage=parseFloat(row_data['incentive_percentage']);
+                            }
+                            calculate_total(row, value, sales_commission_percentage,incentive_percentage);
+                        }
+                    },
+                    {text: 'Commission %', dataField: 'sales_commission_percentage',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:true,columntype:'custom',
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
+                        },
+                        geteditorvalue: function (row, cellvalue, editor) {
+                            return editor.find('input').val();
+                        },
+                        cellendedit: function (row, column, editor,oldvalue,value)
+                        {
+                            var row_data = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                            var tp_mgt=0;
+                            if(!isNaN(parseFloat(row_data['tp_mgt'])))
+                            {
+                                tp_mgt=parseFloat(row_data['tp_mgt']);
+                            }
+                            var incentive_percentage=0;
+                            if(!isNaN(parseFloat(row_data['incentive_percentage'])))
+                            {
+                                incentive_percentage=parseFloat(row_data['incentive_percentage']);
+                            }
+                            calculate_total(row, tp_mgt,value,incentive_percentage);
+                        }
+                    },
+                    {text: 'Commission', dataField: 'sales_commission',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Incentive %', dataField: 'incentive_percentage',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:true,columntype:'custom',
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
+                        },
+                        geteditorvalue: function (row, cellvalue, editor) {
+                            return editor.find('input').val();
+                        },
+                        cellendedit: function (row, column, editor,oldvalue,value)
+                        {
+                            var row_data = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                            var tp_mgt=0;
+                            if(!isNaN(parseFloat(row_data['tp_mgt'])))
+                            {
+                                tp_mgt=parseFloat(row_data['tp_mgt']);
+                            }
+                            var sales_commission_percentage=0;
+                            if(!isNaN(parseFloat(row_data['sales_commission_percentage'])))
+                            {
+                                sales_commission_percentage=parseFloat(row_data['sales_commission_percentage']);
+                            }
+                            calculate_total(row, tp_mgt, sales_commission_percentage,value);
+                        }
+                    },
+                    {text: 'Incentive', dataField: 'incentive',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Net Price', dataField: 'net_price',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'COGS', dataField: 'cogs',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'General', dataField: 'general',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Marketing', dataField: 'marketing',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Finance', dataField: 'finance',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Profit', dataField: 'profit',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Total Net Price', dataField: 'total_net_price',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Total Profit', dataField: 'total_profit',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Profit %', dataField: 'profit_percentage',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false}
 
                 ]
             });

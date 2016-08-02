@@ -103,6 +103,65 @@ class Mgt_sales_pricing_management extends Root_Controller
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
 
+        $year_info=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text','date_start','date_end'),array('id ='.$year0_id),1);
+
+        //getting full budget and target
+        $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
+        $incharge_budget_target=array();//hom budget and target
+        foreach($results as $result)
+        {
+            $incharge_budget_target[$result['variety_id']]=$result;
+        }
+        //getting full budget and target end
+        $currency_rates=array();
+        $rates=Query_helper::get_info($this->config->item('table_mgt_currency_rate'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$year0_id));
+        foreach($rates as $rate)
+        {
+            $currency_rates[$rate['currency_id']]=$rate['rate'];
+        }
+
+        $direct_costs_percentage=0;
+        $result=$results=Query_helper::get_info($this->config->item('table_mgt_direct_cost_percentage'),array('SUM(percentage) total_percentage'),array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$year0_id),1);
+        if($result)
+        {
+            if(strlen($result['total_percentage'])>0)
+            {
+                $direct_costs_percentage=number_format($result['total_percentage']/100,5,'.','');
+            }
+        }
+        $packing_cost=array();
+        $this->db->from($this->config->item('table_mgt_packing_cost_kg').' pc');
+        $this->db->select('SUM(pc.cost) total_cost');
+        $this->db->where('pc.year0_id',$year0_id);
+        $this->db->group_by('pc.variety_id');
+        $results=$this->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $packing_cost[$result['variety_id']]=$result['total_cost'];
+        }
+
+        $indirect_costs=$results=Query_helper::get_info($this->config->item('table_mgt_indirect_cost_setup'),'*',array('status !="'.$this->config->item('system_status_delete').'"','year0_id ='.$year0_id),1);
+
+        //getting cogs
+        $results=Query_helper::get_info($this->config->item('table_mgt_purchase_budget'),'*',array('year0_id ='.$year0_id));
+        $cogs=array();//hom budget and target
+        foreach($results as $result)
+        {
+            //$cogs_price=$result['quantity_total'];
+            $result['cogs']=0;
+            if(isset($currency_rates[$result['currency_id']]))
+            {
+                $result['cogs']=$currency_rates[$result['currency_id']]*$result['unit_price'];
+            }
+            $result['cogs']=$result['cogs']+$result['cogs']*$direct_costs_percentage;
+            if(isset($packing_cost[$result['variety_id']]))
+            {
+                $result['cogs']+=$packing_cost[$result['variety_id']];
+            }
+            $cogs[$result['variety_id']]=$result;
+        }
+        //getting cogs end
+
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id variety_id,v.name variety_name');
         $this->db->select('type.name type_name');
@@ -114,6 +173,7 @@ class Mgt_sales_pricing_management extends Root_Controller
         $this->db->order_by('v.ordering','ASC');
 
         $results=$this->db->get()->result_array();
+
 
         $prev_type='';
         foreach($results as $index=>$result)
@@ -137,36 +197,55 @@ class Mgt_sales_pricing_management extends Root_Controller
                 $item['type_name']=$result['type_name'];
             }
             $item['variety_name']=$result['variety_name'];
-//            { name: 'hom_target', type: 'string' },
-//            { name: 'tp_last_year', type: 'string' },
-//            { name: 'tp_automated', type: 'string' },
-//            { name: 'tp_mgt', type: 'string' },
-//            { name: 'sales_commission_percentage', type: 'string' },
-//            { name: 'sales_commission', type: 'string' },
-//            { name: 'incentive_percentage', type: 'string' },
-//            { name: 'incentive', type: 'string' },
-//            { name: 'net_price', type: 'string' },
-//            { name: 'cogs', type: 'string' },
-//            { name: 'general', type: 'string' },
-//            { name: 'marketing', type: 'string' },
-//            { name: 'finance', type: 'string' },
-//            { name: 'profit', type: 'string' },
-//            { name: 'total_net_price', type: 'string' },
-//            { name: 'total_profit', type: 'string' },
-//            { name: 'profit_percentage', type: 'string' }
-            $item['hom_target']=0;
+
+            if(isset($incharge_budget_target[$result['variety_id']]))
+            {
+                $item['hom_target']=$incharge_budget_target[$result['variety_id']]['year0_target_quantity'];
+            }
+            else
+            {
+                $item['hom_target']=0;
+            }
             $item['tp_last_year']=0;
-            $item['tp_automated']=0;
+            if(isset($cogs[$result['variety_id']]))
+            {
+                $item['cogs']=$cogs[$result['variety_id']]['cogs'];
+            }
+            else
+            {
+                $item['cogs']=0;
+            }
+            if($indirect_costs)
+            {
+                $item['general']=$item['cogs']*$indirect_costs['general']/100;
+                $item['marketing']=$item['cogs']*$indirect_costs['marketing']/100;
+                $item['finance']=$item['cogs']*$indirect_costs['finance']/100;
+                $automated_profit=$item['cogs']*$indirect_costs['profit']/100;
+                $automated_net_price=$item['cogs']+$item['general']+$item['marketing']+$item['finance']+$automated_profit;
+                $automated_sales_commission=$automated_net_price*$indirect_costs['sales_commission']/100;
+                $automated_incentive=$automated_net_price*$indirect_costs['incentive']/100;
+                //$item['trade_price']=$item['net_price']+$item['sales_commission']+$item['incentive'];
+                $item['tp_automated']=$automated_net_price+$automated_sales_commission+$automated_incentive;
+
+            }
+            else
+            {
+                $item['general']=0;
+                $item['marketing']=0;
+                $item['finance']=0;
+                //$item['profit']=0;
+                //$item['net_price']=$item['cogs'];
+                //$item['sales_commission']=0;
+                //$item['incentive']=0;
+                $item['tp_automated']=$item['cogs'];
+            }
             $item['tp_mgt']=0;
             $item['sales_commission_percentage']=0;
             $item['sales_commission']=0;
             $item['incentive_percentage']=0;
             $item['incentive']=0;
             $item['net_price']=0;
-            $item['cogs']=0;
-            $item['general']=0;
-            $item['marketing']=0;
-            $item['finance']=0;
+
             $item['profit']=0;
             $item['total_net_price']=0;
             $item['total_profit']=0;
@@ -193,18 +272,71 @@ class Mgt_sales_pricing_management extends Root_Controller
         {
             $row['hom_target']='';
         }
-        $row['tp_last_year']=$item['tp_last_year'];
-        $row['tp_automated']=$item['tp_automated'];
-        $row['tp_mgt']=$item['tp_mgt'];
-        $row['sales_commission_percentage']=$item['sales_commission_percentage'];
-        $row['sales_commission']=$item['sales_commission'];
-        $row['incentive_percentage']=$item['incentive_percentage'];
-        $row['incentive']=$item['incentive'];
-        $row['net_price']=$item['net_price'];
-        $row['profit']=$item['profit'];
-        $row['total_net_price']=$item['total_net_price'];
-        $row['total_profit']=$item['total_profit'];
-        $row['profit_percentage']=$item['profit_percentage'];
+        if($item['tp_last_year']!=0)
+        {
+            $row['tp_last_year']=$item['tp_last_year'];
+        }
+        else
+        {
+            $row['tp_last_year']='';
+        }
+        if($item['tp_automated']!=0)
+        {
+            $row['tp_automated']=number_format($item['tp_automated'],2);
+        }
+        else
+        {
+            $row['tp_automated']='';
+        }
+        if($item['tp_mgt']!=0)
+        {
+            $row['tp_mgt']=$item['tp_mgt'];
+        }
+        else
+        {
+            $row['tp_mgt']='';
+        }
+        if($item['sales_commission_percentage']!=0)
+        {
+            $row['sales_commission_percentage']=$item['sales_commission_percentage'];
+        }
+        else
+        {
+            $row['sales_commission_percentage']='';
+        }
+        if($item['sales_commission']!=0)
+        {
+            $row['sales_commission']=number_format($item['sales_commission'],2);
+        }
+        else
+        {
+            $row['sales_commission']='';
+        }
+        if($item['incentive_percentage']!=0)
+        {
+            $row['incentive_percentage']=$item['incentive_percentage'];
+        }
+        else
+        {
+            $row['incentive_percentage']='';
+        }
+        if($item['incentive']!=0)
+        {
+            $row['incentive']=number_format($item['incentive'],2);
+        }
+        else
+        {
+            $row['incentive']='';
+        }
+        if($item['net_price']!=0)
+        {
+            $row['net_price']=number_format($item['net_price'],2);
+        }
+        else
+        {
+            $row['net_price']='';
+        }
+
         if($item['cogs']!=0)
         {
             $row['cogs']=number_format($item['cogs'],2);
@@ -237,53 +369,13 @@ class Mgt_sales_pricing_management extends Root_Controller
         {
             $row['finance']='';
         }
-        /*if($item['profit']!=0)
+        if($item['profit']!=0)
         {
             $row['profit']=number_format($item['profit'],2);
         }
         else
         {
             $row['profit']='';
-        }
-        if($item['net_price']!=0)
-        {
-            $row['net_price']=number_format($item['net_price'],2);
-        }
-        else
-        {
-            $row['net_price']='';
-        }
-        if($item['sales_commission']!=0)
-        {
-            $row['sales_commission']=number_format($item['sales_commission'],2);
-        }
-        else
-        {
-            $row['sales_commission']='';
-        }
-        if($item['incentive']!=0)
-        {
-            $row['incentive']=number_format($item['incentive'],2);
-        }
-        else
-        {
-            $row['incentive']='';
-        }
-        if($item['trade_price']!=0)
-        {
-            $row['trade_price']=number_format($item['trade_price'],2);
-        }
-        else
-        {
-            $row['trade_price']='';
-        }
-        if($item['total_profit']!=0)
-        {
-            $row['total_profit']=number_format($item['total_profit'],2);
-        }
-        else
-        {
-            $row['total_profit']='';
         }
         if($item['total_net_price']!=0)
         {
@@ -293,16 +385,22 @@ class Mgt_sales_pricing_management extends Root_Controller
         {
             $row['total_net_price']='';
         }
-
+        if($item['total_profit']!=0)
+        {
+            $row['total_profit']=number_format($item['total_profit'],2);
+        }
+        else
+        {
+            $row['total_profit']='';
+        }
         if($item['profit_percentage']!=0)
         {
             $row['profit_percentage']=number_format($item['profit_percentage'],2);
         }
         else
         {
-            $row['profit_percentage']='';
-        }*/
-
+            $row['profit_percentage']=0;
+        }
         return $row;
 
     }
