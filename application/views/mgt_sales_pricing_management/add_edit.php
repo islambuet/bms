@@ -76,6 +76,11 @@
             $("#system_jqx_container").jqxGrid('setcellvalue', row, 'net_price', '');
             $("#system_jqx_container").jqxGrid('setcellvalue', row, 'total_net_price', '');
         }
+        var cogs=0;
+        if(!isNaN(parseFloat(row_data.cogs.replace(/,/g,''))))
+        {
+            cogs=parseFloat(row_data.cogs.replace(/,/g,''));
+        }
         var general=0;
         if(!isNaN(parseFloat(row_data.general.replace(/,/g,''))))
         {
@@ -91,7 +96,7 @@
         {
             finance=parseFloat(row_data.finance.replace(/,/g,''));
         }
-        var profit=net_price-general-marketing-finance;
+        var profit=net_price-cogs-general-marketing-finance;
         if(profit!=0)
         {
             $("#system_jqx_container").jqxGrid('setcellvalue', row, 'profit', number_format(profit,2));
@@ -108,7 +113,7 @@
         }
         else
         {
-            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'net_price', '');
+            $("#system_jqx_container").jqxGrid('setcellvalue', row, 'profit_percentage', '');
 
         }
 
@@ -120,33 +125,22 @@
             var element = $(defaultHtml);
             // console.log(defaultHtml);
 
-            if (record.variety_name=="Total Type")
+            if (record.profit_percentage<5)
             {
-                if(!((column=='crop_name')||(column=='crop_type_name')))
-                {
-                    element.css({ 'background-color': '#6CAB44','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-                }
+                element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
-            else if (record.crop_type_name=="Total Crop")
+            else if (record.profit_percentage<10)
             {
-
-
-                if((column!='crop_name'))
-                {
-                    element.css({ 'background-color': '#0CA2C5','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-
-                }
+                element.css({ 'background-color': '#0CA2C5','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
 
             }
-            else if (record.crop_name=="Grand Total")
+            else if (record.profit_percentage<15)
             {
-
-                element.css({ 'background-color': grand_total_color,'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-
+                element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
             }
             else
             {
-                element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
+                element.css({ 'background-color': '#00FF00','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             if(column=='tp_mgt' ||column=='sales_commission_percentage' ||column=='incentive_percentage')
             {
