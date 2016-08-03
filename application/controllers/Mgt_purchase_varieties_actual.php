@@ -134,7 +134,7 @@ class Mgt_purchase_varieties_actual extends Root_Controller
 
             $this->db->from($this->config->item('table_mgt_purchase_consignment_varieties').' cv');
             $this->db->select('cv.*');
-            $this->db->select('v.name variety_name');
+            $this->db->select('v.name_import variety_name');
             $this->db->select('crop_type.name crop_type_name');
             $this->db->select('crop.name crop_name');
             $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id =cv.variety_id','INNER');
@@ -219,7 +219,7 @@ class Mgt_purchase_varieties_actual extends Root_Controller
         }
         $this->db->from($this->config->item('table_mgt_purchase_consignment_varieties').' cv');
         $this->db->select('cv.*');
-        $this->db->select('v.name variety_name');
+        $this->db->select('v.name_import variety_name');
         $this->db->select('crop_type.name crop_type_name');
         $this->db->select('crop.name crop_name');
         $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id =cv.variety_id','INNER');

@@ -100,7 +100,6 @@
                 <thead>
                 <tr>
                     <th style="min-width: 150px;"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></th>
-                    <th style="min-width: 150px;"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></th>
                     <th style="min-width: 150px;"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></th>
                     <th style="min-width: 150px;"><?php echo $CI->lang->line('LABEL_QUANTITY'); ?></th>
                     <th style="min-width: 150px;">PI Value</th>
@@ -116,9 +115,6 @@
                     <tr>
                         <td>
                             <label><?php echo $variety['crop_name']; ?></label>
-                        </td>
-                        <td>
-                            <label><?php echo $variety['crop_type_name']; ?></label>
                         </td>
                         <td>
                             <label><?php echo $variety['variety_name']; ?></label>
@@ -172,13 +168,7 @@
                     ?>
                 </select>
             </td>
-            <td>
-                <div style="display: none;" class="crop_type_id_container">
-                    <select class="form-control crop_type_id">
-                        <option value=""><?php echo $this->lang->line('SELECT');?></option>
-                    </select>
-                </div>
-            </td>
+
             <td>
                 <div style="display: none;" class="variety_id_container">
                     <select class="form-control variety_id">
@@ -212,9 +202,7 @@
             $(content_id+' .crop_id').attr('id','crop_id_'+current_id);
             $(content_id+' .crop_id').attr('data-current-id',current_id);
 
-            $(content_id+' .crop_type_id').attr('id','crop_type_id_'+current_id);
-            $(content_id+' .crop_type_id').attr('data-current-id',current_id);
-            $(content_id+' .crop_type_id_container').attr('id','crop_type_id_container_'+current_id);
+
 
             $(content_id+' .variety_id').attr('id','variety_id_'+current_id);
             $(content_id+' .variety_id').attr('data-current-id',current_id);
@@ -231,8 +219,6 @@
             var html=$(content_id).html();
             $("#order_items_container tbody").append(html);
             $(content_id+' .crop_id').removeAttr('id');
-            $(content_id+' .crop_type_id').removeAttr('id');
-            $(content_id+' .crop_type_id_container').removeAttr('id');
             $(content_id+' .variety_id').removeAttr('id');
             $(content_id+' .variety_id_container').removeAttr('id');
             $(content_id+' .quantity').removeAttr('id');
@@ -243,7 +229,6 @@
         {
 
             var active_id=parseInt($(this).attr('data-current-id'));
-            $("#crop_type_id_"+active_id).val("");
             $("#variety_id_"+active_id).val("");
             $("#quantity_"+active_id).val("");
             $("#price_"+active_id).val("");
@@ -251,48 +236,13 @@
             var crop_id=$('#crop_id_'+active_id).val();
             if(crop_id>0)
             {
-                $('#crop_type_id_container_'+active_id).show();
-                $('#variety_id_container_'+active_id).hide();
-
-                $.ajax({
-                    url: base_url+"common_controller/get_dropdown_croptypes_by_cropid/",
-                    type: 'POST',
-                    datatype: "JSON",
-                    data:{crop_id:crop_id,html_container_id:'#crop_type_id_'+active_id},
-                    success: function (data, status)
-                    {
-
-                    },
-                    error: function (xhr, desc, err)
-                    {
-                        console.log("error");
-
-                    }
-                });
-            }
-            else
-            {
-                $('#crop_type_id_container_'+active_id).hide();
-                $('#variety_id_container_'+active_id).hide();
-            }
-        });
-        $(document).on("change",".crop_type_id",function()
-        {
-            var active_id=parseInt($(this).attr('data-current-id'));
-
-            $("#variety_id_"+active_id).val("");
-            $("#quantity_"+active_id).val("");
-            $("#price_"+active_id).val("");
-            var crop_type_id=$('#crop_type_id_'+active_id).val();
-            if(crop_type_id>0)
-            {
                 $('#variety_id_container_'+active_id).show();
 
                 $.ajax({
-                    url: base_url+"common_controller/get_dropdown_armvarieties_by_croptypeid/",
+                    url :"<?php echo site_url('common_controller/get_dropdown_armtradevarieties_by_cropid');?>",
                     type: 'POST',
                     datatype: "JSON",
-                    data:{crop_type_id:crop_type_id,html_container_id:'#variety_id_'+active_id},
+                    data:{crop_id:crop_id,html_container_id:'#variety_id_'+active_id},
                     success: function (data, status)
                     {
 

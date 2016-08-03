@@ -141,6 +141,27 @@ class Common_controller extends Root_Controller
 
         $this->jsonReturn($ajax);
     }
+    public function get_dropdown_armtradevarieties_by_cropid()
+    {
+        $crop_id = $this->input->post('crop_id');
+        $html_container_id='#variety_id';
+        if($this->input->post('html_container_id'))
+        {
+            $html_container_id=$this->input->post('html_container_id');
+        }
+        $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
+        $this->db->select('v.id value,v.name_import text');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        $this->db->where('v.status',$this->config->item('system_status_active'));
+        $this->db->where('v.whose','ARM');
+        $this->db->where('type.crop_id',$crop_id);
+        $this->db->order_by('v.ordering ASC');
+        $data['items']=$this->db->get()->result_array();
+        $ajax['status']=true;
+        $ajax['system_content'][]=array("id"=>$html_container_id,"html"=>$this->load->view("dropdown_with_select",$data,true));
+
+        $this->jsonReturn($ajax);
+    }
 
 
     public function get_dropdown_allcrops()
