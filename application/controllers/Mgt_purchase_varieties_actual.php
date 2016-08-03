@@ -94,7 +94,7 @@ class Mgt_purchase_varieties_actual extends Root_Controller
             $item['month']=date("M", mktime(0, 0, 0,  $result['month'],1, 2000));
             $item['date_purchase']=System_helper::display_date($result['date_purchase']);
             $item['num_varieties']=$result['num_varieties'];
-            $item['total_quantity']=$result['total_quantity'];
+            $item['total_quantity']=number_format($result['total_quantity'],3,'.','');
             $items[]=$item;
         }
         $this->jsonReturn($items);
