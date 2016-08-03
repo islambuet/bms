@@ -153,6 +153,49 @@
         var tooltiprenderer = function (element) {
             $(element).jqxTooltip({position: 'mouse', content: $(element).text() });
         };
+        var aggregates=function (aggregatedValue, currentValue, column, record)
+        {
+            var total=0;
+            var av=String(aggregatedValue);
+            if(!isNaN(parseFloat(av.replace(/,/g,''))))
+            {
+                total=parseFloat(av.replace(/,/g,''));
+            }
+            var cv=String(record[column]);
+            if(!isNaN(parseFloat(cv.replace(/,/g,''))))
+            {
+                total=total+parseFloat(cv.replace(/,/g,''));
+            }
+            //console.log(cv+' '+total);
+
+
+            /*if(aggregatedValue.length>0)
+            {
+                if(!isNaN(parseFloat(aggregatedValue.replace(/,/g,''))))
+                {
+                    total=parseFloat(aggregatedValue.replace(/,/g,''));
+                }
+            }*/
+            /*if(!isNaN(parseFloat(String(currentValue).replace(/,/g,''))))
+            {
+                console.log('parse');
+                total=total+parseFloat(String(currentValue).replace(/,/g,''));
+            }*/
+            if(total!=0)
+            {
+                return number_format(total,2);
+            }
+            else
+            {
+                return '';
+            }
+            //return grand_starting_stock;
+        };
+        var aggregatesrenderer=function (aggregates)
+        {
+            return '<div style="position: relative; margin: 0px;padding: 5px;width: 100%;height: 100%; overflow: hidden;background-color:#AEC2DD;">' +aggregates['total']+'</div>';
+
+        };
 
         var url = "<?php echo site_url($CI->controller_url."/index/get_edit_items/");?>";
 
@@ -200,6 +243,8 @@
                 columnsreorder: true,
                 altrows: true,
                 rowsheight: 35,
+                showstatusbar: true,
+                showaggregates: true,
                 editable:true,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer,editable:false},
@@ -284,8 +329,8 @@
                     {text: 'Marketing', dataField: 'marketing',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
                     {text: 'Finance', dataField: 'finance',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
                     {text: 'Profit', dataField: 'profit',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Total Net Price', dataField: 'total_net_price',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Total Profit', dataField: 'total_profit',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
+                    {text: 'Total Net Price', dataField: 'total_net_price',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    {text: 'Total Profit', dataField: 'total_profit',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false,aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     {text: 'Profit %', dataField: 'profit_percentage',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false}
 
                 ]
