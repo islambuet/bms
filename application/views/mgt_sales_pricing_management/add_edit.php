@@ -25,6 +25,23 @@
         <div class="col-xs-12" style="margin-bottom: 20px;">
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="hom_target">Target</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_last_year">Last Year TP</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_automated">Automated TP</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_mgt">Management TP</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_commission_percentage">Commission %</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_commission">Commission</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive_percentage">Incentive %</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive">Incentive</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="net_price">Net Price</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs">COGS</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="general">General</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="marketing">Marketing</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="finance">Finance</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="profit">Profit</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_net_price">Total Net Price</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_profit">Total Profit</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="profit_percentage">Profit %</label>
 
         </div>
         <?php
@@ -166,21 +183,6 @@
             {
                 total=total+parseFloat(cv.replace(/,/g,''));
             }
-            //console.log(cv+' '+total);
-
-
-            /*if(aggregatedValue.length>0)
-            {
-                if(!isNaN(parseFloat(aggregatedValue.replace(/,/g,''))))
-                {
-                    total=parseFloat(aggregatedValue.replace(/,/g,''));
-                }
-            }*/
-            /*if(!isNaN(parseFloat(String(currentValue).replace(/,/g,''))))
-            {
-                console.log('parse');
-                total=total+parseFloat(String(currentValue).replace(/,/g,''));
-            }*/
             if(total!=0)
             {
                 return number_format(total,2);
@@ -206,6 +208,7 @@
             dataFields: [
                 { name: 'id', type: 'int' },
                 { name: 'type_name', type: 'string' },
+                { name: 'variety_id', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'hom_target', type: 'string' },
                 { name: 'tp_last_year', type: 'string' },

@@ -140,7 +140,7 @@ class Mgt_sales_pricing_management extends Root_Controller
             $packing_cost[$result['variety_id']]=$result['total_cost'];
         }
 
-        $indirect_costs=$results=Query_helper::get_info($this->config->item('table_mgt_indirect_cost_setup'),'*',array('status !="'.$this->config->item('system_status_delete').'"','year0_id ='.$year0_id),1);
+        $indirect_costs=Query_helper::get_info($this->config->item('table_mgt_indirect_cost_setup'),'*',array('status !="'.$this->config->item('system_status_delete').'"','year0_id ='.$year0_id),1);
 
         //getting cogs
         $results=Query_helper::get_info($this->config->item('table_mgt_purchase_budget'),'*',array('year0_id ='.$year0_id));
@@ -161,6 +161,15 @@ class Mgt_sales_pricing_management extends Root_Controller
             $cogs[$result['variety_id']]=$result;
         }
         //getting cogs end
+        //getting previous saved by management
+        //short by crop if needed
+        $sales_pricing=array();
+        $results=Query_helper::get_info($this->config->item('table_mgt_sales_pricing'),'*',array('year0_id ='.$year0_id));
+        foreach($results as $result)
+        {
+            $sales_pricing[$result['variety_id']]=$result;
+        }
+
 
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id variety_id,v.name variety_name');
@@ -196,6 +205,7 @@ class Mgt_sales_pricing_management extends Root_Controller
                 $prev_type=$result['type_name'];
                 $item['type_name']=$result['type_name'];
             }
+            $item['variety_id']=$result['variety_id'];
             $item['variety_name']=$result['variety_name'];
 
             if(isset($incharge_budget_target[$result['variety_id']]))
@@ -239,17 +249,69 @@ class Mgt_sales_pricing_management extends Root_Controller
                 //$item['incentive']=0;
                 $item['tp_automated']=$item['cogs'];
             }
-            $item['tp_mgt']=0;
-            $item['sales_commission_percentage']=0;
-            $item['sales_commission']=0;
-            $item['incentive_percentage']=0;
-            $item['incentive']=0;
-            $item['net_price']=0;
+            if(isset($sales_pricing[$result['variety_id']]))
+            {
+                if(is_null($sales_pricing[$result['variety_id']]['tp_management']))
+                {
+                    $item['tp_mgt']=0;
+                }
+                else
+                {
+                    $item['tp_mgt']=$sales_pricing[$result['variety_id']]['tp_management'];
+                }
+                if(is_null($sales_pricing[$result['variety_id']]['commission_management']))
+                {
+                    $item['sales_commission_percentage']=0;
+                }
+                else
+                {
+                    $item['sales_commission_percentage']=$sales_pricing[$result['variety_id']]['commission_management'];
+                }
+                if(is_null($sales_pricing[$result['variety_id']]['incentive_management']))
+                {
+                    $item['incentive_percentage']=0;
+                }
+                else
+                {
+                    $item['incentive_percentage']=$sales_pricing[$result['variety_id']]['incentive_management'];
+                }
+            }
+            else
+            {
+                $item['tp_mgt']=0;
+                if($indirect_costs)
+                {
+                    $item['sales_commission_percentage']=$indirect_costs['sales_commission'];
+                    $item['incentive_percentage']=$indirect_costs['incentive'];
+                }
+                else
+                {
+                    $item['sales_commission_percentage']=0;
+                    $item['incentive_percentage']=0;
 
-            $item['profit']=0;
-            $item['total_net_price']=0;
-            $item['total_profit']=0;
-            $item['profit_percentage']=0;
+                }
+
+            }
+            $item['sales_commission']=$item['tp_mgt']*$item['sales_commission_percentage']/100;
+            $item['incentive']=$item['tp_mgt']*$item['incentive_percentage']/100;
+            $item['net_price']=$item['tp_mgt']-$item['sales_commission']-$item['incentive'];
+            if($item['net_price']==0)
+            {
+                $item['profit']=0;
+                $item['profit_percentage']=0;
+            }
+            else
+            {
+
+                $item['profit']=$item['net_price']-$item['cogs']-$item['general']-$item['marketing']-$item['finance'];
+                $item['profit_percentage']=$item['profit']*100/$item['net_price'];
+            }
+            $item['total_net_price']=$item['hom_target']*$item['net_price'];
+            $item['total_profit']=$item['hom_target']*$item['profit'];
+
+
+
+
 
             $items[]=$this->get_report_row($item);
 
@@ -262,7 +324,7 @@ class Mgt_sales_pricing_management extends Root_Controller
     {
         $row=array();
         $row['type_name']=$item['type_name'];
-        $row['variety_name']=$item['variety_name'];
+        $row['variety_id']=$item['variety_id'];
         $row['variety_name']=$item['variety_name'];
         if($item['hom_target']!=0)
         {
@@ -406,61 +468,45 @@ class Mgt_sales_pricing_management extends Root_Controller
     }
     private function system_save()
     {
-        $year0_id=$this->input->post('year0_id');
-        $crop_id=$this->input->post('crop_id');
-        if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
+        if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
         {
-            $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+            $year0_id=$this->input->post('year0_id');
+            $crop_id=$this->input->post('crop_id');
+            $user = User_helper::get_user();
+            $time=time();
 
-            if($info)
+            $items=$this->input->post('items');
+            $this->db->trans_start();
+            if(sizeof($items)>0)
             {
-                if($info['status_target_finalize']===$this->config->item('system_status_yes'))
+                $sales_pricing=array();
+                $results=Query_helper::get_info($this->config->item('table_mgt_sales_pricing'),'*',array('year0_id ='.$year0_id));
+                foreach($results as $result)
                 {
-                    $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FINALIZED");
-                    $this->jsonReturn($ajax);
-                    die();
+                    $sales_pricing[$result['variety_id']]=$result;
                 }
-            }
-        }
-        $user = User_helper::get_user();
-        $time=time();
-        //check forward status if has only add permission but not edit permission
-        $items=$this->input->post('items');
 
-        $this->db->trans_start();
-        if(sizeof($items)>0)
-        {
-            $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
-            $budgets=array();//hom budget
-            foreach($results as $result)
-            {
-                $budgets[$result['variety_id']]=$result;
-            }
-
-            foreach($items as $variety_id=>$quantity)
-            {
-                $data=array();
+                foreach($items as $variety_id=>$data)
                 {
-                    if(strlen($quantity)==0)
+                    if(strlen(trim($data['tp_management']))==0)
                     {
-                        $data['year0_target_quantity']=0;
+                        $data['tp_management']=0;
                     }
-                    else
+                    if(strlen(trim($data['commission_management']))==0)
                     {
-                        $data['year0_target_quantity']=$quantity;
+                        $data['commission_management']=0;
                     }
-
-                    if(isset($budgets[$variety_id]))
+                    if(strlen(trim($data['incentive_management']))==0)
+                    {
+                        $data['incentive_management']=0;
+                    }
+                    if(isset($sales_pricing[$variety_id]))
                     {
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        $data['user_budgeted'] = $user->user_id;
-                        $data['date_budgeted'] = $time;
-                        if($quantity!=$budgets[$variety_id]['year0_target_quantity'])
-                        {
-                            Query_helper::update($this->config->item('table_hom_bud_hom_bt'),$data,array("id = ".$budgets[$variety_id]['id']));
-                        }
+                        $data['user_update_management'] = $user->user_id;
+                        $data['date_updated_management'] = $time;
+                        Query_helper::update($this->config->item('table_mgt_sales_pricing'),$data,array("id = ".$sales_pricing[$variety_id]['id']));
                     }
                     else
                     {
@@ -468,30 +514,34 @@ class Mgt_sales_pricing_management extends Root_Controller
                         $data['variety_id']=$variety_id;
                         $data['user_created'] = $user->user_id;
                         $data['date_created'] = $time;
-                        $data['user_budgeted'] = $user->user_id;
-                        $data['date_budgeted'] = $time;
-                        if($quantity!=0)
-                        {
-                            Query_helper::add($this->config->item('table_hom_bud_hom_bt'),$data);
-                        }
-
+                        $data['user_created_management'] = $user->user_id;
+                        $data['date_created_management'] = $time;
+                        Query_helper::add($this->config->item('table_mgt_sales_pricing'),$data);
                     }
+
                 }
             }
-        }
 
-        $this->db->trans_complete();   //DB Transaction Handle END
-        if ($this->db->trans_status() === TRUE)
-        {
-            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-            $this->system_edit($year0_id,$crop_id);
+            $this->db->trans_complete();   //DB Transaction Handle END
+            if ($this->db->trans_status() === TRUE)
+            {
+                $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+                $this->system_search();
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+                $this->jsonReturn($ajax);
+            }
         }
         else
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->jsonReturn($ajax);
         }
+
     }
 
 }

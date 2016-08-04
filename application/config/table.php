@@ -53,3 +53,4 @@ $config['table_mgt_purchase_consignment_costs'] = 'bms_mgt_purchase_consignment_
 $config['table_mgt_purchase_consignment_varieties'] = 'bms_mgt_purchase_consignment_varieties';
 
 $config['table_mgt_indirect_cost_setup'] = 'bms_mgt_indirect_cost_setup';
+$config['table_mgt_sales_pricing'] = 'bms_mgt_sales_pricing';

@@ -80,17 +80,17 @@
         turn_off_triggers();
         $(document).on("click", "#button_action_save_jqx", function(event)
         {
-            console.log('hi');
-            /*$("#system_loading").show();
+            $("#system_loading").show();
+            $('#save_form_jqx #jqx_inputs').html('');
             var data=$('#system_jqx_container').jqxGrid('getrows');
             for(var i=0;i<data.length;i++)
             {
-                if(data[i]['year0_target_quantity_editable'])
-                {
-                    $('#save_form_jqx').append('<input type="hidden" id="items_'+data[i]['variety_id']+'_year0_target_quantity" name="items['+data[i]['variety_id']+']" value="'+data[i]['year0_target_quantity']+'">');
-                }
+                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][tp_management]" value="'+data[i]['tp_mgt']+'">');
+                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][commission_management]" value="'+data[i]['sales_commission_percentage']+'">');
+                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][incentive_management]" value="'+data[i]['incentive_percentage']+'">');
+
             }
-            $("#save_form_jqx").submit();*/
+            $("#save_form_jqx").submit();
 
         });
         load_crops();
