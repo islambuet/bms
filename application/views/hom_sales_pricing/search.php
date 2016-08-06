@@ -19,7 +19,7 @@
                     <?php
                     foreach($years as $year)
                     {?>
-                        <option value="<?php echo $year['value']?>"><?php echo $year['text'];?></option>
+                        <option value="<?php echo $year['value']?>" <?php if($year['value']==$year0_id){echo 'selected';} ?>><?php echo $year['text'];?></option>
                     <?php
                     }
                     ?>

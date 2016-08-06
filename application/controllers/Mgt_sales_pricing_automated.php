@@ -40,7 +40,7 @@ class Mgt_sales_pricing_automated extends Root_Controller
             $ajax['status']=true;
             $fy_info=System_helper::get_fiscal_years();
             $data['fiscal_years']=$fy_info['years'];
-            $data['year0_id']=$fy_info['budget_year']['value']-1;//current fiscal year
+            $data['year0_id']=$fy_info['budget_year']['value'];
 
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array(),0,0,array('ordering ASC'));
 

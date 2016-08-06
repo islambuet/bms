@@ -44,6 +44,7 @@ class Mgt_sales_pricing_management extends Root_Controller
 
             $fy_info=System_helper::get_fiscal_years();
             $data['years']=$fy_info['years'];
+            $data['year0_id']=$fy_info['budget_year']['value'];
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array(),0,0,array('ordering ASC'));
             $data['title']="Pricing Management Search";
             $ajax['status']=true;
