@@ -357,7 +357,7 @@ class Reports_month_target extends Root_Controller
                 $this->db->where('type.id',$crop_type_id);
                 if($variety_id>0)
                 {
-                    $this->db->where('pod.variety_id',$variety_id);
+                    $this->db->where('v.id',$variety_id);
                 }
             }
         }
