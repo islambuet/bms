@@ -146,7 +146,7 @@ class Hom_sales_pricing extends Root_Controller
             $item['tp_management']=$result['tp_management'];
             if($result['user_created_hom']>0)
             {
-                $item['tp_hom']=$result['hom'];
+                $item['tp_hom']=$result['tp_hom'];
                 $item['commission_hom']=$result['commission_hom'];
                 $item['incentive_hom']=$result['incentive_hom'];
             }
@@ -262,37 +262,32 @@ class Hom_sales_pricing extends Root_Controller
 
                 foreach($items as $variety_id=>$data)
                 {
-                    if(strlen(trim($data['tp_management']))==0)
+                    if(strlen(trim($data['tp_hom']))==0)
                     {
-                        $data['tp_management']=0;
+                        $data['tp_hom']=0;
                     }
-                    if(strlen(trim($data['commission_management']))==0)
+                    if(strlen(trim($data['commission_hom']))==0)
                     {
-                        $data['commission_management']=0;
-                    }
-                    if(strlen(trim($data['incentive_management']))==0)
-                    {
-                        $data['incentive_management']=0;
+                        $data['commission_hom']=0;
                     }
                     if(isset($sales_pricing[$variety_id]))
                     {
+                        $data['incentive_hom']=$sales_pricing[$variety_id]['incentive_management'];
                         $data['user_updated'] = $user->user_id;
                         $data['date_updated'] = $time;
-                        $data['user_update_management'] = $user->user_id;
-                        $data['date_updated_management'] = $time;
+                        if($sales_pricing[$variety_id]['user_created_hom']>0)
+                        {
+                            $data['user_updated_hom'] = $user->user_id;
+                            $data['date_updated_hom'] = $time;
+                        }
+                        else
+                        {
+                            $data['user_created_hom'] = $user->user_id;
+                            $data['date_created_hom'] = $time;
+                        }
+
                         Query_helper::update($this->config->item('table_mgt_sales_pricing'),$data,array("id = ".$sales_pricing[$variety_id]['id']));
                     }
-                    else
-                    {
-                        $data['year0_id']=$year0_id;
-                        $data['variety_id']=$variety_id;
-                        $data['user_created'] = $user->user_id;
-                        $data['date_created'] = $time;
-                        $data['user_created_management'] = $user->user_id;
-                        $data['date_created_management'] = $time;
-                        Query_helper::add($this->config->item('table_mgt_sales_pricing'),$data);
-                    }
-
                 }
             }
 

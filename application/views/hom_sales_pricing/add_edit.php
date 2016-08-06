@@ -25,24 +25,14 @@
         <div class="col-xs-12" style="margin-bottom: 20px;">
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="hom_target">Target</label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_last_year">Last Year TP</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_automated">Automated TP</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_mgt">Management TP</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_commission_percentage">Commission %</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_management">Management TP</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="tp_hom">HOM TP</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="commission_hom">Commission %</label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_commission">Commission</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive_percentage">Incentive %</label>
+            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive_hom">Incentive %</label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive">Incentive</label>
             <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="net_price">Net Price</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs">COGS</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="general">General</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="marketing">Marketing</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="finance">Finance</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="profit">Profit</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_net_price">Total Net Price</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_profit">Total Profit</label>
-            <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="profit_percentage">Profit %</label>
-
         </div>
         <?php
     }
@@ -96,7 +86,7 @@
             // console.log(defaultHtml);
 
             element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
-            if(column=='tp_hom' ||column=='commission_hom' ||column=='incentive_hom')
+            if(column=='tp_hom' ||column=='commission_hom')
             {
                 element.html('<div class="jqxgrid_input">'+value+'</div>');
             }
@@ -228,29 +218,7 @@
                         }
                     },
                     {text: 'Commission', dataField: 'sales_commission',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
-                    {text: 'Incentive %', dataField: 'incentive_hom',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:true,columntype:'custom',
-                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
-                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
-                        },
-                        geteditorvalue: function (row, cellvalue, editor) {
-                            return editor.find('input').val();
-                        },
-                        cellendedit: function (row, column, editor,oldvalue,value)
-                        {
-                            var row_data = $('#system_jqx_container').jqxGrid('getrowdata', row);
-                            var tp_hom=0;
-                            if(!isNaN(parseFloat(row_data['tp_hom'])))
-                            {
-                                tp_hom=parseFloat(row_data['tp_hom']);
-                            }
-                            var sales_commission_percentage=0;
-                            if(!isNaN(parseFloat(row_data['commission_hom'])))
-                            {
-                                sales_commission_percentage=parseFloat(row_data['commission_hom']);
-                            }
-                            calculate_total(row, tp_hom, sales_commission_percentage,value);
-                        }
-                    },
+                    {text: 'Incentive %', dataField: 'incentive_hom',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
                     {text: 'Incentive', dataField: 'incentive',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false},
                     {text: 'Net Price', dataField: 'net_price',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,editable:false}
 

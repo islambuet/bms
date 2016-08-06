@@ -85,10 +85,8 @@
             var data=$('#system_jqx_container').jqxGrid('getrows');
             for(var i=0;i<data.length;i++)
             {
-                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][tp_management]" value="'+data[i]['tp_mgt']+'">');
-                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][commission_management]" value="'+data[i]['sales_commission_percentage']+'">');
-                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][incentive_management]" value="'+data[i]['incentive_percentage']+'">');
-
+                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][tp_hom]" value="'+data[i]['tp_hom']+'">');
+                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][commission_hom]" value="'+data[i]['commission_hom']+'">');
             }
             $("#save_form_jqx").submit();
 
