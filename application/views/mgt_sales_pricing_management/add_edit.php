@@ -142,9 +142,13 @@
             var element = $(defaultHtml);
             // console.log(defaultHtml);
 
-            if (record.profit_percentage<5)
+            if (record.profit_percentage<0)
             {
-                element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#FE4638','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+            }
+            else if (record.profit_percentage<5)
+            {
+                element.css({ 'background-color': '#FEE3B4','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             else if (record.profit_percentage<10)
             {
@@ -152,11 +156,11 @@
             }
             else if (record.profit_percentage<15)
             {
-                element.css({ 'background-color': '#0CA2C5','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#65ACFB','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             else
             {
-                element.css({ 'background-color': '#00FF00','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#88E87E','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             if(column=='tp_mgt' ||column=='sales_commission_percentage' ||column=='incentive_percentage')
             {

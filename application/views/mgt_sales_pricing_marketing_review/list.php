@@ -147,9 +147,13 @@
             var element = $(defaultHtml);
             // console.log(defaultHtml);
 
-            if (record.profit_percentage<5)
+            if (record.profit_percentage<0)
             {
-                element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#FE4638','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+            }
+            else if (record.profit_percentage<5)
+            {
+                element.css({ 'background-color': '#FEE3B4','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             else if (record.profit_percentage<10)
             {
@@ -157,11 +161,31 @@
             }
             else if (record.profit_percentage<15)
             {
-                element.css({ 'background-color': '#0CA2C5','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#65ACFB','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             else
             {
-                element.css({ 'background-color': '#00FF00','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#88E87E','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+            }
+            if (record.variety_name=="Total Type")
+            {
+                if(!((column=='crop_name')||(column=='type_name')))
+                {
+                    element.css({ 'color': '#0000FF','font-weight': 'bold'});
+                }
+            }
+            else if (record.type_name=="Total Crop")
+            {
+                if((column!='crop_name'))
+                {
+                    element.css({ 'color': '#0000FF','font-weight': 'bold'});
+
+                }
+
+            }
+            else if (record.crop_name=="Grand Total")
+            {
+                element.css({ 'color': '#0000FF','font-weight': 'bold'});
             }
             if(column=='tp_mgt' ||column=='sales_commission_percentage' ||column=='incentive_percentage')
             {
@@ -243,7 +267,7 @@
                 showaggregates: true,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     {text: 'Target', dataField: 'hom_target',align:'center',cellsalign: 'right',width:'80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
                     {text: 'Last Year TP', dataField: 'tp_last_year',align:'center',cellsalign: 'right',width:'110',cellsrenderer: cellsrenderer,rendered: tooltiprenderer},
