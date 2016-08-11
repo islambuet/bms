@@ -34,6 +34,26 @@
         turn_off_triggers();
         $(document).on("click", "#button_action_save_jqx", function(event)
         {
+            $("#system_loading").show();
+            $('#save_form_jqx #jqx_inputs').html('');
+            var data=$('#system_jqx_container').jqxGrid('getrows');
+            for(var i=0;i<data.length;i++)
+            {
+                if(data[i]['year1_target_quantity_editable'])
+                {
+                    $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][year1_target_quantity]" value="'+data[i]['year1_target_quantity']+'">');
+                }
+                if(data[i]['year2_target_quantity_editable'])
+                {
+                    $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][year2_target_quantity]" value="'+data[i]['year2_target_quantity']+'">');
+                }
+                if(data[i]['year3_target_quantity_editable'])
+                {
+                    $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items['+data[i]['variety_id']+'][year3_target_quantity]" value="'+data[i]['year3_target_quantity']+'">');
+                }
+            }
+            $("#save_form_jqx").submit();
+
             /*$("#system_loading").show();
             var data=$('#system_jqx_container').jqxGrid('getrows');
             for(var i=0;i<data.length;i++)
@@ -118,16 +138,52 @@
                 rowsheight: 35,
                 editable:true,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'100',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
                     { columngroup: 'year0_id',text: 'BUD',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     { columngroup: 'year0_id',text: 'Target',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     { columngroup: 'year1_id',text: '2yr ago',dataField: 'year1_2_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
                     { columngroup: 'year1_id',text: '1yr ago',dataField: 'year1_1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { columngroup: 'year1_id',text: 'Target',dataField: 'year1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                    { columngroup: 'year1_id',text: 'Target',dataField: 'year1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
+                        cellbeginedit: function (row)
+                        {
+                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                            return selectedRowData['year1_target_quantity_editable'];
+                        },
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
+                        },
+                        geteditorvalue: function (row, cellvalue, editor) {
+                            return editor.find('input').val();
+                        }
+                    },
                     { columngroup: 'year2_id',text: '1yr ago',dataField: 'year2_1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { columngroup: 'year2_id',text: 'Target',dataField: 'year2_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { columngroup: 'year3_id',text: 'Target',dataField: 'year3_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false}
+                    { columngroup: 'year2_id',text: 'Target',dataField: 'year2_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
+                        cellbeginedit: function (row)
+                        {
+                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                            return selectedRowData['year2_target_quantity_editable'];
+                        },
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
+                        },
+                        geteditorvalue: function (row, cellvalue, editor) {
+                            return editor.find('input').val();
+                        }
+                    },
+                    { columngroup: 'year3_id',text: 'Target',dataField: 'year3_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
+                        cellbeginedit: function (row)
+                        {
+                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                            return selectedRowData['year3_target_quantity_editable'];
+                        },
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input float_type_positive"><div>');
+                        },
+                        geteditorvalue: function (row, cellvalue, editor) {
+                            return editor.find('input').val();
+                        }
+                    }
                 ],
                 columngroups:
                     [

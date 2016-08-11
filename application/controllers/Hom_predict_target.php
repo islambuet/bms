@@ -58,7 +58,7 @@ class Hom_predict_target extends Root_Controller
         {
             $this->system_get_edit_items();
         }
-        /*elseif($action=="get_detail_items")
+        elseif($action=="get_detail_items")
         {
             $this->system_get_edit_items('details');
         }
@@ -66,7 +66,7 @@ class Hom_predict_target extends Root_Controller
         {
             $this->system_save();
         }
-        elseif($action=="details")
+        /*elseif($action=="details")
         {
             $this->system_details($id1,$id2);
         }
@@ -172,20 +172,20 @@ class Hom_predict_target extends Root_Controller
             $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
             if(!$info)
             {
-                $ajax['status']=false;
+                /*$ajax['status']=false;
                 $ajax['system_message']="Please finalize this year's target first";
                 $this->jsonReturn($ajax);
-                die();
+                die();*/
             }
             else
             {
-                if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
+                /*if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
                     $ajax['system_message']="Please finalize this year's target first";
                     $this->jsonReturn($ajax);
                     die();
-                }
+                }*/
 
             }
             if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
@@ -229,7 +229,93 @@ class Hom_predict_target extends Root_Controller
         $items=array();
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
-        $item=array();
+        $year_2_id=0;
+        $year_1_id=0;
+
+        $prev_years=Query_helper::get_info($this->config->item('ems_basic_setup_fiscal_year'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"',' id <'.$year0_id),2,0,array('id DESC'));
+        if(sizeof($prev_years)>0)
+        {
+            $year_1_id=$prev_years[0]['value'];
+        }
+        if(sizeof($prev_years)>1)
+        {
+            $year_2_id=$prev_years[1]['value'];
+        }
+
+
+        $this->db->from($this->config->item('table_hom_bud_hom_bt').' bt');
+        $this->db->select('bt.*');
+        $this->db->select('v.name variety_name');
+        $this->db->select('type.name type_name');
+        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id = bt.variety_id','INNER');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
+        $this->db->where('bt.year0_id',$year0_id);
+        $this->db->where('type.crop_id',$crop_id);
+        $this->db->order_by('type.ordering','ASC');
+        $this->db->order_by('v.ordering','ASC');
+        $results=$this->db->get()->result_array();
+
+        $crop_row=$type_row=array();
+        $crop_row['crop_name']=$type_row['crop_name']='';
+        $crop_row['type_name']=$type_row['type_name']='';
+        $crop_row['variety_name']=$type_row['variety_name']='';
+        $crop_row['variety_id']=$type_row['variety_id']='';
+        $type_row['variety_name']='Total Type';
+        $crop_row['type_name']='Total Crop';
+        $crop_row['variety_id']=$type_row['variety_id']='';
+        $crop_row['year0_budget_quantity']=$type_row['year0_budget_quantity']=0;
+        $crop_row['year0_target_quantity']=$type_row['year0_target_quantity']=0;
+        $crop_row['year1_target_quantity']=$type_row['year1_target_quantity']=0;
+        $crop_row['year2_target_quantity']=$type_row['year2_target_quantity']=0;
+        $crop_row['year3_target_quantity']=$type_row['year3_target_quantity']=0;
+        $prev_type='';
+        foreach($results as $index=>$result)
+        {
+            $item=array();
+            if($index>0)
+            {
+                if($prev_type!=$result['type_name'])
+                {
+
+                    $items[]=$this->get_item_row($type_row);
+                    $type_row['year0_budget_quantity']=0;
+                    $type_row['year0_target_quantity']=0;
+                    $item['type_name']=$result['type_name'];
+                    $prev_type=$result['type_name'];
+                }
+                else
+                {
+                    $item['type_name']='';
+                }
+            }
+            else
+            {
+                $prev_type=$result['type_name'];
+                $item['type_name']=$result['type_name'];
+            }
+            $item['variety_id']=$result['variety_id'];
+            $item['variety_name']=$result['variety_name'];
+            $item['year0_budget_quantity']=$result['year0_budget_quantity'];
+            if($item['year0_budget_quantity']>0)
+            {
+                $type_row['year0_budget_quantity']+=$item['year0_budget_quantity'];
+                $crop_row['year0_budget_quantity']+=$item['year0_budget_quantity'];
+            }
+            $item['year0_target_quantity']=$result['year0_target_quantity'];
+            if($item['year0_target_quantity']>0)
+            {
+                $type_row['year0_target_quantity']+=$item['year0_target_quantity'];
+                $crop_row['year0_target_quantity']+=$item['year0_target_quantity'];
+            }
+            $item['year1_target_quantity']=$result['year1_target_quantity'];
+            $item['year2_target_quantity']=$result['year2_target_quantity'];
+            $item['year3_target_quantity']=$result['year3_target_quantity'];
+            $items[]=$this->get_item_row($item);
+        }
+        $items[]=$this->get_item_row($type_row);
+        $items[]=$this->get_item_row($crop_row);
+
+        /*$item=array();
         $item['type_name']='test';
         $item['variety_id']='1';
         $item['variety_name']='test';
@@ -244,7 +330,7 @@ class Hom_predict_target extends Root_Controller
         $item['year2_target_quantity_editable']=true;
         $item['year3_target_quantity']='300';
         $item['year3_target_quantity_editable']='1';
-        $items[]=$item;
+        $items[]=$item;*/
         /*$results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
         $budgets=array();//hom budget and target
         foreach($results as $result)
@@ -469,79 +555,119 @@ class Hom_predict_target extends Root_Controller
         $this->jsonReturn($items);
 
     }
+    private function get_item_row($item)
+    {
+        $row=array();
+        $row['type_name']=$item['type_name'];
+        $row['variety_id']=$item['variety_id'];
+        $row['variety_name']=$item['variety_name'];
+        if($item['year0_budget_quantity']!=0)
+        {
+            $row['year0_budget_quantity']=$item['year0_budget_quantity'];
+        }
+        else
+        {
+            $row['year0_budget_quantity']='';
+        }
+        if($item['year0_target_quantity']!=0)
+        {
+            $row['year0_target_quantity']=$item['year0_target_quantity'];
+        }
+        else
+        {
+            $row['year0_target_quantity']='';
+        }
+        for($i=1;$i<4;$i++)
+        {
+            if($item['year'.$i.'_target_quantity']!=0)
+            {
+                $row['year'.$i.'_target_quantity']=$item['year'.$i.'_target_quantity'];
+                if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
+                {
+                    $row['year'.$i.'_target_quantity_editable']=true;
+                }
+                else
+                {
+                    $row['year'.$i.'_target_quantity_editable']=false;
+                }
+            }
+            else
+            {
+                $row['year'.$i.'_target_quantity']='';
+                if($row['variety_name']=='Total Type' || $row['type_name']=='Total Crop')
+                {
+                    $row['year'.$i.'_target_quantity_editable']=false;
+                }
+                else
+                {
+                    $row['year'.$i.'_target_quantity_editable']=true;
+                }
+
+            }
+        }
+
+
+
+        return $row;
+    }
 
     private function system_save()
     {
         $year0_id=$this->input->post('year0_id');
         $crop_id=$this->input->post('crop_id');
+        $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
+        if(!$info)
+        {
+            /*$ajax['status']=false;
+            $ajax['system_message']="Please finalize this year's target first";
+            $this->jsonReturn($ajax);
+            die();*/
+        }
+        else
+        {
+            /*if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']="Please finalize this year's target first";
+                $this->jsonReturn($ajax);
+                die();
+            }*/
+
+        }
         if((!isset($this->permissions['edit'])||($this->permissions['edit']!=1)))
         {
-            $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
-
-            if($info)
+            if($info['status_prediction_finalize']===$this->config->item('system_status_yes'))
             {
-                if($info['status_target_finalize']===$this->config->item('system_status_yes'))
-                {
-                    $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_ALREADY_FINALIZED");
-                    $this->jsonReturn($ajax);
-                    die();
-                }
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_ALREADY_PREDICTION_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
             }
         }
         $user = User_helper::get_user();
         $time=time();
         //check forward status if has only add permission but not edit permission
         $items=$this->input->post('items');
-
+        
         $this->db->trans_start();
         if(sizeof($items)>0)
         {
             $results=Query_helper::get_info($this->config->item('table_hom_bud_hom_bt'),'*',array('year0_id ='.$year0_id));
-            $budgets=array();//hom budget
+            $old_items=array();//hom budget
             foreach($results as $result)
             {
-                $budgets[$result['variety_id']]=$result;
+                $old_items[$result['variety_id']]=$result;
             }
 
-            foreach($items as $variety_id=>$quantity)
+            foreach($items as $variety_id=>$data)
             {
-                $data=array();
+                if(isset($old_items[$variety_id]))
                 {
-                    if(strlen($quantity)==0)
-                    {
-                        $data['year0_target_quantity']=0;
-                    }
-                    else
-                    {
-                        $data['year0_target_quantity']=$quantity;
-                    }
-
-                    if(isset($budgets[$variety_id]))
-                    {
-                        $data['user_updated'] = $user->user_id;
-                        $data['date_updated'] = $time;
-                        $data['user_budgeted'] = $user->user_id;
-                        $data['date_budgeted'] = $time;
-                        if($quantity!=$budgets[$variety_id]['year0_target_quantity'])
-                        {
-                            Query_helper::update($this->config->item('table_hom_bud_hom_bt'),$data,array("id = ".$budgets[$variety_id]['id']));
-                        }
-                    }
-                    else
-                    {
-                        $data['year0_id']=$year0_id;
-                        $data['variety_id']=$variety_id;
-                        $data['user_created'] = $user->user_id;
-                        $data['date_created'] = $time;
-                        $data['user_budgeted'] = $user->user_id;
-                        $data['date_budgeted'] = $time;
-                        if($quantity!=0)
-                        {
-                            Query_helper::add($this->config->item('table_hom_bud_hom_bt'),$data);
-                        }
-
-                    }
+                    $data['user_updated'] = $user->user_id;
+                    $data['date_updated'] = $time;
+                    $data['user_predicted'] = $user->user_id;
+                    $data['date_predicted'] = $time;
+                    Query_helper::update($this->config->item('table_hom_bud_hom_bt'),$data,array("id = ".$old_items[$variety_id]['id']));
                 }
             }
         }
