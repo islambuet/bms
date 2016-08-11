@@ -36,19 +36,20 @@
             dataType: "json",
             dataFields: [
                 { name: 'id', type: 'int' },
-                { name: 'sl_no', type: 'int' },
                 { name: 'type_name', type: 'string' },
                 { name: 'variety_id', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'year0_budget_quantity', type: 'string' },
-                { name: 'year0_variance_quantity', type: 'string' },
-                { name: 'min_stock', type: 'string' },
-                { name: 'quantity_needed', type: 'string' },
-                { name: 'year0_purchase_quantity', type: 'string' },
-                { name: 'pq_fv', type: 'string' },
-                { name: 'pq_fv_min', type: 'string' },
                 { name: 'year0_target_quantity', type: 'string' },
-                { name: 'year0_target_quantity_editable', type: 'string' }
+                { name: 'year1_2_target_quantity', type: 'string' },
+                { name: 'year1_1_target_quantity', type: 'string' },
+                { name: 'year1_target_quantity', type: 'string' },
+                { name: 'year1_target_quantity_editable', type: 'string' },
+                { name: 'year2_1_target_quantity', type: 'string' },
+                { name: 'year2_target_quantity', type: 'string' },
+                { name: 'year2_target_quantity_editable', type: 'string' },
+                { name: 'year3_target_quantity', type: 'string' },
+                { name: 'year3_target_quantity_editable', type: 'string' }
 
             ],
             id: 'id',
@@ -93,17 +94,30 @@
                 altrows: true,
                 rowsheight: 35,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_SL_NO'); ?>',pinned:true, dataField: 'sl_no',width:'50',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'60',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center',editable:false},
-                    { text: 'HOM BUD',dataField: 'year0_budget_quantity',width:'100',pinned:true,cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'Final Variance',dataField: 'year0_variance_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'Min Stock',dataField: 'min_stock',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'Quantity Needed',dataField: 'quantity_needed',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'Purchase Quantity',dataField: 'year0_purchase_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'PQ+FV',dataField: 'pq_fv',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'PQ+FV+MIN Stock',dataField: 'pq_fv_min',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
-                    { text: 'Target Quantity',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false}                ]
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>',pinned:true, dataField: 'type_name',width:'100',cellsrenderer: cellsrenderer,align:'center'},
+                    { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>',pinned:true, dataField: 'variety_name',width:'150',cellsrenderer: cellsrenderer,align:'center'},
+                    { columngroup: 'year0_id',text: 'BUD',dataField: 'year0_budget_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year0_id',text: 'Target',dataField: 'year0_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year1_id',text: '2yr ago',dataField: 'year1_2_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year1_id',text: '1yr ago',dataField: 'year1_1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year1_id',text: 'Target',dataField: 'year1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year2_id',text: '1yr ago',dataField: 'year2_1_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year2_id',text: 'Target',dataField: 'year2_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'year3_id',text: 'Target',dataField: 'year3_target_quantity',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right'}
+                ],
+                columngroups:
+                    [
+                        { text: '<?php echo $CI->lang->line('LABEL_BUDGETED_YEAR'); ?>', align: 'center', name: 'budgeted_year' },
+                        { text: '<?php echo $CI->lang->line('LABEL_NEXT_YEARS'); ?>', align: 'center', name: 'next_years' },
+                            <?php
+                            for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
+                            {?>{ text: '<?php echo $years[$i]['text']; ?>', align: 'center',parentgroup:'next_years', name: '<?php echo 'year'.$i.'_id'; ?>' },
+                        <?php
+                            }
+                        ?>
+                        { text: '<?php echo $years[0]['text']; ?>', align: 'center',parentgroup:'budgeted_year', name: 'year0_id' }
+
+                    ]
             });
 
     });
