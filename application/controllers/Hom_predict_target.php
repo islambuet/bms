@@ -70,10 +70,10 @@ class Hom_predict_target extends Root_Controller
         {
             $this->system_details($id1,$id2);
         }
-        /*elseif($action=="forward")
+        elseif($action=="forward")
         {
             $this->system_forward($id1,$id2);
-        }*/
+        }
         else
         {
             $this->system_search();
@@ -173,7 +173,7 @@ class Hom_predict_target extends Root_Controller
             if(!$info)
             {
                 $ajax['status']=false;
-                $ajax['system_message']="Please finalize this year's target first";
+                $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
                 $this->jsonReturn($ajax);
                 die();
             }
@@ -182,7 +182,7 @@ class Hom_predict_target extends Root_Controller
                 if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
-                    $ajax['system_message']="Please finalize this year's target first";
+                    $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
                     $this->jsonReturn($ajax);
                     die();
                 }
@@ -443,7 +443,7 @@ class Hom_predict_target extends Root_Controller
         if(!$info)
         {
             $ajax['status']=false;
-            $ajax['system_message']="Please finalize this year's target first";
+            $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
             $this->jsonReturn($ajax);
             die();
         }
@@ -452,7 +452,7 @@ class Hom_predict_target extends Root_Controller
             if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']="Please finalize this year's target first";
+                $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
                 $this->jsonReturn($ajax);
                 die();
             }
@@ -521,7 +521,7 @@ class Hom_predict_target extends Root_Controller
             if(!$info)
             {
                 $ajax['status']=false;
-                $ajax['system_message']="Please finalize this year's target first";
+                $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
                 $this->jsonReturn($ajax);
                 die();
             }
@@ -530,7 +530,7 @@ class Hom_predict_target extends Root_Controller
                 if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
-                    $ajax['system_message']="Please finalize this year's target first";
+                    $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
                     $this->jsonReturn($ajax);
                     die();
                 }
@@ -574,39 +574,40 @@ class Hom_predict_target extends Root_Controller
             $crop_id=$this->input->post('id');
         }
         $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
-        $this->db->trans_start();
-        if($info)
+
+        if(!$info)
         {
-            if($info['status_target_finalize']===$this->config->item('system_status_yes'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
-                $this->jsonReturn($ajax);
-                die();
-            }
-            else
-            {
-                $data=array();
-                $data['status_target_finalize']=$this->config->item('system_status_yes');
-                $data['user_updated'] = $user->user_id;
-                $data['date_updated'] = $time;
-                $data['user_target_finalized'] = $user->user_id;
-                $data['date_target_finalized'] = $time;
-                Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
-            }
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
+            $this->jsonReturn($ajax);
+            die();
         }
         else
         {
-            $data=array();
-            $data['status_target_finalize']=$this->config->item('system_status_yes');
-            $data['year0_id']=$year0_id;
-            $data['crop_id']=$crop_id;
-            $data['user_created'] = $user->user_id;
-            $data['date_created'] = $time;
-            $data['user_target_finalized'] = $user->user_id;
-            $data['date_target_finalized'] = $time;
-            Query_helper::add($this->config->item('table_forward_hom'),$data);
+            if($info['status_target_finalize']!=$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
+                $this->jsonReturn($ajax);
+                die();
+            }
+            if($info['status_prediction_finalize']==$this->config->item('system_status_yes'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("MSG_ALREADY_PREDICTION_FINALIZED");
+                $this->jsonReturn($ajax);
+                die();
+            }
         }
+        $data=array();
+        $data['status_prediction_finalize']=$this->config->item('system_status_yes');
+        $data['user_updated'] = $user->user_id;
+        $data['date_updated'] = $time;
+        $data['user_prediction_finalized'] = $user->user_id;
+        $data['date_prediction_finalized'] = $time;
+        Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
+
+        $this->db->trans_start();
         $this->db->trans_complete();   //DB Transaction Handle END
         if ($this->db->trans_status() === TRUE)
         {
@@ -621,5 +622,5 @@ class Hom_predict_target extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    
+
 }
