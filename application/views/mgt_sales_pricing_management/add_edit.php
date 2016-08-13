@@ -144,7 +144,7 @@
 
             if (record.profit_percentage<0)
             {
-                element.css({ 'background-color': '#FE4638','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                element.css({ 'background-color': '#fb6c6c','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
             }
             else if (record.profit_percentage<5)
             {
