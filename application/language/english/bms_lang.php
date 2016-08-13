@@ -130,3 +130,5 @@ $lang['LABEL_SALES_COMMISSION'] = 'Sales Commission';
 $lang['LABEL_INCENTIVE'] = 'Incentive';
 $lang['MSG_FINALIZE_TARGET_BEFORE_PREDICTION'] = 'Please finalize this year\'s target first.';
 $lang['MSG_ALREADY_PREDICTION_FINALIZED'] = 'Prediction already finalized.';
+$lang['LABEL_PREDICTED'] = 'Predicted';
+$lang['MSG_PREDICTION_NOT_FINALIZED'] = 'Prediction Not Finalized.';
