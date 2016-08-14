@@ -58,7 +58,7 @@ class Hom_bud_di_target_prediction extends Root_Controller
         {
             $this->system_get_edit_items();
         }
-        /*elseif($action=="save")
+        elseif($action=="save")
         {
             $this->system_save();
         }
@@ -69,7 +69,7 @@ class Hom_bud_di_target_prediction extends Root_Controller
         elseif($action=="forward")
         {
             $this->system_forward($id1,$id2);
-        }*/
+        }
         else
         {
             $this->system_search();
@@ -113,7 +113,7 @@ class Hom_bud_di_target_prediction extends Root_Controller
             $data['keys']=trim($keys,',');
             $data['title']="Crop List";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("Hom_bud_di_target_prediction/list",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_report_container","html"=>$this->load->view("hom_bud_di_target_prediction/list",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -376,10 +376,10 @@ class Hom_bud_di_target_prediction extends Root_Controller
             $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
             if($info)
             {
-                if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
+                if($info['status_prediction_finalize']!=$this->config->item('system_status_yes'))
                 {
                     $ajax['status']=false;
-                    $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                    $ajax['system_message']=$this->lang->line("MSG_PREDICTION_NOT_FINALIZED");
                     $this->jsonReturn($ajax);
                     die();
                 }
@@ -387,7 +387,7 @@ class Hom_bud_di_target_prediction extends Root_Controller
             else
             {
                 $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $ajax['system_message']=$this->lang->line("MSG_PREDICTION_NOT_FINALIZED");
                 $this->jsonReturn($ajax);
                 die();
             }
@@ -397,7 +397,7 @@ class Hom_bud_di_target_prediction extends Root_Controller
 
                 if($info)
                 {
-                    if($info['status_assign']===$this->config->item('system_status_yes'))
+                    if($info['status_prediction_assign']==$this->config->item('system_status_yes'))
                     {
                         $ajax['status']=false;
                         $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
@@ -419,36 +419,27 @@ class Hom_bud_di_target_prediction extends Root_Controller
 
                 foreach($items as $division_id=>$item)
                 {
-                    foreach($item as $variety_id=> $year0_target_quantity)
+                    foreach($item as $variety_id=> $data)
                     {
-                        $data=array();
                         if(isset($area_budget_target[$division_id][$variety_id]))
                         {
-                            $data['year0_target_quantity']=$year0_target_quantity;
+
                             $data['user_updated'] = $user->user_id;
                             $data['date_updated'] = $time;
-                            $data['user_targeted'] = $user->user_id;
-                            $data['date_targeted'] = $time;
-                            if($year0_target_quantity!=$area_budget_target[$division_id][$variety_id]['year0_target_quantity'])
-                            {
-                                Query_helper::update($this->config->item('table_di_bud_di_bt'),$data,array("id = ".$area_budget_target[$division_id][$variety_id]['id']));
-                            }
-
+                            $data['user_predicted'] = $user->user_id;
+                            $data['date_predicted'] = $time;
+                            Query_helper::update($this->config->item('table_di_bud_di_bt'),$data,array("id = ".$area_budget_target[$division_id][$variety_id]['id']));
                         }
                         else
                         {
                             $data['division_id'] = $division_id;
                             $data['year0_id'] = $year0_id;
                             $data['variety_id'] = $variety_id;
-                            $data['year0_target_quantity']=$year0_target_quantity;
                             $data['user_created'] = $user->user_id;
                             $data['date_created'] = $time;
-                            $data['user_targeted'] = $user->user_id;
-                            $data['date_targeted'] = $time;
-                            if(!empty($year0_target_quantity))
-                            {
-                                Query_helper::add($this->config->item('table_di_bud_di_bt'),$data);
-                            }
+                            $data['user_predicted'] = $user->user_id;
+                            $data['date_predicted'] = $time;
+                            Query_helper::add($this->config->item('table_di_bud_di_bt'),$data);
                         }
 
 
@@ -499,7 +490,7 @@ class Hom_bud_di_target_prediction extends Root_Controller
 
 
             $data['title']="DI Target For ".$crop['text'].'('.$data['years'][0]['text'].')';
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_di_target/details",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("hom_bud_di_target_prediction/details",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
@@ -523,67 +514,40 @@ class Hom_bud_di_target_prediction extends Root_Controller
         {
             $crop_id=$this->input->post('id');
         }
-        //only for HOM target finalized is in same table
         $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
-        if($info)
-        {
-            if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
-                $this->jsonReturn($ajax);
-                die();
-            }
-        }
-        else
+        if(!$info)
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+            $ajax['system_message']=$this->lang->line("MSG_FINALIZE_TARGET_BEFORE_PREDICTION");
             $this->jsonReturn($ajax);
             die();
         }
-
-        $info=Query_helper::get_info($this->config->item('table_forward_hom'),'*',array('year0_id ='.$year0_id,'crop_id ='.$crop_id),1);
-        $this->db->trans_start();
-        if($info)
+        else
         {
-            if($info['status_target_finalize']!==$this->config->item('system_status_yes'))
+            if($info['status_prediction_finalize']!=$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("MSG_TARGET_NOT_FINALIZED");
+                $ajax['system_message']=$this->lang->line("MSG_PREDICTION_NOT_FINALIZED");
                 $this->jsonReturn($ajax);
                 die();
             }
-            else if($info['status_assign']===$this->config->item('system_status_yes'))
+            if($info['status_prediction_assign']==$this->config->item('system_status_yes'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("MSG_ALREADY_FORWARDED");
                 $this->jsonReturn($ajax);
                 die();
             }
-            else
-            {
-                $data=array();
-                $data['status_assign']=$this->config->item('system_status_yes');
-                $data['user_assigned'] = $user->user_id;
-                $data['date_assigned'] = $time;
-                $data['user_updated'] = $user->user_id;
-                $data['date_updated'] = $time;
-                Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
-            }
         }
-        else
-        {
-            $data=array();
-            $data['status_assign']=$this->config->item('system_status_yes');
-            $data['year0_id']=$year0_id;
-            $data['crop_id']=$crop_id;
-            $data['user_created'] = $user->user_id;
-            $data['date_created'] = $time;
-            $data['user_assigned'] = $user->user_id;
-            $data['date_assigned'] = $time;
-            Query_helper::add($this->config->item('table_forward_hom'),$data);
-        }
+        $data=array();
+        $data['status_prediction_assign']=$this->config->item('system_status_yes');
+        $data['user_updated'] = $user->user_id;
+        $data['date_updated'] = $time;
+        $data['user_prediction_assigned'] = $user->user_id;
+        $data['date_prediction_assigned'] = $time;
+        Query_helper::update($this->config->item('table_forward_hom'),$data,array("id = ".$info['id']));
+
+        $this->db->trans_start();
         $this->db->trans_complete();   //DB Transaction Handle END
         if ($this->db->trans_status() === TRUE)
         {
@@ -598,14 +562,4 @@ class Hom_bud_di_target_prediction extends Root_Controller
             $this->jsonReturn($ajax);
         }
     }
-    private function check_my_editable($customer)
-    {
-        if(($this->locations['division_id']>0)&&($this->locations['division_id']!=$customer['division_id']))
-        {
-            return false;
-        }
-        return true;
-    }
-
-
 }

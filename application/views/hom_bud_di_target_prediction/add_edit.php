@@ -33,6 +33,27 @@
         turn_off_triggers();
         $(document).on("click", "#button_action_save_jqx", function(event)
         {
+            $("#system_loading").show();
+            $('#save_form_jqx #jqx_inputs').html('');
+            var data=$('#system_jqx_container').jqxGrid('getrows');
+            for(var i=0;i<data.length;i++)
+            {
+                <?php
+                    for($i=1;$i<=$CI->config->item('num_year_prediction');$i++)
+                    {
+                       foreach($areas as $area)
+                       {
+                       ?>
+                            if(data[i]['<?php echo 'year'.$i.'_target_quantity_'.$area['value'].'_editable';?>'])
+                            {
+                                $('#save_form_jqx  #jqx_inputs').append('<input type="hidden" name="items[<?php echo $area['value']; ?>]['+data[i]['variety_id']+'][<?php echo 'year'.$i.'_target_quantity';?>]" value="'+data[i]['<?php echo 'year'.$i.'_target_quantity_'.$area['value'];?>']+'">');
+                            }
+                        <?php
+                       }
+                    }
+                ?>
+            }
+            $("#save_form_jqx").submit();
 
         });
         var url = "<?php echo site_url($CI->controller_url.'/index/get_edit_items');?>";
@@ -72,6 +93,43 @@
             {
                 element.html('<div class="jqxgrid_input">'+value+'</div>');
             }
+            <?php
+            for($i=0;$i<=$CI->config->item('num_year_prediction');$i++)
+            {
+                ?>
+                if(column=='<?php echo 'year'.$i.'_variance';?>')
+                {
+                    var variance=0;
+                    if(!isNaN(parseFloat(record['<?php echo 'year'.$i.'_target_quantity_hom';?>'])))
+                    {
+                        variance=parseFloat(record['<?php echo 'year'.$i.'_target_quantity_hom';?>']);
+                    }
+                    <?php
+                        foreach($areas as $area)
+                        {
+                        ?>
+                    if(!isNaN(parseFloat(record['<?php echo 'year'.$i.'_target_quantity_'.$area['value'];?>'])))
+                    {
+                        variance-=parseFloat(record['<?php echo 'year'.$i.'_target_quantity_'.$area['value'];?>']);
+                    }
+                        <?php
+                        }
+                    ?>
+                    if(variance==0)
+                    {
+                        element.html('');
+                        element.css({ 'background-color': '#00FF00','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                    }
+                    else
+                    {
+                        element.html(variance);
+                        element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
+                    }
+                }
+                <?php
+            }
+            ?>
+
             return element[0].outerHTML;
 
         };
@@ -95,25 +153,25 @@
                             <?php
                             foreach($areas as $area)
                             {?>{ columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: '<?php echo $area['text']; ?>',dataField: '<?php echo 'year'.$i.'_target_quantity_'.$area['value'];?>',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:true,columntype:'custom',
-                        cellbeginedit: function (row)
-                        {
-                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
-                            return selectedRowData['<?php echo 'year'.$i.'_target_quantity_'.$area['value'].'_editable';?>'];
-                        },
-                        initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
+                                    cellbeginedit: function (row)
+                                    {
+                                        var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
+                                        return selectedRowData['<?php echo 'year'.$i.'_target_quantity_'.$area['value'].'_editable';?>'];
+                                    },
+                                    initeditor: function (row, cellvalue, editor, celltext, pressedkey) {
 
-                            editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input integer_type_positive"><div>');
-                        },
-                        geteditorvalue: function (row, cellvalue, editor) {
-                            // return the editor's value.
-                            var value=editor.find('input').val();
-                            var selectedRowData = $('#system_jqx_container').jqxGrid('getrowdata', row);
-                            return editor.find('input').val();
-                        }
-                    },
-
+                                        editor.html('<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;"><input type="text" value="'+cellvalue+'" class="jqxgrid_input integer_type_positive"><div>');
+                                    },
+                                    geteditorvalue: function (row, cellvalue, editor)
+                                    {
+                                        return editor.find('input').val();
+                                    }
+                                },
                                 <?php
                             }
+                            ?>
+                            { columngroup: '<?php echo 'year'.$i.'_id'; ?>',text: 'Variance',dataField: '<?php echo 'year'.$i.'_variance';?>',width:'100',cellsrenderer: cellsrenderer,align:'center',cellsAlign:'right',editable:false},
+                        <?php
                         }
                     ?>
                 ],
