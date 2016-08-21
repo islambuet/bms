@@ -42,6 +42,7 @@ $config['table_hom_bud_variance'] = 'bms_hom_bud_variance';
 $config['table_forward_hom'] = 'bms_forward_hom';
 
 $config['table_variety_min_stock'] = 'bms_variety_min_stock';
+$config['table_setup_incentive_ratio'] = 'bms_setup_incentive_ratio';
 
 //mgt
 $config['table_mgt_currency_rate'] = 'bms_mgt_currency_rate';
