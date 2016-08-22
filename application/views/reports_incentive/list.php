@@ -33,6 +33,15 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="target_kg">Target (Kg)</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_kg">Sales (Kg)</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variance_kg">Variance (Kg)</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="target_net">Net Target</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_net">Net Sales</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_percentage">Sales %</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive_achievable">Achievable Incentive</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="payment">Payment Collected</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="incentive_achieved">Achieved Incentive</label>
             </div>
         </div>
     <?php
@@ -66,8 +75,10 @@
                 { name: 'variance_kg', type: 'string' },
                 { name: 'target_net', type: 'string' },
                 { name: 'sales_net', type: 'string' },
-                { name: 'achieve_percentage', type: 'string' },
-                { name: 'incentive', type: 'string' }
+                { name: 'sales_percentage', type: 'string' },
+                { name: 'incentive_achievable', type: 'string' },
+                { name: 'payment', type: 'string' },
+                { name: 'incentive_achieved', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -143,18 +154,20 @@
                 enabletooltips: true,
                 showaggregates: true,
                 showstatusbar: true,
-                rowsheight: 35,
+                rowsheight: 25,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Target (Kg)', dataField: 'target_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { text: 'Sales (Kg)', dataField: 'sales_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { text: 'Variance (Kg)', dataField: 'variance_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { text: 'Net Target', dataField: 'target_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { text: 'Net Sales', dataField: 'sales_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { text: 'Achieve %', dataField: 'achieve_percentage',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { text: 'Incentive', dataField: 'incentive',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'}
+                    { text: 'Target (Kg)', dataField: 'target_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Sales (Kg)', dataField: 'sales_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Variance (Kg)', dataField: 'variance_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Net Target', dataField: 'target_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Net Sales', dataField: 'sales_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Sales %', dataField: 'sales_percentage',width: '50',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Achievable Incentive', dataField: 'incentive_achievable',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Payment Collected', dataField: 'payment',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Achieved Incentive', dataField: 'incentive_achieved',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ]
 
             });

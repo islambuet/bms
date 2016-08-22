@@ -101,6 +101,17 @@
                         <label class="control-label"><?php echo $CI->lang->line('LABEL_DIVISION_NAME');?></label>
                     </div>
                 </div>
+                <div style="<?php if(!(sizeof($zones)>0)){echo 'display:none';} ?>" class="row show-grid" id="di_ict_container">
+                    <div class="col-xs-6">
+                        <select class="form-control" name="report[di_ict]">
+                            <option value="di">DI</option>
+                            <option value="ict">ICT Officers</option>
+                        </select>
+                    </div>
+                    <div class="col-xs-6">
+                        <label class="control-label">DI/ICT Officers</label>
+                    </div>
+                </div>
 
                 <div style="<?php if(!(sizeof($zones)>0)){echo 'display:none';} ?>" class="row show-grid" id="zone_id_container">
                     <div class="col-xs-6">
@@ -269,6 +280,7 @@
             var division_id=$('#division_id').val();
             if(division_id>0)
             {
+                $('#di_ict_container').show();
                 $('#zone_id_container').show();
                 $('#territory_id_container').hide();
                 $('#district_id_container').hide();
@@ -291,6 +303,7 @@
             }
             else
             {
+                $('#di_ict_container').hide();
                 $('#zone_id_container').hide();
                 $('#territory_id_container').hide();
                 $('#district_id_container').hide();

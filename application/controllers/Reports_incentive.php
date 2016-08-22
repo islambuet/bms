@@ -245,6 +245,14 @@ class Reports_incentive extends Root_Controller
 
             }
         }
+        //variety price
+        $variety_prices=array();
+        $results=Query_helper::get_info($this->config->item('ems_setup_classification_variety_price_kg'),'*',array('year0_id ='.$year0_id));
+        foreach($results as $result)
+        {
+            $variety_prices[$result['variety_id']]=$result['price_net'];
+        }
+
         //variety list
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
         $this->db->select('v.id variety_id,v.name variety_name');
@@ -283,6 +291,10 @@ class Reports_incentive extends Root_Controller
 
         $grand_row['target_net']=$crop_row['target_net']=$type_row['target_net']=0;
         $grand_row['sales_net']=$crop_row['sales_net']=$type_row['sales_net']=0;
+        $grand_row['sales_percentage']=$crop_row['sales_percentage']=$type_row['sales_percentage']=0;
+        $grand_row['incentive_achievable']=$crop_row['incentive_achievable']=$type_row['incentive_achievable']=0;
+        $grand_row['payment']=$crop_row['payment']=$type_row['payment']=0;
+        $grand_row['incentive_achieved']=$crop_row['incentive_achieved']=$type_row['incentive_achieved']=0;
 
         $prev_crop_name='';
         $prev_crop_type_name='';
@@ -296,11 +308,13 @@ class Reports_incentive extends Root_Controller
                 {
                     $items[]=$this->get_report_row($type_row);
                     $type_row['target_kg']=0;
+                    $type_row['target_net']=0;
                     $type_row['sales_kg']=0;
                     $type_row['sales_net']=0;
 
                     $items[]=$this->get_report_row($crop_row);
                     $crop_row['target_kg']=0;
+                    $crop_row['target_net']=0;
                     $crop_row['sales_kg']=0;
                     $crop_row['sales_net']=0;
 
@@ -314,6 +328,7 @@ class Reports_incentive extends Root_Controller
                 {
                     $items[]=$this->get_report_row($type_row);
                     $type_row['target_kg']=0;
+                    $type_row['target_net']=0;
                     $type_row['sales_kg']=0;
                     $type_row['sales_net']=0;
 
@@ -349,7 +364,14 @@ class Reports_incentive extends Root_Controller
             $crop_row['target_kg']+=$item['target_kg'];
             $grand_row['target_kg']+=$item['target_kg'];
 
-            $item['target_net']=1000;//get net price for kg
+            $item['target_net']=0;//get net price for kg
+            if((isset($variety_prices[$result['variety_id']]))&&($variety_prices[$result['variety_id']]>0))
+            {
+                $item['target_net']=$variety_prices[$result['variety_id']]*$item['target_kg'];
+            }
+            $type_row['target_net']+=$item['target_net'];
+            $crop_row['target_net']+=$item['target_net'];
+            $grand_row['target_net']+=$item['target_net'];
 
             $item['sales_kg']=0;
             $item['sales_net']=0;
@@ -369,72 +391,97 @@ class Reports_incentive extends Root_Controller
             $type_row['sales_net']+=$item['sales_net'];
             $crop_row['sales_net']+=$item['sales_net'];
             $grand_row['sales_net']+=$item['sales_net'];
-
-
-
-            /*$item['target_total']=0;//initialization
-            $item['achieve_total']=0;//initialization
-            $item['variance_total']=0;//initialization
-            $item['net_total']=0;//initialization
-
-            for($month=$month_start;$month<=$month_end;$month++)
-            {
-                if($month%12)
-                {
-                    $m=$month%12;
-                }
-                else
-                {
-                    $m=12;
-                }
-                if((isset($month_total[$result['variety_id']]['target_quantity_'.$m]))&&($month_total[$result['variety_id']]['target_quantity_'.$m]!=null))
-                {
-                    $item['target_'.$m]=$month_total[$result['variety_id']]['target_quantity_'.$m];
-                    $item['target_total']+=$item['target_'.$m];
-                    $type_total['target_'.$m]+=$item['target_'.$m];
-                    $type_total['target_total']+=$item['target_'.$m];
-                    $crop_total['target_'.$m]+=$item['target_'.$m];
-                    $crop_total['target_total']+=$item['target_'.$m];
-                    $grand_total['target_'.$m]+=$item['target_'.$m];
-                    $grand_total['target_total']+=$item['target_'.$m];
-                }
-                else
-                {
-                    $item['target_'.$m]=0;
-                }
-                if((isset($sales_total[$result['variety_id']][$m]))&&($sales_total[$result['variety_id']][$m]['quantity']!=null))
-                {
-                    $item['achieve_'.$m]=$sales_total[$result['variety_id']][$m]['quantity']/1000;
-                    $item['achieve_total']+=$item['achieve_'.$m];
-                    $type_total['achieve_'.$m]+=$item['achieve_'.$m];
-                    $type_total['achieve_total']+=$item['achieve_'.$m];
-                    $crop_total['achieve_'.$m]+=$item['achieve_'.$m];
-                    $crop_total['achieve_total']+=$item['achieve_'.$m];
-                    $grand_total['achieve_'.$m]+=$item['achieve_'.$m];
-                    $grand_total['achieve_total']+=$item['achieve_'.$m];
-
-                    $item['net_'.$m]=$sales_total[$result['variety_id']][$m]['net_sales'];
-                    $item['net_total']+=$item['net_'.$m];
-                    $type_total['net_'.$m]+=$item['net_'.$m];
-                    $type_total['net_total']+=$item['net_'.$m];
-                    $crop_total['net_'.$m]+=$item['net_'.$m];
-                    $crop_total['net_total']+=$item['net_'.$m];
-                    $grand_total['net_'.$m]+=$item['net_'.$m];
-                    $grand_total['net_total']+=$item['net_'.$m];
-
-                }
-                else
-                {
-                    $item['achieve_'.$m]=0;
-                    $item['net_'.$m]=0;
-
-                }
-            }*/
+            $item['sales_percentage']=0;
+            $item['incentive_achievable']=0;
+            $item['payment']=0;
+            $item['incentive_achieved']=0;
 
             $items[]=$this->get_report_row($item);
         }
         $items[]=$this->get_report_row($type_row);
         $items[]=$this->get_report_row($crop_row);
+        if($grand_row['target_net']!=0)
+        {
+            $grand_row['sales_percentage']=ceil($grand_row['sales_net']*100/$grand_row['target_net']);
+            if($grand_row['sales_percentage']>100)
+            {
+                $grand_row['sales_percentage']=100;
+            }
+        }
+        //$grand_row['sales_percentage']=95;
+        $incentive_ratio=0;
+        $result=Query_helper::get_info($this->config->item('table_mgt_indirect_cost_setup'),'*',array('status !="'.$this->config->item('system_status_delete').'"','year0_id ='.$year0_id),1);
+        if($result)
+        {
+            $incentive_ratio=$result['incentive']/100;
+        }
+
+        $result=Query_helper::get_info($this->config->item('table_setup_incentive_ratio'),'*',array('status !="'.$this->config->item('system_status_delete').'"','year0_id ='.$year0_id),1);
+        if($result)
+        {
+            if($territory_id>0)
+            {
+                $incentive_ratio*=$result['ti']/100;
+            }
+            elseif($zone_id>0)
+            {
+                $incentive_ratio*=$result['zi']/100;
+            }
+            elseif($division_id>0)
+            {
+                if($this->input->post('di_ict')=='ict')
+                {
+                    $incentive_ratio*=$result['ict']/100;
+                }
+                else
+                {
+                    $incentive_ratio*=$result['di']/100;
+                }
+
+            }
+            else
+            {
+                $incentive_ratio*=$result['hom']/100;
+            }
+            $achieve_ratio=json_decode($result['achieve_ratio'],true);
+            if(isset($achieve_ratio[$grand_row['sales_percentage']]))
+            {
+                $incentive_ratio*=$achieve_ratio[$grand_row['sales_percentage']]/100;
+            }
+
+        }
+        $grand_row['incentive_achievable']=number_format($grand_row['sales_net']*$incentive_ratio,2);
+        //payment
+        $payment_amount=0;
+        $this->db->from($this->config->item('ems_payment_payment').' p');
+        $this->db->select('SUM(p.amount) total_payment');
+        $this->db->where('p.status',$this->config->item('system_status_active'));
+        $this->db->where('p.date_payment_receive >=',$year_info['date_start']);
+        $this->db->where('p.date_payment_receive <=',$year_info['date_end']);
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = p.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                }
+            }
+        }
+        $result=$this->db->get()->row_array();
+        if($result)
+        {
+            $payment_amount=$result['total_payment'];
+        }
+
+        $grand_row['payment']=number_format($payment_amount,2);
+        $grand_row['incentive_achieved']=number_format($payment_amount*$incentive_ratio,2);
         $items[]=$this->get_report_row($grand_row);
         $this->jsonReturn($items);
     }
@@ -484,105 +531,39 @@ class Reports_incentive extends Root_Controller
         {
             $info['sales_net']='';
         }
-        if($item['target_net']!=0)
+        if($item['sales_percentage']!=0)
         {
-            $info['achieve_percentage']=number_format($item['sales_net']*100/$item['target_net'],2);
+            $info['sales_percentage']=$item['sales_percentage'];
         }
         else
         {
-            $info['achieve_percentage']='-';
+            $info['sales_percentage']='';
+        }
+        if($item['incentive_achievable']!=0)
+        {
+            $info['incentive_achievable']=$item['incentive_achievable'];
+        }
+        else
+        {
+            $info['incentive_achievable']='';
+        }
+        if($item['payment']!=0)
+        {
+            $info['payment']=$item['payment'];
+        }
+        else
+        {
+            $info['payment']='';
+        }
+        if($item['incentive_achieved']!=0)
+        {
+            $info['incentive_achieved']=$item['incentive_achieved'];
+        }
+        else
+        {
+            $info['incentive_achieved']='';
         }
         return $info;
     }
-    /*private function get_report_row($item,$month_start,$month_end)
-    {
-        $info=array();
-        $info['crop_name']=$item['crop_name'];
-        $info['crop_type_name']=$item['crop_type_name'];
-        $info['variety_name']=$item['variety_name'];
-        for($month=$month_start;$month<=$month_end;$month++)
-        {
-
-            if($month%12)
-            {
-                $m=$month%12;
-            }
-            else
-            {
-                $m=12;
-            }
-            if(isset($item['target_'.$m]) && $item['target_'.$m]!=0)
-            {
-                $info['target_'.$m]=number_format($item['target_'.$m],3,'.','');
-                $info['variance_'.$m]=$item['target_'.$m];
-            }
-            else
-            {
-                $info['target_'.$m]='';
-                $info['variance_'.$m]=0;
-            }
-            if(isset($item['achieve_'.$m]) && $item['achieve_'.$m]!=0)
-            {
-                $info['achieve_'.$m]=number_format($item['achieve_'.$m],3,'.','');
-                $info['variance_'.$m]-=$item['achieve_'.$m];
-            }
-            else
-            {
-                $info['achieve_'.$m]='';
-            }
-            if($info['variance_'.$m]==0)
-            {
-                $info['variance_'.$m]='';
-            }
-            else
-            {
-                $info['variance_'.$m]=number_format($info['variance_'.$m],3,'.','');
-            }
-            if(isset($item['net_'.$m]) && $item['net_'.$m]!=0)
-            {
-                $info['net_'.$m]=number_format($item['net_'.$m],2);
-            }
-            else
-            {
-                $info['net_'.$m]='';
-            }
-        }
-        if(isset($item['target_total']) && $item['target_total']!=0)
-        {
-            $info['target_total']=number_format($item['target_total'],3,'.','');
-            $info['variance_total']=$item['target_total'];
-        }
-        else
-        {
-            $info['target_total']='';
-            $info['variance_total']=0;
-        }
-        if(isset($item['achieve_total']) && $item['achieve_total']!=0)
-        {
-            $info['achieve_total']=number_format($item['achieve_total'],3,'.','');
-            $info['variance_total']-=$item['achieve_total'];
-        }
-        else
-        {
-            $info['achieve_total']='';
-        }
-        if($info['variance_total']==0)
-        {
-            $info['variance_total']='';
-        }
-        else
-        {
-            $info['variance_total']=number_format($info['variance_total'],3,'.','');
-        }
-        if(isset($item['net_total']) && $item['net_total']!=0)
-        {
-            $info['net_total']=number_format($item['net_total'],2);
-        }
-        else
-        {
-            $info['net_total']='';
-        }
-        return $info;
-    }*/
 
 }
