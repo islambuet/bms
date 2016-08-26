@@ -117,115 +117,20 @@ class Reports_mgt_purchase_budget extends Root_Controller
         $crop_type_id=$this->input->post('crop_type_id');
         $variety_id=$this->input->post('variety_id');
 
-        $division_id=$this->input->post('division_id');
-        $zone_id=$this->input->post('zone_id');
-        $territory_id=$this->input->post('territory_id');
-
-        //get budget and target
-        $bud_target=array();
-        if($division_id>0)
-        {
-            if($zone_id>0)
-            {
-                if($territory_id>0)
-                {
-                    $this->db->from($this->config->item('table_ti_bud_ti_bt').' bud_target');
-                    $this->db->where('bud_target.territory_id',$territory_id);
-                }
-                else
-                {
-                    $this->db->from($this->config->item('table_zi_bud_zi_bt').' bud_target');
-                    $this->db->where('bud_target.zone_id',$zone_id);
-                }
-            }
-            else
-            {
-                $this->db->from($this->config->item('table_di_bud_di_bt').' bud_target');
-                $this->db->where('bud_target.division_id',$division_id);
-            }
-
-        }
-        else
-        {
-            $this->db->from($this->config->item('table_hom_bud_hom_bt').' bud_target');
-        }
-        $this->db->where('bud_target.year0_id',$year0_id);
+        $purchase_budget=array();
+        $this->db->from($this->config->item('table_mgt_purchase_budget').' purchase_budget');
+        $this->db->select('purchase_budget.*');
+        $this->db->where('purchase_budget.year0_id',$year0_id);
         $results=$this->db->get()->result_array();
         foreach($results as $result)
         {
-            $bud_target[$result['variety_id']]=$result;
+            $purchase_budget[$result['variety_id']]=$result;
         }
 
-        //total sales
-        $sales_total=array();
-        $this->db->from($this->config->item('ems_sales_po_details').' pod');
-
-        $this->db->select('pod.*');
-        $this->db->select('po.date_approved');
-
-        $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
-        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
-        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
-        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
-        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
-
-        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id =pod.variety_id','INNER');
-        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id =v.crop_type_id','INNER');
-
-        $this->db->where('pod.revision',1);
-        $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
-        $this->db->where('po.date_approved >=',$year_info['date_start']);
-        $this->db->where('po.date_approved <=',$year_info['date_end']);
-        if($crop_id>0)
-        {
-            $this->db->where('type.crop_id',$crop_id);
-            if($crop_type_id>0)
-            {
-                $this->db->where('type.id',$crop_type_id);
-                if($variety_id>0)
-                {
-                    $this->db->where('pod.variety_id',$variety_id);
-                }
-            }
-        }
-        if($division_id>0)
-        {
-            $this->db->where('zone.division_id',$division_id);
-            if($zone_id>0)
-            {
-                $this->db->where('zone.id',$zone_id);
-                if($territory_id>0)
-                {
-                    $this->db->where('t.id',$territory_id);
-                }
-            }
-        }
-        $results=$this->db->get()->result_array();
-        foreach($results as $result)
-        {
-            if(isset($sales_total[$result['variety_id']]))
-            {
-                $sales_total[$result['variety_id']]['quantity']+=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                $sales_total[$result['variety_id']]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
-            }
-            else
-            {
-                $sales_total[$result['variety_id']]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                $sales_total[$result['variety_id']]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
-
-            }
-        }
-        //variety price
-        $variety_prices=array();
-        $results=Query_helper::get_info($this->config->item('ems_setup_classification_variety_price_kg'),'*',array('year0_id ='.$year0_id));
-        foreach($results as $result)
-        {
-            $variety_prices[$result['variety_id']]=$result['price_net'];
-        }
 
         //variety list
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
-        $this->db->select('v.id variety_id,v.name variety_name');
+        $this->db->select('v.id variety_id,v.name variety_name,v.name_import variety_import_name');
         $this->db->select('type.name type_name');
         $this->db->select('crop.name crop_name');
         $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
@@ -253,16 +158,12 @@ class Reports_mgt_purchase_budget extends Root_Controller
         $grand_row['crop_name']=$crop_row['crop_name']=$type_row['crop_name']='';
         $grand_row['type_name']=$crop_row['type_name']=$type_row['type_name']='';
         $grand_row['variety_name']=$crop_row['variety_name']=$type_row['variety_name']='';
+        $grand_row['variety_import_name']=$crop_row['variety_import_name']=$type_row['variety_import_name']='';
         $type_row['variety_name']='Total Type';
         $crop_row['type_name']='Total Crop';
         $grand_row['crop_name']='Grand Total';
-        $grand_row['budget_kg']=$crop_row['budget_kg']=$type_row['budget_kg']=0;
-        $grand_row['target_kg']=$crop_row['target_kg']=$type_row['target_kg']=0;
-        $grand_row['sales_kg']=$crop_row['sales_kg']=$type_row['sales_kg']=0;
+        $grand_row['quantity_total']=$crop_row['quantity_total']=$type_row['quantity_total']=0;
 
-        $grand_row['budget_net']=$crop_row['budget_net']=$type_row['budget_net']=0;
-        $grand_row['target_net']=$crop_row['target_net']=$type_row['target_net']=0;
-        $grand_row['sales_net']=$crop_row['sales_net']=$type_row['sales_net']=0;
         $prev_crop_name='';
         $prev_crop_type_name='';
 
@@ -274,20 +175,11 @@ class Reports_mgt_purchase_budget extends Root_Controller
                 if($prev_crop_name!=$result['crop_name'])
                 {
                     $items[]=$this->get_report_row($type_row);
-                    $type_row['budget_kg']=0;
-                    $type_row['budget_net']=0;
-                    $type_row['target_kg']=0;
-                    $type_row['target_net']=0;
-                    $type_row['sales_kg']=0;
-                    $type_row['sales_net']=0;
+                    $type_row['quantity_total']=0;
+
 
                     $items[]=$this->get_report_row($crop_row);
-                    $crop_row['budget_kg']=0;
-                    $crop_row['budget_net']=0;
-                    $crop_row['target_kg']=0;
-                    $crop_row['target_net']=0;
-                    $crop_row['sales_kg']=0;
-                    $crop_row['sales_net']=0;
+                    $crop_row['quantity_total']=0;
 
                     $item['crop_name']=$result['crop_name'];
                     $prev_crop_name=$result['crop_name'];
@@ -298,12 +190,8 @@ class Reports_mgt_purchase_budget extends Root_Controller
                 elseif($prev_crop_type_name!=$result['type_name'])
                 {
                     $items[]=$this->get_report_row($type_row);
-                    $type_row['budget_kg']=0;
-                    $type_row['budget_net']=0;
-                    $type_row['target_kg']=0;
-                    $type_row['target_net']=0;
-                    $type_row['sales_kg']=0;
-                    $type_row['sales_net']=0;
+                    $type_row['quantity_total']=0;
+
 
                     $item['crop_name']='';
                     $item['type_name']=$result['type_name'];
@@ -323,8 +211,20 @@ class Reports_mgt_purchase_budget extends Root_Controller
                 $prev_crop_type_name=$result['type_name'];
             }
             $item['variety_name']=$result['variety_name'];
+            $item['variety_import_name']=$result['variety_import_name'];
+            $item['quantity_total']=0;
+            if(isset($purchase_budget[$result['variety_id']]))
+            {
+                if($purchase_budget[$result['variety_id']]['quantity_total']>0)
+                {
+                    $item['quantity_total']=$purchase_budget[$result['variety_id']]['quantity_total'];
+                }
+            }
+            $type_row['quantity_total']+=$item['quantity_total'];
+            $crop_row['quantity_total']+=$item['quantity_total'];
+            $grand_row['quantity_total']+=$item['quantity_total'];
 
-            $item['budget_kg']=0;
+            /*$item['budget_kg']=0;
             $item['target_kg']=0;
             if(isset($bud_target[$result['variety_id']]))
             {
@@ -380,7 +280,7 @@ class Reports_mgt_purchase_budget extends Root_Controller
             $grand_row['sales_kg']+=$item['sales_kg'];
             $type_row['sales_net']+=$item['sales_net'];
             $crop_row['sales_net']+=$item['sales_net'];
-            $grand_row['sales_net']+=$item['sales_net'];
+            $grand_row['sales_net']+=$item['sales_net'];*/
 
             $items[]=$this->get_report_row($item);
         }
@@ -395,15 +295,16 @@ class Reports_mgt_purchase_budget extends Root_Controller
         $info['crop_name']=$item['crop_name'];
         $info['type_name']=$item['type_name'];
         $info['variety_name']=$item['variety_name'];
-        if($item['budget_kg']!=0)
+        $info['variety_import_name']=$item['variety_import_name'];
+        if($item['quantity_total']!=0)
         {
-            $info['budget_kg']=number_format($item['budget_kg'],3,'.','');
+            $info['quantity_total']=number_format($item['quantity_total'],3,'.','');
         }
         else
         {
-            $info['budget_kg']='';
+            $info['quantity_total']='';
         }
-        if($item['target_kg']!=0)
+        /*if($item['target_kg']!=0)
         {
             $info['target_kg']=number_format($item['target_kg'],3,'.','');
         }
@@ -458,7 +359,7 @@ class Reports_mgt_purchase_budget extends Root_Controller
         else
         {
             $info['variance_net']='';
-        }
+        }*/
         return $info;
     }
 

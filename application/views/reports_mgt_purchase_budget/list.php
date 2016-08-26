@@ -33,14 +33,8 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="budget_kg">Budget (Kg)</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="target_kg">Target (Kg)</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_kg">Sales (Kg)</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variance_kg">Variance (Kg)</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="budget_net">Net Budget</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="target_net">Net Target</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_net">Net Sales</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variance_net">Net Variance</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_import_name">Import Name</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="quantity_total">Purchase Quantity</label>
             </div>
         </div>
     <?php
@@ -99,14 +93,8 @@
                 { name: 'crop_name', type: 'string' },
                 { name: 'type_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
-                { name: 'budget_kg', type: 'string' },
-                { name: 'target_kg', type: 'string' },
-                { name: 'sales_kg', type: 'string' },
-                { name: 'variance_kg', type: 'string' },
-                { name: 'budget_net', type: 'string' },
-                { name: 'target_net', type: 'string' },
-                { name: 'sales_net', type: 'string' },
-                { name: 'variance_net', type: 'string' }
+                { name: 'variety_import_name', type: 'string' },
+                { name: 'quantity_total', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -146,7 +134,7 @@
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
             }
-            if(column=='details_button')
+            if(column=='details_button' && record.variety_name!='Total Type'&& record.variety_name!='')
             {
                 element.html('<div><button class="btn btn-primary pop_up" data-item-no="'+row+'">Details</button></div>');
             }
@@ -191,14 +179,8 @@
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Budget (Kg)', dataField: 'budget_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Target (Kg)', dataField: 'target_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Sales (Kg)', dataField: 'sales_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Variance (Kg)', dataField: 'variance_kg',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Net Budget', dataField: 'budget_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Net Target', dataField: 'target_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Net Sales', dataField: 'sales_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Net Variance', dataField: 'variance_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Import Name', dataField: 'variety_import_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: 'Purchase Quantity', dataField: 'quantity_total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
                     { text: 'Details', dataField: 'details_button',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
                 ]
 
