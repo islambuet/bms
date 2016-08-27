@@ -486,6 +486,14 @@ class Reports_budget_target extends Root_Controller
         {
             $info['variance_net']='';
         }
+        if($item['target_net']!=0)
+        {
+            $info['achieve_percentage']=number_format($item['sales_net']*100/$item['target_net'],2);
+        }
+        else
+        {
+            $info['achieve_percentage']='';
+        }
         return $info;
     }
 

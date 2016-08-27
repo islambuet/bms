@@ -41,6 +41,7 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="target_net">Net Target</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="sales_net">Net Sales</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variance_net">Net Variance</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="achieve_percentage">Achieve %</label>
             </div>
         </div>
     <?php
@@ -76,7 +77,8 @@
                 { name: 'budget_net', type: 'string' },
                 { name: 'target_net', type: 'string' },
                 { name: 'sales_net', type: 'string' },
-                { name: 'variance_net', type: 'string' }
+                { name: 'variance_net', type: 'string' },
+                { name: 'achieve_percentage', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -164,7 +166,8 @@
                     { text: 'Net Budget', dataField: 'budget_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { text: 'Net Target', dataField: 'target_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { text: 'Net Sales', dataField: 'sales_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Net Variance', dataField: 'variance_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
+                    { text: 'Net Variance', dataField: 'variance_net',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Achieve %', dataField: 'achieve_percentage',width: '80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ]
 
             });
