@@ -45,7 +45,7 @@ class Reports_mgt_purchase_budget extends Root_Controller
             $data['year0_id']=$fy_info['budget_year']['value']-1;//current fiscal year
 
             $data['crops']=Query_helper::get_info($this->config->item('ems_setup_classification_crops'),array('id value','name text'),array(),0,0,array('ordering ASC'));
-
+            $data['principals']=Query_helper::get_info($this->config->item('ems_basic_setup_principal'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
 
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("reports_mgt_purchase_budget/search",$data,true));
             if($this->message)
@@ -77,11 +77,29 @@ class Reports_mgt_purchase_budget extends Root_Controller
                 $ajax['system_message']='Please Select a Fiscal Year';
                 $this->jsonReturn($ajax);
             }
+            $months=$this->input->post('months');
+            if(!(sizeof($months)>0))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Please Select at Least one month';
+                $this->jsonReturn($ajax);
+            }
             $keys=',';
 
             foreach($reports as $elem=>$value)
             {
                 $keys.=$elem.":'".$value."',";
+            }
+            for($i=1;$i<13;$i++)
+            {
+                if((isset($months[$i]))&&$months[$i]>0)
+                {
+                    $keys.="month_".$i.":'1',";
+                }
+                else
+                {
+                    $keys.="month_".$i.":'0',";
+                }
             }
 
             $data['keys']=trim($keys,',');

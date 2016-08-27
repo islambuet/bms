@@ -9,62 +9,104 @@
             </div>
             <div class="clearfix"></div>
         </div>
-
-
         <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $this->lang->line('LABEL_FISCAL_YEAR');?></label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <select id="year0_id" class="form-control" name="report[year0_id]">
-                    <option value=""><?php echo $this->lang->line('SELECT');?></option>
-                    <?php
-                    foreach($fiscal_years as $year)
-                    {?>
-                        <option value="<?php echo $year['value']?>" <?php if($year['value']==$year0_id){echo 'selected';} ?>><?php echo $year['text'];?></option>
-                    <?php
-                    }
-                    ?>
-                </select>
-            </div>
+            <div class="col-xs-6">
+                <div class="row show-grid">
+                    <div class="col-xs-6">
+                        <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_FISCAL_YEAR');?></label>
+                    </div>
+                    <div class="col-xs-6">
+                        <select id="year0_id" class="form-control" name="report[year0_id]">
+                            <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                            <?php
+                            foreach($fiscal_years as $year)
+                            {?>
+                                <option value="<?php echo $year['value']?>" <?php if($year['value']==$year0_id){echo 'selected';} ?>><?php echo $year['text'];?></option>
+                            <?php
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div style="" class="row show-grid">
+                    <div class="col-xs-6">
+                        <label class="control-label pull-right">Months</label>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="checkbox">
+                            <label><input type="checkbox" id="select_all">Select ALL</label>
+                        </div>
+                        <?php
+                        for($i=1;$i<13;$i++)
+                        {
+                            ?>
+                            <div class="checkbox">
+                                <label><input type="checkbox" class="months" name="months[<?php echo $i;?>]" value="1"><?php echo date("M", mktime(0, 0, 0,$i,1, 2000));?></label>
+                            </div>
+                        <?php
+                        }
+                        ?>
 
-        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-6">
+                <div class="row show-grid" id="principal_id_container">
+                    <div class="col-xs-6">
+                        <select id="principal_id" name="report[principal_id]" class="form-control">
+                            <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                            <?php
+                            foreach($principals as $principal)
+                            {?>
+                                <option value="<?php echo $principal['value']?>"><?php echo $principal['text'];?></option>
+                            <?php
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-xs-6">
+                        <label class="control-label"><?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME');?></label>
+                    </div>
+                </div>
+                <div style="" class="row show-grid" id="crop_id_container">
+                    <div class="col-xs-6">
+                        <select id="crop_id" name="report[crop_id]" class="form-control">
+                            <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                            <?php
+                            foreach($crops as $crop)
+                            {?>
+                                <option value="<?php echo $crop['value']?>"><?php echo $crop['text'];?></option>
+                            <?php
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-xs-6">
+                        <label class="control-label"><?php echo $CI->lang->line('LABEL_CROP_NAME');?></label>
+                    </div>
+                </div>
+                <div style="display: none;" class="row show-grid" id="crop_type_id_container">
 
-        <div style="" class="row show-grid" id="crop_id_container">
-            <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_CROP_NAME');?></label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <select id="crop_id" name="report[crop_id]" class="form-control">
-                    <option value=""><?php echo $this->lang->line('SELECT');?></option>
-                    <?php
-                    foreach($crops as $crop)
-                    {?>
-                        <option value="<?php echo $crop['value']?>"><?php echo $crop['text'];?></option>
-                    <?php
-                    }
-                    ?>
-                </select>
-            </div>
-        </div>
-        <div style="display: none;" class="row show-grid" id="crop_type_id_container">
-            <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_CROP_TYPE');?></label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <select id="crop_type_id" name="report[crop_type_id]" class="form-control">
-                    <option value=""><?php echo $this->lang->line('SELECT');?></option>
-                </select>
-            </div>
-        </div>
-        <div style="display: none;" class="row show-grid" id="variety_id_container">
-            <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_VARIETY_NAME');?></label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <select id="variety_id" name="report[variety_id]" class="form-control">
-                    <option value=""><?php echo $this->lang->line('SELECT');?></option>
-                </select>
+                    <div class="col-xs-6">
+                        <select id="crop_type_id" name="report[crop_type_id]" class="form-control">
+                            <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                        </select>
+                    </div>
+                    <div class="col-xs-6">
+                        <label class="control-label"><?php echo $CI->lang->line('LABEL_CROP_TYPE');?></label>
+                    </div>
+                </div>
+                <div style="display: none;" class="row show-grid" id="variety_id_container">
+
+                    <div class="col-xs-6">
+                        <select id="variety_id" name="report[variety_id]" class="form-control">
+                            <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                        </select>
+                    </div>
+                    <div class="col-xs-6">
+                        <label class="control-label"><?php echo $CI->lang->line('LABEL_VARIETY_NAME');?></label>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row show-grid">
@@ -81,7 +123,6 @@
 
             </div>
         </div>
-
     </div>
 
     <div class="clearfix"></div>
@@ -94,6 +135,19 @@
     jQuery(document).ready(function()
     {
         turn_off_triggers();
+        $(document).off("change", "#select_all");
+        $(document).on("change","#select_all",function()
+        {
+            if($(this).is(':checked'))
+            {
+                $('.months').prop('checked', true);
+            }
+            else
+            {
+                $('.months').prop('checked', false);
+            }
+
+        });
         $(document).on("change","#crop_id",function()
         {
             $("#crop_type_id").val("");
