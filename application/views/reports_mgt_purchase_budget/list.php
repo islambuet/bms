@@ -48,37 +48,6 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
-        $(document).off("click", ".pop_up");
-        $(document).on("click", ".pop_up", function(event)
-        {
-            var left=((($(window).width() - 550) / 2) +$(window).scrollLeft());
-            var top=((($(window).height() - 550) / 2) +$(window).scrollTop());
-
-            $("#popup_window").jqxWindow({position: { x: left, y: top  }});
-            /*var row=$(this).attr('data-item-no');
-            var row_info = $("#system_jqx_container").jqxGrid('getrowdata', row);
-            var html='';
-            html+='<div style="line-height: 1.8;">';
-            html+='<div><b>Crop Name:</b> '+row_info.details['crop_name']+'<div>';
-            html+='<div><b>Crop Type:</b> '+row_info.details['crop_type_name']+'<div>';
-            html+='<div><b>Variety Name:</b> '+row_info.details['variety_name']+'<div>';
-            html+='<div><b>Characteristics:</b><div>';
-            html+='<div>'+row_info.details['characteristics']+'<div>';
-            html+='<div><b>Cultivation Period:</b> '+row_info.details['cultivation_period']+'<div>';
-            html+='<div><b>Compare With Other Variety:</b><div>';
-            html+='<div>'+row_info.details['comparison']+'<div>';
-            html+='<div><b>Remarks:</b> '+row_info.details['remarks']+'<div>';
-            html+='<div><b>Picture:</b> <div>';
-            html+='<div><img src="'+row_info.details['picture']+'" style="max-width: 100%;"></div>';
-
-            html+='</div>';
-            $('#popup_content').html(html);*/
-            $('#popup_content').html('shaiful');
-            $("#popup_window").jqxWindow('open');
-
-
-        });
-
         //var grand_total_color='#AEC2DD';
         var grand_total_color='#AEC2DD';
 
@@ -92,9 +61,27 @@
                 { name: 'id', type: 'int' },
                 { name: 'crop_name', type: 'string' },
                 { name: 'type_name', type: 'string' },
+                { name: 'principal_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'variety_import_name', type: 'string' },
-                { name: 'quantity_total', type: 'string' }
+                { name: 'month', type: 'string' },
+                { name: 'quantity', type: 'string'},
+                { name: 'currency_name', type: 'string'},
+                { name: 'currency_rate', type: 'string'},
+                { name: 'unit_price', type: 'string'},
+                <?php
+                    foreach($direct_costs as $cost)
+                    {?>{ name: '<?php echo 'dc_'.$cost['value'];?>', type: 'string' },
+                        <?php
+                    }
+                    foreach($packing_costs as $cost)
+                    {?>{ name: '<?php echo 'pc_'.$cost['value'];?>', type: 'string' },
+                        <?php
+                    }
+                ?>
+                { name: 'bank', type: 'string'},
+                { name: 'cogs', type: 'string'},
+                { name: 'total_cogs', type: 'string'}
             ],
             id: 'id',
             url: url,
@@ -134,11 +121,6 @@
             {
                 element.css({'margin': '0px','width': '100%', 'height': '100%',padding:'5px','whiteSpace':'normal'});
             }
-            if(column=='details_button' && record.variety_name!='Total Type'&& record.variety_name!='')
-            {
-                element.html('<div><button class="btn btn-primary pop_up" data-item-no="'+row+'">Details</button></div>');
-            }
-
             return element[0].outerHTML;
 
         };
@@ -174,14 +156,31 @@
                 enabletooltips: true,
                 showaggregates: true,
                 showstatusbar: true,
-                rowsheight: 45,
+                rowsheight: 25,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?>', dataField: 'principal_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: 'Import Name', dataField: 'variety_import_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Purchase Quantity', dataField: 'quantity_total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
-                    { text: 'Details', dataField: 'details_button',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer}
+                    { text: 'Month', dataField: 'month',width: '40',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: 'Quantity', dataField: 'quantity',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'Currency', dataField: 'currency_name',width: '50',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'C Rate', dataField: 'currency_rate',width: '60',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'Price/Kg', dataField: 'unit_price',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    <?php
+                        foreach($direct_costs as $cost)
+                        {?>{ text: '<?php echo $cost['text']; ?>', dataField: '<?php echo 'pc_'.$cost['value'];?>',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                                <?php
+                        }
+                        foreach($packing_costs as $cost)
+                        {?>{ text: '<?php echo $cost['text']; ?>', dataField: '<?php echo 'dc_'.$cost['value'];?>',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                            <?php
+                        }
+                    ?>
+                    { text: 'Bank', dataField: 'bank',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'COGS', dataField: 'cogs',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'Total Cogs', dataField: 'total_cogs',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'}
                 ]
 
             });
