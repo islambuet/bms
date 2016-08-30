@@ -32,9 +32,18 @@
             <div class="col-xs-12" style="margin-bottom: 20px;">
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="crop_name"><?php echo $CI->lang->line('LABEL_CROP_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="type_name"><?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="principal_name"><?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_import_name">Import Name</label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="quantity_total">Purchase Quantity</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="quantity">Quantity</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="currency_name">Currency</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="currency_rate">C Rate</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="unit_price">Price/Kg</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="direct_cost">Direct Cost</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="packing_cost">Packing Cost</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="pi_values">Pi Values</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs">COGS</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_cogs">Total COGS</label>
             </div>
         </div>
     <?php
@@ -64,22 +73,13 @@
                 { name: 'principal_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'variety_import_name', type: 'string' },
-                { name: 'month', type: 'string' },
                 { name: 'quantity', type: 'string'},
                 { name: 'currency_name', type: 'string'},
                 { name: 'currency_rate', type: 'string'},
                 { name: 'unit_price', type: 'string'},
-                <?php
-                    foreach($direct_costs as $cost)
-                    {?>{ name: '<?php echo 'dc_'.$cost['value'];?>', type: 'string' },
-                        <?php
-                    }
-                    foreach($packing_costs as $cost)
-                    {?>{ name: '<?php echo 'pc_'.$cost['value'];?>', type: 'string' },
-                        <?php
-                    }
-                ?>
-                { name: 'bank', type: 'string'},
+                { name: 'direct_cost', type: 'string'},
+                { name: 'packing_cost', type: 'string'},
+                { name: 'pi_values', type: 'string'},
                 { name: 'cogs', type: 'string'},
                 { name: 'total_cogs', type: 'string'}
             ],
@@ -93,26 +93,7 @@
             var element = $(defaultHtml);
             // console.log(defaultHtml);
 
-            if((column=='target_net')&&(record.target_net==""))
-            {
-                element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-            }
-            else if (record.variety_name=="Total Type")
-            {
-                if(!((column=='crop_name')||(column=='type_name')))
-                {
-                    element.css({ 'background-color': '#6CAB44','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-                }
-            }
-            else if (record.type_name=="Total Crop")
-            {
-                if((column!='crop_name'))
-                {
-                    element.css({ 'background-color': '#0CA2C5','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-
-                }
-            }
-            else if (record.crop_name=="Grand Total")
+            if (record.crop_name=="Total")
             {
 
                 element.css({ 'background-color': grand_total_color,'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
@@ -129,7 +110,7 @@
         };
         var aggregates=function (total, column, element, record)
         {
-            if(record.crop_name=="Grand Total")
+            if(record.crop_name=="Total")
             {
                 //console.log(element);
                 return record[element];
@@ -156,31 +137,22 @@
                 enabletooltips: true,
                 showaggregates: true,
                 showstatusbar: true,
-                rowsheight: 25,
+                rowsheight: 35,
                 columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: '<?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?>', dataField: 'principal_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?>', dataField: 'principal_name',width: '150',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: 'Import Name', dataField: 'variety_import_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Month', dataField: 'month',width: '40',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Quantity', dataField: 'quantity',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'Quantity', dataField: 'quantity',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { text: 'Currency', dataField: 'currency_name',width: '50',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
                     { text: 'C Rate', dataField: 'currency_rate',width: '60',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
-                    { text: 'Price/Kg', dataField: 'unit_price',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
-                    <?php
-                        foreach($direct_costs as $cost)
-                        {?>{ text: '<?php echo $cost['text']; ?>', dataField: '<?php echo 'pc_'.$cost['value'];?>',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
-                                <?php
-                        }
-                        foreach($packing_costs as $cost)
-                        {?>{ text: '<?php echo $cost['text']; ?>', dataField: '<?php echo 'dc_'.$cost['value'];?>',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
-                            <?php
-                        }
-                    ?>
-                    { text: 'Bank', dataField: 'bank',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'Price/Kg', dataField: 'unit_price',width: '80',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
+                    { text: 'Direct Cost', dataField: 'direct_cost',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Packing Cost', dataField: 'packing_cost',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'PI Values', dataField: 'pi_values',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { text: 'COGS', dataField: 'cogs',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
-                    { text: 'Total Cogs', dataField: 'total_cogs',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'}
+                    { text: 'Total COGS', dataField: 'total_cogs',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ]
 
             });
