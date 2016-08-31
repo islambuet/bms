@@ -221,6 +221,7 @@ class Reports_mgt_purchase_budget extends Root_Controller
         $grand_row['principal_name']='';
         $grand_row['variety_name']='';
         $grand_row['variety_import_name']='';
+        $grand_row['months']='';
         $grand_row['quantity']=0;
         $grand_row['currency_name']='';
         $grand_row['currency_rate']=0;
@@ -267,6 +268,7 @@ class Reports_mgt_purchase_budget extends Root_Controller
             $item['principal_name']=$result['principal_name'];
             $item['variety_name']=$result['variety_name'];
             $item['variety_import_name']=$result['variety_import_name'];
+            $item['months']=',';
             $item['currency_name']=$result['currency_name'];
             $item['quantity']=0;
             foreach($months as $month)
@@ -274,8 +276,10 @@ class Reports_mgt_purchase_budget extends Root_Controller
                 if($result['quantity_'.$month]>0)
                 {
                     $item['quantity']+=$result['quantity_'.$month];
+                    $item['months'].=date("M", mktime(0, 0, 0,$month,1, 2000)).',';
                 }
             }
+            $item['months']=trim($item['months'],',');
             $grand_row['quantity']+=$item['quantity'];
             $item['currency_rate']=0;
             if(isset($currency_rates[$result['currency_id']]))
@@ -325,6 +329,7 @@ class Reports_mgt_purchase_budget extends Root_Controller
         $info['principal_name']=$item['principal_name'];
         $info['variety_name']=$item['variety_name'];
         $info['variety_import_name']=$item['variety_import_name'];
+        $info['months']=$item['months'];
 
         if($item['quantity']!=0)
         {

@@ -35,6 +35,7 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="principal_name"><?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_name"><?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="variety_import_name">Import Name</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="months">Months</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="quantity">Quantity</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="currency_name">Currency</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="currency_rate">C Rate</label>
@@ -73,6 +74,7 @@
                 { name: 'principal_name', type: 'string' },
                 { name: 'variety_name', type: 'string' },
                 { name: 'variety_import_name', type: 'string' },
+                { name: 'months', type: 'string' },
                 { name: 'quantity', type: 'string'},
                 { name: 'currency_name', type: 'string'},
                 { name: 'currency_rate', type: 'string'},
@@ -144,6 +146,7 @@
                     { text: '<?php echo $CI->lang->line('LABEL_PRINCIPAL_NAME'); ?>', dataField: 'principal_name',width: '150',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: 'Import Name', dataField: 'variety_import_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: 'Months', dataField: 'months',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: 'Quantity', dataField: 'quantity',width: '100',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { text: 'Currency', dataField: 'currency_name',width: '50',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
                     { text: 'C Rate', dataField: 'currency_rate',width: '60',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right'},
