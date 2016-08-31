@@ -193,62 +193,121 @@ class Analysis_sales_month extends Root_Controller
         $crop_id=$this->input->post('crop_id');
         $crop_type_id=$this->input->post('crop_type_id');
         $variety_id=$this->input->post('variety_id');
-        $principal_id=$this->input->post('principal_id');
+
+        $division_id=$this->input->post('division_id');
+        $zone_id=$this->input->post('zone_id');
+        $territory_id=$this->input->post('territory_id');
+        $district_id=$this->input->post('district_id');
+        $customer_id=$this->input->post('customer_id');
+
         $months=array();
-        $where='';
+
         for($i=1;$i<13;$i++)
         {
             if($this->input->post('month_'.$i)==1)
             {
                 $months[]=$i;
-                $where.=' or quantity_'.$i.' > 0';
             }
         }
-        $where='('.substr($where,4).')';
 
-        //currency rates
-        $results=Query_helper::get_info($this->config->item('table_mgt_currency_rate'),'*',array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$year0_id));
-        $currency_rates=array();
-        foreach($results as $result)
+        //total sales
+        $sales_total=array();
+        $this->db->from($this->config->item('ems_sales_po_details').' pod');
+
+        $this->db->select('pod.*');
+        $this->db->select('po.date_approved');
+
+        //$this->db->select('(pod.pack_size * pod.quantity) sales_quantity');
+        //$this->db->select('(pod.bonus_pack_size * pod.quantity_bonus) bonus_quantity');
+        //$this->db->select('(pod.variety_price_net * pod.quantity) net_sales');
+
+        $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+
+        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id =pod.variety_id','INNER');
+        $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id =v.crop_type_id','INNER');
+
+        $this->db->where('pod.revision',1);
+        $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
+        $this->db->where('po.date_approved >=',$year_info['date_start']);
+        $this->db->where('po.date_approved <=',$year_info['date_end']);
+        if($crop_id>0)
         {
-            $currency_rates[$result['currency_id']]=$result['rate'];
-        }
-        $result=Query_helper::get_info($this->config->item('table_mgt_direct_cost_percentage'),array('SUM(percentage) total_percentage'),array('status !="'.$this->config->item('system_status_delete').'"','fiscal_year_id ='.$year0_id),1);
-        $direct_costs_percentage=0;
-        if($result)
-        {
-            if(strlen($result['total_percentage'])>0)
+            $this->db->where('type.crop_id',$crop_id);
+            if($crop_type_id>0)
             {
-                $direct_costs_percentage=number_format($result['total_percentage']/100,5,'.','');
+                $this->db->where('type.id',$crop_type_id);
+                if($variety_id>0)
+                {
+                    $this->db->where('pod.variety_id',$variety_id);
+                }
             }
         }
-        $this->db->from($this->config->item('table_mgt_packing_cost_kg').' pack_cost');
-        $this->db->select('SUM(pack_cost.cost) total_cost');
-        $this->db->select('pack_cost.variety_id');
-        $this->db->where('pack_cost.year0_id',$year0_id);
-        $this->db->group_by('pack_cost.variety_id');
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                    if($district_id>0)
+                    {
+                        $this->db->where('d.id',$district_id);
+                        if($customer_id>0)
+                        {
+                            $this->db->where('cus.id',$customer_id);
+                        }
+                    }
+                }
+            }
+        }
         $results=$this->db->get()->result_array();
-        $packing_costs=array();
         foreach($results as $result)
         {
-            $packing_costs[$result['variety_id']]=$result['total_cost'];
+            $m=date('n',$result['date_approved']);
+            if(in_array($m,$months))
+            {
+                if(isset($sales_total[$result['variety_id']][$m]))
+                {
+                    $sales_total[$result['variety_id']][$m]['quantity']+=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
+                    //$sales_total[$result['variety_id']][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+                }
+                else
+                {
+                    $sales_total[$result['variety_id']][$m]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
+                    //$sales_total[$result['variety_id']][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+
+                }
+            }
+
         }
 
 
-        //variety list from purchase table
-        $this->db->from($this->config->item('table_mgt_purchase_budget').' purchase_budget');
-        $this->db->select('purchase_budget.*');
-        $this->db->select('v.name variety_name,v.name_import variety_import_name');
-        $this->db->select('type.id type_id,type.name type_name');
-        $this->db->select('crop.id crop_id,crop.name crop_name');
-        $this->db->select('c.name currency_name');
-        $this->db->select('p.id principal_id,p.name principal_name');
-        $this->db->join($this->config->item('ems_setup_classification_varieties').' v','v.id = purchase_budget.variety_id','INNER');
+
+        $grand_row=array();
+        $grand_row['crop_name']='Total';
+        $grand_row['type_name']='';
+        $grand_row['variety_name']='';
+        foreach($months as $month)
+        {
+            $grand_row['quantity_'.$month]=0;
+        }
+        $grand_row['total']=0;
+
+        //variety list
+        $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
+        $this->db->select('v.id variety_id,v.name variety_name');
+        $this->db->select('type.name type_name');
+        $this->db->select('crop.name crop_name');
         $this->db->join($this->config->item('ems_setup_classification_crop_types').' type','type.id = v.crop_type_id','INNER');
         $this->db->join($this->config->item('ems_setup_classification_crops').' crop','crop.id = type.crop_id','INNER');
-
-        $this->db->join($this->config->item('table_setup_currency').' c','c.id = purchase_budget.currency_id','INNER');
-        $this->db->join($this->config->item('ems_basic_setup_principal').' p','p.id = v.principal_id','LEFT');
+        $this->db->where('v.whose','ARM');
+        $this->db->where('v.status =',$this->config->item('system_status_active'));
         if($crop_id>0)
         {
             $this->db->where('crop.id',$crop_id);
@@ -261,32 +320,11 @@ class Analysis_sales_month extends Root_Controller
                 }
             }
         }
-        if($principal_id>0)
-        {
-            $this->db->where('p.id',$principal_id);
-        }
-        $this->db->where('purchase_budget.year0_id',$year0_id);
-        $this->db->where($where);
         $this->db->order_by('crop.ordering','ASC');
         $this->db->order_by('type.ordering','ASC');
         $this->db->order_by('v.ordering','ASC');
         $results=$this->db->get()->result_array();
-        $grand_row=array();
-        $grand_row['crop_name']='Total';
-        $grand_row['type_name']='';
-        $grand_row['principal_name']='';
-        $grand_row['variety_name']='';
-        $grand_row['variety_import_name']='';
-        $grand_row['months']='';
-        $grand_row['quantity']=0;
-        $grand_row['currency_name']='';
-        $grand_row['currency_rate']=0;
-        $grand_row['unit_price']=0;
-        $grand_row['direct_cost']=0;
-        $grand_row['packing_cost']=0;
-        $grand_row['pi_values']=0;
-        $grand_row['cogs']=0;
-        $grand_row['total_cogs']=0;
+
         $prev_crop_name='';
         $prev_crop_type_name='';
         foreach($results as $index=>$result)
@@ -321,136 +359,57 @@ class Analysis_sales_month extends Root_Controller
                 $item['type_name']=$result['type_name'];
                 $prev_crop_type_name=$result['type_name'];
             }
-            $item['principal_name']=$result['principal_name'];
             $item['variety_name']=$result['variety_name'];
-            $item['variety_import_name']=$result['variety_import_name'];
-            $item['months']=',';
-            $item['currency_name']=$result['currency_name'];
-            $item['quantity']=0;
+            $item['total']=0;
             foreach($months as $month)
             {
-                if($result['quantity_'.$month]>0)
+                //$sales_total[$result['variety_id']][$m]['quantity']
+                $item['quantity_'.$month]=0;
+                if(isset($sales_total[$result['variety_id']][$month]['quantity']))
+                {
+                    $item['quantity_'.$month]=$sales_total[$result['variety_id']][$month]['quantity'];
+                }
+                $item['total']+=$item['quantity_'.$month];
+                $grand_row['quantity_'.$month]+=$item['quantity_'.$month];
+                /*if($result['quantity_'.$month]>0)
                 {
                     $item['quantity']+=$result['quantity_'.$month];
                     $item['months'].=date("M", mktime(0, 0, 0,$month,1, 2000)).',';
-                }
+                }*/
             }
-            $item['months']=trim($item['months'],',');
-            $grand_row['quantity']+=$item['quantity'];
-            $item['currency_rate']=0;
-            if(isset($currency_rates[$result['currency_id']]))
-            {
-                $item['currency_rate']=$currency_rates[$result['currency_id']];
-            }
-            else
-            {
-                $item['currency_rate']=0;
-            }
-            $item['unit_price']=$result['unit_price'];
-
-
-            $item['pi_values']=$item['quantity']*$item['currency_rate']*$item['unit_price'];
-            $item['cogs']=$item['currency_rate']*$item['unit_price'];//unit price in bdt
-            $item['direct_cost']=$item['quantity']*$item['cogs']*$direct_costs_percentage;//total direct cost
-            $item['cogs']=$item['cogs']+$item['cogs']*$direct_costs_percentage;//unit price + unit direct cost
-
-            $item['packing_cost']=0;
-            if(isset($packing_costs[$result['variety_id']]))
-            {
-                $item['packing_cost']=$item['quantity']*$packing_costs[$result['variety_id']];
-                $item['cogs']=$item['cogs']+$packing_costs[$result['variety_id']];
-            }
-
-            $item['total_cogs']=$item['quantity']*$item['cogs'];
-
-            $grand_row['direct_cost']+=$item['direct_cost'];
-            $grand_row['packing_cost']+=$item['packing_cost'];
-
-            $grand_row['pi_values']+=$item['pi_values'];
-            $grand_row['total_cogs']+=$item['total_cogs'];
-
-            $items[]=$this->get_report_row($item);
+            $grand_row['total']+=$item['total'];
+            $items[]=$this->get_report_row_product($item,$months);
         }
-        $items[]=$this->get_report_row($grand_row);
+        $items[]=$this->get_report_row_product($grand_row,$months);
         $this->jsonReturn($items);
 
 
         $this->jsonReturn($items);
     }
-    private function get_report_row($item)
+    private function get_report_row_product($item,$months)
     {
         $info=array();
         $info['crop_name']=$item['crop_name'];
         $info['type_name']=$item['type_name'];
-        $info['principal_name']=$item['principal_name'];
         $info['variety_name']=$item['variety_name'];
-        $info['variety_import_name']=$item['variety_import_name'];
-        $info['months']=$item['months'];
-
-        if($item['quantity']!=0)
+        foreach($months as $month)
         {
-            $info['quantity']=number_format($item['quantity'],3,'.','');
+            if($item['quantity_'.$month]!=0)
+            {
+                $info['quantity_'.$month]=number_format($item['quantity_'.$month]/1000,3,'.','');
+            }
+            else
+            {
+                $info['quantity_'.$month]='';
+            }
+        }
+        if($item['total']!=0)
+        {
+            $info['total']=number_format($item['total']/1000,3,'.','');
         }
         else
         {
-            $info['quantity']='';
-        }
-        $info['currency_name']=$item['currency_name'];
-        if($item['currency_rate']!=0)
-        {
-            $info['currency_rate']=number_format($item['currency_rate'],2);
-        }
-        else
-        {
-            $info['currency_rate']='';
-        }
-        if($item['unit_price']!=0)
-        {
-            $info['unit_price']=number_format($item['unit_price'],2);
-        }
-        else
-        {
-            $info['unit_price']='';
-        }
-        if($item['direct_cost']!=0)
-        {
-            $info['direct_cost']=number_format($item['direct_cost'],2);
-        }
-        else
-        {
-            $info['direct_cost']='';
-        }
-        if($item['packing_cost']!=0)
-        {
-            $info['packing_cost']=number_format($item['packing_cost'],2);
-        }
-        else
-        {
-            $info['packing_cost']='';
-        }
-        if($item['pi_values']!=0)
-        {
-            $info['pi_values']=number_format($item['pi_values'],2);
-        }
-        else
-        {
-            $info['pi_values']='';
-        }
-        if($item['cogs']!=0)
-        {
-            $info['cogs']=number_format($item['cogs'],2);
-        }
-        else
-        {
-            $info['cogs']='';
-        }
-        if($item['total_cogs']!=0)
-        {
-            $info['total_cogs']=number_format($item['total_cogs'],2);
-        }
-        else
-        {
-            $info['total_cogs']='';
+            $info['total']='';
         }
         return $info;
     }

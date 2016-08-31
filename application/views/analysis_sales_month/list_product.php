@@ -141,11 +141,11 @@
                     <?php
                         foreach($months as $month)
                         {
-                            ?>{ text: '<?php echo date("M", mktime(0, 0, 0,$month,1, 2000));?>', dataField: 'quantity_<?php echo $month;?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center'},
+                            ?>{ text: '<?php echo date("M", mktime(0, 0, 0,$month,1, 2000));?>', dataField: 'quantity_<?php echo $month;?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                             <?php
                         }
                     ?>
-                    { text: 'Total', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center'}
+                    { text: 'Total', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ]
 
             });
