@@ -33,7 +33,7 @@
                         <label class="control-label pull-right">Months</label>
                     </div>
                     <div class="col-xs-6">
-                        <div class="checkbox">
+                        <div class="checkbox col-xs-12">
                             <label><input type="checkbox" id="select_all">Select ALL</label>
                         </div>
                         <?php
