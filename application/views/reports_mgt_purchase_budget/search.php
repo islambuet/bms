@@ -40,7 +40,7 @@
                         for($i=1;$i<13;$i++)
                         {
                             ?>
-                            <div class="checkbox">
+                            <div class="checkbox col-xs-3">
                                 <label><input type="checkbox" class="months" name="months[<?php echo $i;?>]" value="1"><?php echo date("M", mktime(0, 0, 0,$i,1, 2000));?></label>
                             </div>
                         <?php
