@@ -85,7 +85,7 @@
             var element = $(defaultHtml);
             // console.log(defaultHtml);
 
-            if (record.crop_name=="Total")
+            if (record.name=="Total")
             {
 
                 element.css({ 'background-color': grand_total_color,'margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
@@ -102,7 +102,7 @@
         };
         var aggregates=function (total, column, element, record)
         {
-            if(record.crop_name=="Total")
+            if(record.name=="Total")
             {
                 //console.log(element);
                 return record[element];
@@ -121,7 +121,7 @@
         $("#system_jqx_container").jqxGrid(
             {
                 width: '100%',
-                height:'350px',
+                height:'250px',
                 source: dataAdapter,
                 columnsresize: true,
                 columnsreorder: true,
@@ -135,11 +135,11 @@
                     <?php
                         foreach($months as $month)
                         {
-                            ?>{ text: '<?php echo date("M", mktime(0, 0, 0,$month,1, 2000));?>', dataField: 'quantity_<?php echo $month;?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center'},
+                            ?>{ text: '<?php echo date("M", mktime(0, 0, 0,$month,1, 2000));?>', dataField: 'quantity_<?php echo $month;?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                             <?php
                         }
                     ?>
-                    { text: 'Total', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center'}
+                    { text: 'Total', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ]
 
             });
