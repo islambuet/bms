@@ -207,6 +207,8 @@ class Analysis_sales_month extends Root_Controller
         $territory_id=$this->input->post('territory_id');
         $district_id=$this->input->post('district_id');
         $customer_id=$this->input->post('customer_id');
+        $report_type=$this->input->post('report_type');
+
 
         $months=array();
 
@@ -283,19 +285,15 @@ class Analysis_sales_month extends Root_Controller
                 if(isset($sales_total[$result['variety_id']][$m]))
                 {
                     $sales_total[$result['variety_id']][$m]['quantity']+=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                    //$sales_total[$result['variety_id']][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+                    $sales_total[$result['variety_id']][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
                 }
                 else
                 {
                     $sales_total[$result['variety_id']][$m]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                    //$sales_total[$result['variety_id']][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
-
+                    $sales_total[$result['variety_id']][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
                 }
             }
-
         }
-
-
 
         $grand_row=array();
         $grand_row['crop_name']='Total';
@@ -304,8 +302,10 @@ class Analysis_sales_month extends Root_Controller
         foreach($months as $month)
         {
             $grand_row['quantity_'.$month]=0;
+            $grand_row['net_sales_'.$month]=0;
         }
-        $grand_row['total']=0;
+        $grand_row['total_kg']=0;
+        $grand_row['total_net_sales']=0;
 
         //variety list
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
@@ -368,28 +368,31 @@ class Analysis_sales_month extends Root_Controller
                 $prev_crop_type_name=$result['type_name'];
             }
             $item['variety_name']=$result['variety_name'];
-            $item['total']=0;
+            $item['total_kg']=0;
+            $item['total_net_sales']=0;
             foreach($months as $month)
             {
                 //$sales_total[$result['variety_id']][$m]['quantity']
                 $item['quantity_'.$month]=0;
-                if(isset($sales_total[$result['variety_id']][$month]['quantity']))
+                $item['net_sales_'.$month]=0;
+                if(isset($sales_total[$result['variety_id']][$month]))
                 {
                     $item['quantity_'.$month]=$sales_total[$result['variety_id']][$month]['quantity'];
+                    $item['net_sales_'.$month]=$sales_total[$result['variety_id']][$month]['net_sales'];
                 }
-                $item['total']+=$item['quantity_'.$month];
+                $item['total_kg']+=$item['quantity_'.$month];
+                $item['total_net_sales']+=$item['net_sales_'.$month];
                 $grand_row['quantity_'.$month]+=$item['quantity_'.$month];
+                $grand_row['net_sales_'.$month]+=$item['net_sales_'.$month];
             }
-            $grand_row['total']+=$item['total'];
-            $items[]=$this->get_report_row_product($item,$months);
+            $grand_row['total_kg']+=$item['total_kg'];
+            $grand_row['total_net_sales']+=$item['total_net_sales'];
+            $items[]=$this->get_report_row_product($item,$months,$report_type);
         }
-        $items[]=$this->get_report_row_product($grand_row,$months);
-        $this->jsonReturn($items);
-
-
+        $items[]=$this->get_report_row_product($grand_row,$months,$report_type);
         $this->jsonReturn($items);
     }
-    private function get_report_row_product($item,$months)
+    private function get_report_row_product($item,$months,$report_type)
     {
         $info=array();
         $info['crop_name']=$item['crop_name'];
@@ -397,23 +400,52 @@ class Analysis_sales_month extends Root_Controller
         $info['variety_name']=$item['variety_name'];
         foreach($months as $month)
         {
-            if($item['quantity_'.$month]!=0)
+            if($report_type=='weight')
             {
-                $info['quantity_'.$month]=number_format($item['quantity_'.$month]/1000,3,'.','');
+                if($item['quantity_'.$month]!=0)
+                {
+                    $info['quantity_'.$month]=number_format($item['quantity_'.$month]/1000,3,'.','');
+                }
+                else
+                {
+                    $info['quantity_'.$month]='';
+                }
             }
             else
             {
-                $info['quantity_'.$month]='';
+                if($item['net_sales_'.$month]!=0)
+                {
+                    $info['quantity_'.$month]=number_format($item['net_sales_'.$month],2);
+                }
+                else
+                {
+                    $info['quantity_'.$month]='';
+                }
             }
         }
-        if($item['total']!=0)
+        if($report_type=='weight')
         {
-            $info['total']=number_format($item['total']/1000,3,'.','');
+            if($item['total_kg']!=0)
+            {
+                $info['total']=number_format($item['total_kg']/1000,3,'.','');
+            }
+            else
+            {
+                $info['total']='';
+            }
         }
         else
         {
-            $info['total']='';
+            if($item['total_net_sales']!=0)
+            {
+                $info['total']=number_format($item['total_net_sales'],2);
+            }
+            else
+            {
+                $info['total']='';
+            }
         }
+
         return $info;
     }
     private function get_items_location()
@@ -432,6 +464,7 @@ class Analysis_sales_month extends Root_Controller
         $territory_id=$this->input->post('territory_id');
         $district_id=$this->input->post('district_id');
         $customer_id=$this->input->post('customer_id');
+        $report_type=$this->input->post('report_type');
 
         $type='division_id';
         $locations=array();
@@ -542,75 +575,104 @@ class Analysis_sales_month extends Root_Controller
                 if(isset($sales_total[$result[$type]][$m]))
                 {
                     $sales_total[$result[$type]][$m]['quantity']+=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                    //$sales_total[$result[$type]][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+                    $sales_total[$result[$type]][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
                 }
                 else
                 {
                     $sales_total[$result[$type]][$m]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                    //$sales_total[$result[$type]][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+                    $sales_total[$result[$type]][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
 
                 }
             }
-
         }
-
-
-
         $grand_row=array();
         $grand_row['name']='Total';
+
         foreach($months as $month)
         {
             $grand_row['quantity_'.$month]=0;
+            $grand_row['net_sales_'.$month]=0;
         }
-        $grand_row['total']=0;
-
+        $grand_row['total_kg']=0;
+        $grand_row['total_net_sales']=0;
 
         foreach($locations as $location)
         {
             $item=array();
             $item['name']=$location['text'];
-            $item['total']=0;
+            $item['total_kg']=0;
+            $item['total_net_sales']=0;
             foreach($months as $month)
             {
                 $item['quantity_'.$month]=0;
-                if(isset($sales_total[$location['value']][$month]['quantity']))
+                $item['net_sales_'.$month]=0;
+                if(isset($sales_total[$location['value']][$month]))
                 {
                     $item['quantity_'.$month]=$sales_total[$location['value']][$month]['quantity'];
+                    $item['net_sales_'.$month]=$sales_total[$location['value']][$month]['net_sales'];
                 }
-                $item['total']+=$item['quantity_'.$month];
+                $item['total_kg']+=$item['quantity_'.$month];
+                $item['total_net_sales']+=$item['net_sales_'.$month];
                 $grand_row['quantity_'.$month]+=$item['quantity_'.$month];
+                $grand_row['net_sales_'.$month]+=$item['net_sales_'.$month];
             }
-            $grand_row['total']+=$item['total'];
-            $items[]=$this->get_report_row_location($item,$months);
+            $grand_row['total_kg']+=$item['total_kg'];
+            $grand_row['total_net_sales']+=$item['total_net_sales'];
+            $items[]=$this->get_report_row_location($item,$months,$report_type);
         }
-        $items[]=$this->get_report_row_location($grand_row,$months);
-        $this->jsonReturn($items);
-
-
+        $items[]=$this->get_report_row_location($grand_row,$months,$report_type);
         $this->jsonReturn($items);
     }
-    private function get_report_row_location($item,$months)
+    private function get_report_row_location($item,$months,$report_type)
     {
         $info=array();
         $info['name']=$item['name'];
         foreach($months as $month)
         {
-            if($item['quantity_'.$month]!=0)
+            if($report_type=='weight')
             {
-                $info['quantity_'.$month]=number_format($item['quantity_'.$month]/1000,3,'.','');
+                if($item['quantity_'.$month]!=0)
+                {
+                    $info['quantity_'.$month]=number_format($item['quantity_'.$month]/1000,3,'.','');
+                }
+                else
+                {
+                    $info['quantity_'.$month]='';
+                }
             }
             else
             {
-                $info['quantity_'.$month]='';
+                if($item['net_sales_'.$month]!=0)
+                {
+                    $info['quantity_'.$month]=number_format($item['net_sales_'.$month],2);
+                }
+                else
+                {
+                    $info['quantity_'.$month]='';
+                }
             }
         }
-        if($item['total']!=0)
+        if($report_type=='weight')
         {
-            $info['total']=number_format($item['total']/1000,3,'.','');
+            if($item['total_kg']!=0)
+            {
+                $info['total']=number_format($item['total_kg']/1000,3,'.','');
+            }
+            else
+            {
+                $info['total']='';
+            }
         }
         else
         {
-            $info['total']='';
+            if($item['total_net_sales']!=0)
+            {
+                $info['total']=number_format($item['total_net_sales'],2);
+            }
+            else
+            {
+                $info['total']='';
+            }
         }
         return $info;
     }
@@ -629,6 +691,7 @@ class Analysis_sales_month extends Root_Controller
         $territory_id=$this->input->post('territory_id');
         $district_id=$this->input->post('district_id');
         $customer_id=$this->input->post('customer_id');
+        $report_type=$this->input->post('report_type');
 
         $months=array();
 
@@ -714,12 +777,12 @@ class Analysis_sales_month extends Root_Controller
                 if(isset($sales_total[$year_id][$m]))
                 {
                     $sales_total[$year_id][$m]['quantity']+=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                    //$sales_total[$result[$type]][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+                    $sales_total[$year_id][$m]['net_sales']+=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
                 }
                 else
                 {
                     $sales_total[$year_id][$m]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
-                    //$sales_total[$result[$type]][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
+                    $sales_total[$year_id][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
 
                 }
             }
@@ -730,32 +793,36 @@ class Analysis_sales_month extends Root_Controller
         foreach($months as $month)
         {
             $grand_row['quantity_'.$month]=0;
+            $grand_row['net_sales_'.$month]=0;
         }
-        $grand_row['total']=0;
-
+        $grand_row['total_kg']=0;
+        $grand_row['total_net_sales']=0;
 
         foreach($years as $year)
         {
             $item=array();
             $item['name']=$year['text'];
-            $item['total']=0;
+            $item['total_kg']=0;
+            $item['total_net_sales']=0;
             foreach($months as $month)
             {
                 $item['quantity_'.$month]=0;
-                if(isset($sales_total[$year['value']][$month]['quantity']))
+                $item['net_sales_'.$month]=0;
+                if(isset($sales_total[$year['value']][$month]))
                 {
                     $item['quantity_'.$month]=$sales_total[$year['value']][$month]['quantity'];
+                    $item['net_sales_'.$month]=$sales_total[$year['value']][$month]['net_sales'];
                 }
-                $item['total']+=$item['quantity_'.$month];
+                $item['total_kg']+=$item['quantity_'.$month];
+                $item['total_net_sales']+=$item['net_sales_'.$month];
                 $grand_row['quantity_'.$month]+=$item['quantity_'.$month];
+                $grand_row['net_sales_'.$month]+=$item['net_sales_'.$month];
             }
-            $grand_row['total']+=$item['total'];
-            $items[]=$this->get_report_row_location($item,$months);
+            $grand_row['total_kg']+=$item['total_kg'];
+            $grand_row['total_net_sales']+=$item['total_net_sales'];
+            $items[]=$this->get_report_row_location($item,$months,$report_type);
         }
-        $items[]=$this->get_report_row_location($grand_row,$months);
-        $this->jsonReturn($items);
-
-
+        $items[]=$this->get_report_row_location($grand_row,$months,$report_type);
         $this->jsonReturn($items);
     }
 

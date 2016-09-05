@@ -63,6 +63,17 @@
                     </div>
 
                 </div>
+                <div class="row show-grid">
+                    <div class="col-xs-6">
+                        <label class="control-label pull-right">Kg/Net Sales</label>
+                    </div>
+                    <div class="col-xs-6">
+                        <select name="report[report_type]" class="form-control">
+                            <option value="weight">Kg</option>
+                            <option value="net_sales">Net Sales</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="col-xs-6">
                 <div style="" class="row show-grid">
