@@ -335,7 +335,6 @@ class Reports_mgt_purchase_actual extends Root_Controller
                 $current_type_name=$result['type_name'];
                 $prev_crop_type_name=$result['type_name'];
             }
-            $index=0;
             $variety_total=array();
             $variety_total['crop_name']='';
             $variety_total['type_name']='';
@@ -352,6 +351,7 @@ class Reports_mgt_purchase_actual extends Root_Controller
             $variety_total['pi_values']=0;
             $variety_total['cogs']=0;
             $variety_total['total_cogs']=0;
+            $index=0;
             foreach($purchase_varieties[$result['variety_id']] as $variety_id=>$cons)
             {
                 $item=array();
@@ -371,6 +371,7 @@ class Reports_mgt_purchase_actual extends Root_Controller
                     $item['principal_name']='';
                     $item['variety_import_name']='';
                 }
+                $index++;
                 $item['months']=$cons['months'];
                 $item['quantity']=$cons['quantity'];
                 $variety_total['quantity']+=$cons['quantity'];
