@@ -37,6 +37,7 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="territory_name"><?php echo $CI->lang->line('LABEL_TERRITORY_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="district_name"><?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total">Total Sales</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_po">Total # Po</label>
 
             </div>
         </div>
@@ -68,7 +69,8 @@
                 { name: 'zone_name', type: 'string' },
                 { name: 'territory_name', type: 'string' },
                 { name: 'district_name', type: 'string' },
-                { name: 'total', type: 'string'}
+                { name: 'total', type: 'string'},
+                { name: 'total_po', type: 'string'}
             ],
             id: 'id',
             url: url,
@@ -139,7 +141,8 @@
                     { text: '<?php echo $CI->lang->line('LABEL_ZONE_NAME');?>', dataField: 'zone_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_TERRITORY_NAME');?>', dataField: 'territory_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?>', dataField: 'district_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Total Sales', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
+                    { text: 'Total Sales', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Total # Po', dataField: 'total_po',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
                 ]
 
             });

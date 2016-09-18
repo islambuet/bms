@@ -564,7 +564,7 @@ class Analysis_sales_order extends Root_Controller
         }
 
         //total sales
-        $sales_total=array();
+
         $this->db->from($this->config->item('ems_sales_po_details').' pod');
 
         $this->db->select('pod.*');
@@ -621,6 +621,8 @@ class Analysis_sales_order extends Root_Controller
             }
         }
         $results=$this->db->get()->result_array();
+        $sales_total=array();
+        $customer_po_ids=array();
         foreach($results as $result)
         {
             $m=date('n',$result['date_approved']);
@@ -636,6 +638,7 @@ class Analysis_sales_order extends Root_Controller
                     //$sales_total[$result[$type]][$m]['quantity']=$result['pack_size']*$result['quantity'];//minus sales return,discard bonus
                     $sales_total[$result['customer_id']][$m]['net_sales']=$result['variety_price_net']*$result['quantity'];//minus sales return,discard bonus
                 }
+                $customer_po_ids[$result['customer_id']][$result['sales_po_id']]=$result['sales_po_id'];
             }
 
         }
@@ -689,6 +692,11 @@ class Analysis_sales_order extends Root_Controller
                     $item['total']+=$sales_total[$result['customer_id']][$month]['net_sales'];
                 }
             }
+            $item['total_po']=0;
+            if(isset($customer_po_ids[$result['customer_id']]))
+            {
+                $item['total_po']=sizeof($customer_po_ids[$result['customer_id']]);
+            }
             $items[]=$this->get_report_row_customer($item);
         }
 
@@ -713,6 +721,14 @@ class Analysis_sales_order extends Root_Controller
         {
             $info['total']='';
             $info['sales']=0;
+        }
+        if($item['total_po']!=0)
+        {
+            $info['total_po']=$item['total_po'];
+        }
+        else
+        {
+            $info['total_po']='';
         }
         return $info;
     }
