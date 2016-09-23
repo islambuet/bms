@@ -292,6 +292,12 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
             }
 
         }
+        $indirect_cost_percentage=0;
+        $result=Query_helper::get_info($this->config->item('table_mgt_indirect_cost_setup'),'*',array('status !="'.$this->config->item('system_status_delete').'"','year0_id ='.$year0_id),1);
+        if($result)
+        {
+            $indirect_cost_percentage=$result['general']+$result['marketing']+$result['finance'];
+        }
         //actual cogs calculation finish
         //variety list
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
@@ -396,6 +402,9 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
             {
                 $item['cogs_actual']=0;
             }
+            $item['np_kg_budgeted']=$item['price_final']-$item['cogs_budgeted']-$item['cogs_budgeted']*$indirect_cost_percentage/100;
+            $item['np_kg_actual']=$item['price_final']-$item['cogs_actual']-$item['cogs_actual']*$indirect_cost_percentage/100;
+
             $items[]=$this->get_report_row($item);
         }
 
@@ -464,6 +473,58 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
         {
             $info['cogs_variance']='';
         }
+        if($item['np_kg_budgeted']!=0)
+        {
+            $info['np_kg_budgeted']=number_format($item['np_kg_budgeted'],2);
+            if($item['sales_kg']!=0)
+            {
+                $info['np_total_budgeted']=number_format($item['np_kg_budgeted']*$item['sales_kg'],2);
+            }
+            else
+            {
+                $info['np_total_budgeted']='';
+            }
+        }
+        else
+        {
+            $info['np_kg_budgeted']='';
+            $info['np_total_budgeted']='';
+        }
+        if($item['np_kg_actual']!=0)
+        {
+            $info['np_kg_actual']=number_format($item['np_kg_actual'],2);
+            if($item['sales_kg']!=0)
+            {
+                $info['np_total_actual']=number_format($item['np_kg_actual']*$item['sales_kg'],2);
+            }
+            else
+            {
+                $info['np_total_actual']='';
+            }
+        }
+        else
+        {
+            $info['np_kg_actual']='';
+            $info['np_total_actual']='';
+        }
+        if(($item['np_kg_budgeted']-$item['np_kg_actual'])!=0)
+        {
+            $info['np_kg_variance']=number_format(($item['np_kg_budgeted']-$item['np_kg_actual']),2);
+            if($item['sales_kg']!=0)
+            {
+                $info['np_total_variance']=number_format(($item['np_kg_budgeted']-$item['np_kg_actual'])*$item['sales_kg'],2);
+            }
+            else
+            {
+                $info['np_total_variance']='';
+            }
+        }
+        else
+        {
+            $info['np_kg_variance']='';
+            $info['np_total_variance']='';
+        }
+        
         return $info;
     }
 
