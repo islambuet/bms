@@ -324,6 +324,25 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
         $this->db->order_by('type.ordering','ASC');
         $this->db->order_by('v.ordering','ASC');
         $results=$this->db->get()->result_array();
+        $grand_row=array();
+        $crop_row=array();
+        $type_row=array();
+        $grand_row['crop_name']='Grand Total';
+        $crop_row['crop_name']=$type_row['crop_name']='';
+        $crop_row['type_name']='Total Crop';
+        $grand_row['type_name']=$type_row['type_name']='';
+        $type_row['variety_name']='Total Type';
+        $grand_row['variety_name']=$crop_row['variety_name']='';
+        $grand_row['price_final']=$crop_row['price_final']=$type_row['price_final']=0;
+        $grand_row['target_kg']=$crop_row['target_kg']=$type_row['target_kg']=0;
+        $grand_row['sales_kg']=$crop_row['sales_kg']=$type_row['sales_kg']=0;
+        $grand_row['cogs_budgeted']=$crop_row['cogs_budgeted']=$type_row['cogs_budgeted']=0;
+        $grand_row['cogs_actual']=$crop_row['cogs_actual']=$type_row['cogs_actual']=0;
+        $grand_row['np_kg_budgeted']=$crop_row['np_kg_budgeted']=$type_row['np_kg_budgeted']=0;
+        $grand_row['np_kg_actual']=$crop_row['np_kg_actual']=$type_row['np_kg_actual']=0;
+        $grand_row['np_total_budgeted']=$crop_row['np_total_budgeted']=$type_row['np_total_budgeted']=0;
+        $grand_row['np_total_actual']=$crop_row['np_total_actual']=$type_row['np_total_actual']=0;
+
         $prev_crop_name='';
         $prev_crop_type_name='';
         foreach($results as $index=>$result)
@@ -333,6 +352,21 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
             {
                 if($prev_crop_name!=$result['crop_name'])
                 {
+                    $items[]=$this->get_report_row($crop_row);
+                    $type_row['target_kg']=0;
+                    $type_row['sales_kg']=0;
+                    $type_row['np_kg_budgeted']=0;
+                    $type_row['np_kg_actual']=0;
+                    $type_row['np_total_budgeted']=0;
+                    $type_row['np_total_actual']=0;
+
+                    $crop_row['target_kg']=0;
+                    $crop_row['sales_kg']=0;
+                    $crop_row['np_kg_budgeted']=0;
+                    $crop_row['np_kg_actual']=0;
+                    $crop_row['np_total_budgeted']=0;
+                    $crop_row['np_total_actual']=0;
+
                     $item['crop_name']=$result['crop_name'];
                     $prev_crop_name=$result['crop_name'];
 
@@ -341,6 +375,14 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
                 }
                 elseif($prev_crop_type_name!=$result['type_name'])
                 {
+                    $items[]=$this->get_report_row($type_row);
+                    $type_row['target_kg']=0;
+                    $type_row['sales_kg']=0;
+                    $type_row['np_kg_budgeted']=0;
+                    $type_row['np_kg_actual']=0;
+                    $type_row['np_total_budgeted']=0;
+                    $type_row['np_total_actual']=0;
+
                     $item['crop_name']='';
                     $item['type_name']=$result['type_name'];
                     $prev_crop_type_name=$result['type_name'];
@@ -376,6 +418,9 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
             if(isset($incharge_budget_target[$result['variety_id']]))
             {
                 $item['target_kg']=$incharge_budget_target[$result['variety_id']]['year0_target_quantity'];
+                $type_row['target_kg']+=$item['target_kg'];
+                $crop_row['target_kg']+=$item['target_kg'];
+                $grand_row['target_kg']+=$item['target_kg'];
             }
             else
             {
@@ -385,6 +430,9 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
             if((isset($sales_total[$result['variety_id']]))&&($sales_total[$result['variety_id']]['quantity']!=null))
             {
                 $item['sales_kg']=$sales_total[$result['variety_id']]['quantity']/1000;
+                $type_row['sales_kg']+=$item['sales_kg'];
+                $crop_row['sales_kg']+=$item['sales_kg'];
+                $grand_row['sales_kg']+=$item['sales_kg'];
             }
             if(isset($cogs_budgeted[$result['variety_id']]))
             {
@@ -403,10 +451,28 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
                 $item['cogs_actual']=0;
             }
             $item['np_kg_budgeted']=$item['price_final']-$item['cogs_budgeted']-$item['cogs_budgeted']*$indirect_cost_percentage/100;
+            $type_row['np_kg_budgeted']+=$item['np_kg_budgeted'];
+            $crop_row['np_kg_budgeted']+=$item['np_kg_budgeted'];
+            $grand_row['np_kg_budgeted']+=$item['np_kg_budgeted'];
+            $item['np_total_budgeted']=$item['np_kg_budgeted']*$item['target_kg'];
+            $type_row['np_total_budgeted']+=$item['np_total_budgeted'];
+            $crop_row['np_total_budgeted']+=$item['np_total_budgeted'];
+            $grand_row['np_total_budgeted']+=$item['np_total_budgeted'];
+
             $item['np_kg_actual']=$item['price_final']-$item['cogs_actual']-$item['cogs_actual']*$indirect_cost_percentage/100;
+            $type_row['np_kg_actual']+=$item['np_kg_actual'];
+            $crop_row['np_kg_actual']+=$item['np_kg_actual'];
+            $grand_row['np_kg_actual']+=$item['np_kg_actual'];
+            $item['np_total_actual']=$item['np_kg_actual']*$item['sales_kg'];
+            $type_row['np_total_actual']+=$item['np_total_actual'];
+            $crop_row['np_total_actual']+=$item['np_total_actual'];
+            $grand_row['np_total_actual']+=$item['np_total_actual'];
 
             $items[]=$this->get_report_row($item);
         }
+        $items[]=$this->get_report_row($type_row);
+        $items[]=$this->get_report_row($crop_row);
+        $items[]=$this->get_report_row($grand_row);
 
 
         $this->jsonReturn($items);
@@ -476,52 +542,53 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
         if($item['np_kg_budgeted']!=0)
         {
             $info['np_kg_budgeted']=number_format($item['np_kg_budgeted'],2);
-            if($item['sales_kg']!=0)
-            {
-                $info['np_total_budgeted']=number_format($item['np_kg_budgeted']*$item['sales_kg'],2);
-            }
-            else
-            {
-                $info['np_total_budgeted']='';
-            }
         }
         else
         {
             $info['np_kg_budgeted']='';
-            $info['np_total_budgeted']='';
         }
         if($item['np_kg_actual']!=0)
         {
             $info['np_kg_actual']=number_format($item['np_kg_actual'],2);
-            if($item['sales_kg']!=0)
-            {
-                $info['np_total_actual']=number_format($item['np_kg_actual']*$item['sales_kg'],2);
-            }
-            else
-            {
-                $info['np_total_actual']='';
-            }
         }
         else
         {
             $info['np_kg_actual']='';
-            $info['np_total_actual']='';
+
         }
         if(($item['np_kg_budgeted']-$item['np_kg_actual'])!=0)
         {
             $info['np_kg_variance']=number_format(($item['np_kg_budgeted']-$item['np_kg_actual']),2);
-            if($item['sales_kg']!=0)
-            {
-                $info['np_total_variance']=number_format(($item['np_kg_budgeted']-$item['np_kg_actual'])*$item['sales_kg'],2);
-            }
-            else
-            {
-                $info['np_total_variance']='';
-            }
         }
         else
         {
             $info['np_kg_variance']='';
+        }
+        if($item['np_total_budgeted']!=0)
+        {
+            $info['np_total_budgeted']=number_format($item['np_total_budgeted'],2);
+
+        }
+        else
+        {
+            $info['np_total_budgeted']='';
+        }
+
+        if($item['np_total_actual']!=0)
+        {
+            $info['np_total_actual']=number_format($item['np_total_actual'],2);
+
+        }
+        else
+        {
+            $info['np_total_actual']='';
+        }
+        if(($item['np_total_budgeted']-$item['np_total_actual'])!=0)
+        {
+            $info['np_total_variance']=number_format(($item['np_total_budgeted']-$item['np_total_actual']),2);
+        }
+        else
+        {
             $info['np_total_variance']='';
         }
         

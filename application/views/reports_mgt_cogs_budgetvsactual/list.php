@@ -99,11 +99,7 @@
             var element = $(defaultHtml);
             // console.log(defaultHtml);
 
-            if((column=='target_net')&&(record.target_net==""))
-            {
-                element.css({ 'background-color': '#FF0000','margin': '0px','width': '100%', 'height': '100%',padding:'5px','line-height':'25px'});
-            }
-            else if (record.variety_name=="Total Type")
+           if (record.variety_name=="Total Type")
             {
                 if(!((column=='crop_name')||(column=='type_name')))
                 {
@@ -163,7 +159,7 @@
                 enabletooltips: true,
                 showaggregates: true,
                 showstatusbar: true,
-                rowsheight: 25,
+                rowsheight: 35,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_NAME'); ?>', dataField: 'crop_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_CROP_TYPE'); ?>', dataField: 'type_name',width: '80',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
