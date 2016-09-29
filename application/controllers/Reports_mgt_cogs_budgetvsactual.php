@@ -265,7 +265,7 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
             {
                 $total_weight+=$result['quantity']*$result['price'];
             }
-            foreach($varieties as $variety_id=>$result)
+            foreach($varieties as $v_id=>$result)
             {
                 $total=0;
                 $total+=$result['price']*$result['quantity']*$consignments[$con_id]['rate'];
@@ -274,20 +274,20 @@ class Reports_mgt_cogs_budgetvsactual extends Root_Controller
                     $total+=($consignments[$con_id]['direct_cost']*$result['quantity']*$result['price']/$total_weight);
 
                 }
-                if(isset($packing_costs[$variety_id]))
+                if(isset($packing_costs[$v_id]))
                 {
-                    $total+=($result['quantity']*$packing_costs[$variety_id]);
+                    $total+=($result['quantity']*$packing_costs[$v_id]);
 
                 }
-                if(isset($cogs_actual[$variety_id]))
+                if(isset($cogs_actual[$v_id]))
                 {
-                    $cogs_actual[$variety_id]['total_cogs']+=$total;
-                    $cogs_actual[$variety_id]['quantity']+=$result['quantity'];
+                    $cogs_actual[$v_id]['total_cogs']+=$total;
+                    $cogs_actual[$v_id]['quantity']+=$result['quantity'];
                 }
                 else
                 {
-                    $cogs_actual[$variety_id]['total_cogs']=$total;
-                    $cogs_actual[$variety_id]['quantity']=$result['quantity'];
+                    $cogs_actual[$v_id]['total_cogs']=$total;
+                    $cogs_actual[$v_id]['quantity']=$result['quantity'];
                 }
             }
 
