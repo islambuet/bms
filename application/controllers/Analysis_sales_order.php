@@ -642,6 +642,8 @@ class Analysis_sales_order extends Root_Controller
             }
 
         }
+        $arm_banks=Query_helper::get_info($this->config->item('ems_basic_setup_arm_bank'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'));
+
         $this->db->from($this->config->item('ems_csetup_customers').' cus');
         $this->db->select('cus.id customer_id,cus.name customer_name,cus.customer_code customer_code');
         $this->db->select('division.name division_name');
@@ -675,29 +677,428 @@ class Analysis_sales_order extends Root_Controller
             }
         }
         $results=$this->db->get()->result_array();
-        foreach($results as $result)
+        $area_initial=array();
+        //setting 0
+        foreach($results as $area)
         {
-            $item=array();
-            $item['name']=$result['customer_name'];
-            $item['customer_code']=$result['customer_code'];
-            $item['division_name']=$result['division_name'];
-            $item['zone_name']=$result['zone_name'];
-            $item['territory_name']=$result['territory_name'];
-            $item['district_name']=$result['district_name'];
-            $item['total']=0;
+            $area_initial[$area['customer_id']]['name']=$area['customer_name'];
+            $area_initial[$area['customer_id']]['customer_code']=$area['customer_code'];
+            $area_initial[$area['customer_id']]['division_name']=$area['division_name'];
+            $area_initial[$area['customer_id']]['zone_name']=$area['zone_name'];
+            $area_initial[$area['customer_id']]['territory_name']=$area['territory_name'];
+            $area_initial[$area['customer_id']]['district_name']=$area['district_name'];
+
+            $area_initial[$area['customer_id']]['opening_balance_tp']=0;
+            $area_initial[$area['customer_id']]['opening_balance_net']=0;
+            $area_initial[$area['customer_id']]['sales_tp']=0;
+            $area_initial[$area['customer_id']]['sales_net']=0;
+            foreach($arm_banks as $arm_bank)
+            {
+                $area_initial[$area['customer_id']]['payment_'.$arm_bank['value']]=0;
+            }
+
+            $area_initial[$area['customer_id']]['total_payment']=0;
+            $area_initial[$area['customer_id']]['adjust_tp']=0;
+            $area_initial[$area['customer_id']]['adjust_net']=0;
+
+            //from previous calculation
+            $area_initial[$area['customer_id']]['total']=0;
             foreach($months as $month)
             {
-                if(isset($sales_total[$result['customer_id']][$month]['net_sales']))
+                if(isset($sales_total[$area['customer_id']][$month]['net_sales']))
                 {
-                    $item['total']+=$sales_total[$result['customer_id']][$month]['net_sales'];
+                    $area_initial[$area['customer_id']]['total']+=$sales_total[$area['customer_id']][$month]['net_sales'];
                 }
             }
-            $item['total_po']=0;
-            if(isset($customer_po_ids[$result['customer_id']]))
+            $area_initial[$area['customer_id']]['total_po']=0;
+            if(isset($customer_po_ids[$area['customer_id']]))
             {
-                $item['total_po']=sizeof($customer_po_ids[$result['customer_id']]);
+                $area_initial[$area['customer_id']]['total_po']=sizeof($customer_po_ids[$area['customer_id']]);
             }
-            $items[]=$this->get_report_row_customer($item);
+        }
+        //party balance report copy from ems
+        $location_type='customer_id';
+        if($year_info['date_start']>0)
+        {
+            $this->db->from($this->config->item('ems_csetup_balance_adjust').' ba');
+            $this->db->select('SUM(ba.amount_tp) amount_tp');
+            $this->db->select('SUM(ba.amount_net) amount_net');
+            $this->db->select('ba.customer_id customer_id');
+            $this->db->select('ba.date_adjust date_adjust');
+            $this->db->select('d.id district_id');
+            $this->db->select('t.id territory_id');
+            $this->db->select('zone.id zone_id');
+            $this->db->select('zone.division_id division_id');
+            $this->db->where('ba.status',$this->config->item('system_status_active'));
+            $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = ba.customer_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+            if($division_id>0)
+            {
+                $this->db->where('zone.division_id',$division_id);
+                if($zone_id>0)
+                {
+                    $this->db->where('zone.id',$zone_id);
+                    if($territory_id>0)
+                    {
+                        $this->db->where('t.id',$territory_id);
+                        if($district_id>0)
+                        {
+                            $this->db->where('d.id',$district_id);
+                        }
+                    }
+                }
+            }
+            $this->db->where('ba.date_adjust <',$year_info['date_start']);
+            $group_array[]=$location_type;
+            $this->db->group_by($group_array);
+            $results=$this->db->get()->result_array();
+            if($results)
+            {
+                foreach($results as $result)
+                {
+
+                    $area_initial[$result[$location_type]]['opening_balance_tp']-=$result['amount_tp'];
+                    $area_initial[$result[$location_type]]['opening_balance_net']-=$result['amount_net'];
+                }
+            }
+        }
+        //other adjustment
+        $this->db->from($this->config->item('ems_csetup_balance_adjust').' ba');
+        $this->db->select('SUM(ba.amount_tp) amount_tp');
+        $this->db->select('SUM(ba.amount_net) amount_net');
+        $this->db->select('ba.customer_id customer_id');
+        $this->db->select('ba.date_adjust date_adjust');
+        $this->db->select('d.id district_id');
+        $this->db->select('t.id territory_id');
+        $this->db->select('zone.id zone_id');
+        $this->db->select('zone.division_id division_id');
+        $this->db->where('ba.status',$this->config->item('system_status_active'));
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = ba.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                    if($district_id>0)
+                    {
+                        $this->db->where('d.id',$district_id);
+                    }
+                }
+            }
+        }
+        $this->db->where('ba.date_adjust >=',$year_info['date_start']);
+        $this->db->where('ba.date_adjust <=',$year_info['date_end']);
+        $group_array[]=$location_type;
+        $this->db->group_by($group_array);
+        $results=$this->db->get()->result_array();
+        if($results)
+        {
+            foreach($results as $result)
+            {
+
+                $area_initial[$result[$location_type]]['adjust_tp']+=$result['amount_tp'];
+                $area_initial[$result[$location_type]]['adjust_net']+=$result['amount_net'];
+            }
+        }
+
+        //sales in opening balance
+        if($year_info['date_start']>0)
+        {
+            $this->db->from($this->config->item('ems_sales_po_details').' pod');
+            $this->db->select('SUM(quantity*variety_price) total_sales_tp');
+            $this->db->select('SUM(quantity*variety_price_net) total_sales_net');
+
+            $this->db->select('cus.id customer_id,cus.name customer_name');
+            $this->db->select('d.id district_id');
+            $this->db->select('t.id territory_id');
+            $this->db->select('zone.id zone_id');
+            $this->db->select('zone.division_id division_id');
+
+            $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
+            $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+            $this->db->where('pod.revision',1);
+            $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
+            if($division_id>0)
+            {
+                $this->db->where('zone.division_id',$division_id);
+                if($zone_id>0)
+                {
+                    $this->db->where('zone.id',$zone_id);
+                    if($territory_id>0)
+                    {
+                        $this->db->where('t.id',$territory_id);
+                        if($district_id>0)
+                        {
+                            $this->db->where('d.id',$district_id);
+                        }
+                    }
+                }
+            }
+
+            $this->db->where('po.date_approved <',$year_info['date_start']);
+
+            $group_array[]=$location_type;
+            $this->db->group_by($group_array);
+            $results=$this->db->get()->result_array();
+            foreach($results as $result)
+            {
+                $area_initial[$result[$location_type]]['opening_balance_tp']+=$result['total_sales_tp'];
+                $area_initial[$result[$location_type]]['opening_balance_net']+=$result['total_sales_net'];
+            }
+        }
+        //sales in sales
+        $this->db->from($this->config->item('ems_sales_po_details').' pod');
+        $this->db->select('SUM(quantity*variety_price) total_sales_tp');
+        $this->db->select('SUM(quantity*variety_price_net) total_sales_net');
+
+        $this->db->select('cus.id customer_id,cus.name customer_name');
+        $this->db->select('d.id district_id');
+        $this->db->select('t.id territory_id');
+        $this->db->select('zone.id zone_id');
+        $this->db->select('zone.division_id division_id');
+
+        $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+        $this->db->where('pod.revision',1);
+        $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                    if($district_id>0)
+                    {
+                        $this->db->where('d.id',$district_id);
+                    }
+                }
+            }
+        }
+
+        $this->db->where('po.date_approved >=',$year_info['date_start']);
+        $this->db->where('po.date_approved <=',$year_info['date_end']);
+
+        $group_array[]=$location_type;
+        $this->db->group_by($group_array);
+        $results=$this->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $area_initial[$result[$location_type]]['sales_tp']+=$result['total_sales_tp'];
+            $area_initial[$result[$location_type]]['sales_net']+=$result['total_sales_net'];
+        }
+
+        //payment opening balance
+        if($year_info['date_start']>0)
+        {
+            $this->db->from($this->config->item('ems_payment_payment').' p');
+            $this->db->select('p.amount,p.date_payment_receive,p.customer_id');
+            $this->db->select('d.id district_id');
+            $this->db->select('t.id territory_id');
+            $this->db->select('zone.id zone_id');
+            $this->db->select('zone.division_id division_id');
+            $this->db->where('p.status',$this->config->item('system_status_active'));
+            $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = p.customer_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+            if($division_id>0)
+            {
+                $this->db->where('zone.division_id',$division_id);
+                if($zone_id>0)
+                {
+                    $this->db->where('zone.id',$zone_id);
+                    if($territory_id>0)
+                    {
+                        $this->db->where('t.id',$territory_id);
+                        if($district_id>0)
+                        {
+                            $this->db->where('d.id',$district_id);
+                        }
+                    }
+                }
+            }
+            $this->db->where('p.date_payment_receive <',$year_info['date_start']);
+            $group_array[]=$location_type;
+            $this->db->group_by($group_array);
+            $results=$this->db->get()->result_array();
+            if($results)
+            {
+                foreach($results as $result)
+                {
+                    $area_initial[$result[$location_type]]['opening_balance_tp']-=$result['amount'];
+                    $area_initial[$result[$location_type]]['opening_balance_net']-=$result['amount'];
+                }
+            }
+
+        }
+        //payment
+        $this->db->from($this->config->item('ems_payment_payment').' p');
+        $this->db->select('p.amount,p.date_payment_receive,p.arm_bank_id,p.customer_id');
+        $this->db->select('d.id district_id');
+        $this->db->select('t.id territory_id');
+        $this->db->select('zone.id zone_id');
+        $this->db->select('zone.division_id division_id');
+        $this->db->where('p.status',$this->config->item('system_status_active'));
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = p.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                    if($district_id>0)
+                    {
+                        $this->db->where('d.id',$district_id);
+                    }
+                }
+            }
+        }
+
+        $this->db->where('p.date_payment_receive >=',$year_info['date_start']);
+        $this->db->where('p.date_payment_receive <=',$year_info['date_end']);
+
+        $results=$this->db->get()->result_array();
+        if($results)
+        {
+            foreach($results as $result)
+            {
+                $area_initial[$result[$location_type]]['payment_'.$result['arm_bank_id']]+=$result['amount'];
+            }
+        }
+        //sales return in opening balance
+        if($year_info['date_start']>0)
+        {
+
+            $this->db->from($this->config->item('ems_sales_po_details').' pod');
+            $this->db->select('SUM(quantity_return*variety_price) total_sales_tp');
+            $this->db->select('SUM(quantity_return*variety_price_net) total_sales_net');
+
+            $this->db->select('cus.id customer_id,cus.name customer_name');
+            $this->db->select('d.id district_id');
+            $this->db->select('t.id territory_id');
+            $this->db->select('zone.id zone_id');
+            $this->db->select('zone.division_id division_id');
+
+            $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
+            $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+            $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+            $this->db->where('pod.revision',1);
+            $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
+            if($division_id>0)
+            {
+                $this->db->where('zone.division_id',$division_id);
+                if($zone_id>0)
+                {
+                    $this->db->where('zone.id',$zone_id);
+                    if($territory_id>0)
+                    {
+                        $this->db->where('t.id',$territory_id);
+                        if($district_id>0)
+                        {
+                            $this->db->where('d.id',$district_id);
+                        }
+                    }
+                }
+            }
+            $this->db->where('pod.date_return >',0);
+            $this->db->where('pod.date_return <',$year_info['date_start']);
+            $group_array[]=$location_type;
+            $this->db->group_by($group_array);
+            $results=$this->db->get()->result_array();
+            foreach($results as $result)
+            {
+                $area_initial[$result[$location_type]]['opening_balance_tp']-=$result['total_sales_tp'];
+                $area_initial[$result[$location_type]]['opening_balance_net']-=$result['total_sales_net'];
+
+            }
+        }
+        //sales return in sales
+        $this->db->from($this->config->item('ems_sales_po_details').' pod');
+        $this->db->select('SUM(quantity_return*variety_price) total_sales_tp');
+        $this->db->select('SUM(quantity_return*variety_price_net) total_sales_net');
+
+        $this->db->select('cus.id customer_id,cus.name customer_name');
+        $this->db->select('d.id district_id');
+        $this->db->select('t.id territory_id');
+        $this->db->select('zone.id zone_id');
+        $this->db->select('zone.division_id division_id');
+
+        $this->db->join($this->config->item('ems_sales_po').' po','po.id = pod.sales_po_id','INNER');
+        $this->db->join($this->config->item('ems_csetup_customers').' cus','cus.id = po.customer_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_districts').' d','d.id = cus.district_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_territories').' t','t.id = d.territory_id','INNER');
+        $this->db->join($this->config->item('ems_setup_location_zones').' zone','zone.id = t.zone_id','INNER');
+        $this->db->where('pod.revision',1);
+        $this->db->where('po.status_approved',$this->config->item('system_status_po_approval_approved'));
+        if($division_id>0)
+        {
+            $this->db->where('zone.division_id',$division_id);
+            if($zone_id>0)
+            {
+                $this->db->where('zone.id',$zone_id);
+                if($territory_id>0)
+                {
+                    $this->db->where('t.id',$territory_id);
+                    if($district_id>0)
+                    {
+                        $this->db->where('d.id',$district_id);
+                    }
+                }
+            }
+        }
+        $this->db->where('pod.date_return >',0);
+        $this->db->where('pod.date_return >=',$year_info['date_start']);
+        $this->db->where('pod.date_return <=',$year_info['date_end']);
+        $group_array[]=$location_type;
+        $this->db->group_by($group_array);
+        $results=$this->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $area_initial[$result[$location_type]]['sales_tp']-=$result['total_sales_tp'];
+            $area_initial[$result[$location_type]]['sales_net']-=$result['total_sales_net'];
+
+        }
+        foreach($area_initial as $area)
+        {
+            //bank sum
+            foreach($arm_banks as $arm_bank)
+            {
+                $area['total_payment']+=($area['payment_'.$arm_bank['value']]);
+
+            }
+            //opening balance+sales-total_payment-adjustment
+            $area['balance_tp']=$area['opening_balance_tp']+$area['sales_tp']-$area['total_payment']-$area['adjust_tp'];
+            $area['balance_net']=$area['opening_balance_net']+$area['sales_net']-$area['total_payment']-$area['adjust_net'];
+
+            //for printing purpose
+            $items[]=$this->get_report_row_customer($area);
+
         }
 
         usort($items, array( $this, 'sorting_compare' ));
@@ -729,6 +1130,63 @@ class Analysis_sales_order extends Root_Controller
         else
         {
             $info['total_po']='';
+        }
+        if($item['opening_balance_tp']!=0)
+        {
+            $info['opening_balance_tp']=number_format($item['opening_balance_tp'],2);
+        }
+        else
+        {
+            $info['opening_balance_tp']='';
+        }
+        if($item['opening_balance_net']!=0)
+        {
+            $info['opening_balance_net']=number_format($item['opening_balance_net'],2);
+        }
+        else
+        {
+            $info['opening_balance_net']='';
+        }
+        if($item['total_payment']!=0)
+        {
+            $info['total_payment']=number_format($item['total_payment'],2);
+        }
+        else
+        {
+            $info['total_payment']='';
+        }
+        if($item['balance_tp']!=0)
+        {
+            $info['balance_tp']=number_format($item['balance_tp'],2);
+        }
+        else
+        {
+            $info['balance_tp']='';
+        }
+        if($item['balance_net']!=0)
+        {
+            $info['balance_net']=number_format($item['balance_net'],2);
+        }
+        else
+        {
+            $info['balance_net']='';
+        }
+
+        if(($item['sales_tp'])!=0)
+        {
+            $info['payment_percentage_tp']=number_format(($item['total_payment']-$item['opening_balance_tp'])*100/($item['sales_tp']),2);
+        }
+        else
+        {
+            $info['payment_percentage_tp']='-';
+        }
+        if(($item['sales_net'])!=0)
+        {
+            $info['payment_percentage_net']=number_format(($item['total_payment']-$item['opening_balance_net'])*100/($item['sales_net']),2);
+        }
+        else
+        {
+            $info['payment_percentage_net']='-';
         }
         return $info;
     }

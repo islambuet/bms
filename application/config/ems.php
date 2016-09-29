@@ -44,6 +44,7 @@ $config['ems_basic_setup_principal'] = 'ems_basic_setup_principal';
 //customer setup
 $config['ems_csetup_customers'] = 'ems_csetup_customers';
 $config['ems_csetup_other_customers'] = 'ems_csetup_other_customers';
+$config['ems_csetup_balance_adjust'] = 'ems_balance_adjust';
 //stock in
 $config['ems_stockin_varieties'] = 'ems_stockin_varieties';
 $config['ems_stockin_excess_inventory'] = 'ems_stockin_excess_inventory';

@@ -35,10 +35,16 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="division_name"><?php echo $CI->lang->line('LABEL_DIVISION_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="zone_name"><?php echo $CI->lang->line('LABEL_ZONE_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="territory_name"><?php echo $CI->lang->line('LABEL_TERRITORY_NAME');?></label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="district_name"><?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?></label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="district_name"><?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total">Total Sales</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_po">Total # PO</label>
-
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="opening_balance_tp">Opening Balance TP</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="opening_balance_net">Opening Balance Net</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="total_payment">Total Payment</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="balance_tp">Current Balance TP</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="balance_net">Current Balance NET</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="payment_percentage_tp">Payment % TP</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="payment_percentage_net">Payment % NET</label>
             </div>
         </div>
     <?php
@@ -70,7 +76,17 @@
                 { name: 'territory_name', type: 'string' },
                 { name: 'district_name', type: 'string' },
                 { name: 'total', type: 'string'},
-                { name: 'total_po', type: 'string'}
+                { name: 'total_po', type: 'string'},
+
+                { name: 'opening_balance_tp', type: 'string' },
+                { name: 'opening_balance_net', type: 'string' },
+
+                { name: 'total_payment', type: 'string' },
+
+                { name: 'balance_tp', type: 'string' },
+                { name: 'balance_net', type: 'string' },
+                { name: 'payment_percentage_tp', type: 'string' },
+                { name: 'payment_percentage_net', type: 'string' }
             ],
             id: 'id',
             url: url,
@@ -140,10 +156,23 @@
                     { text: '<?php echo $CI->lang->line('LABEL_DIVISION_NAME');?>', dataField: 'division_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_ZONE_NAME');?>', dataField: 'zone_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_TERRITORY_NAME');?>', dataField: 'territory_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: '<?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?>', dataField: 'district_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
+                    { text: '<?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?>',hidden:true, dataField: 'district_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: 'Total Sales', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { text: 'Total # PO', dataField: 'total_po',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
-                ]
+                    { text: 'Total # PO', dataField: 'total_po',width: '60',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'opening_balance',text: 'TP',hidden:true,dataField: 'opening_balance_tp',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsAlign:'right'},
+                    { columngroup: 'opening_balance',text: 'NET',hidden:true,dataField: 'opening_balance_net',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsAlign:'right'},
+                    { text: 'Total Payment',hidden:true, dataField: 'total_payment',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsalign: 'right',width:'150'},
+                    { columngroup: 'balance',text: 'TP', dataField: 'balance_tp',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsalign: 'right',width:'150'},
+                    { columngroup: 'balance',text: 'NET', dataField: 'balance_net',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsalign: 'right',width:'150'},
+                    { columngroup: 'payment_percentage',text: 'TP', dataField: 'payment_percentage_tp',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsalign: 'right',width:'80'},
+                    { columngroup: 'payment_percentage',text: 'NET', dataField: 'payment_percentage_net',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsalign: 'right',width:'80'}
+                ],
+                columngroups:
+                    [
+                        { text: 'Opening Balance', align: 'center', name: 'opening_balance' },
+                        { text: 'Current Balance', align: 'center', name: 'balance' },
+                        { text: 'Payment %', align: 'center', name: 'payment_percentage' }
+                    ]
 
             });
     });
