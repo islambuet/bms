@@ -195,30 +195,30 @@
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
 
                     { columngroup: 'quantity',text: 'Budgeted', dataField: 'kg_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'quantity',text: 'Actual', dataField: 'kg_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'quantity',text: 'Variance', dataField: 'kg_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'quantity',text: 'Actual', dataField: 'kg_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'quantity',text: 'Variance', dataField: 'kg_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
                     { columngroup: 'pi',text: 'Budgeted', dataField: 'pi_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'pi',text: 'Actual', dataField: 'pi_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'pi',text: 'Variance', dataField: 'pi_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'pi',text: 'Actual', dataField: 'pi_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'pi',text: 'Variance', dataField: 'pi_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
                     <?php
                         foreach($direct_costs as $cost)
                         {?>{ columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Budgeted', dataField: '<?php echo 'dc_'.$cost['value'].'_budgeted'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Actual', dataField: '<?php echo 'dc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Variance', dataField: '<?php echo 'dc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Actual', dataField: '<?php echo 'dc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Variance', dataField: '<?php echo 'dc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
                             <?php
                         }
                     ?>
                     <?php
                         foreach($packing_costs as $cost)
                         {?>{ columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Budgeted', dataField: '<?php echo 'pc_'.$cost['value'].'_budgeted'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Actual', dataField: '<?php echo 'pc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Variance', dataField: '<?php echo 'pc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Actual', dataField: '<?php echo 'pc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Variance', dataField: '<?php echo 'pc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
                             <?php
                         }
                     ?>
-                    { columngroup: 'cogs',text: 'Budgeted', dataField: 'cogs_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'cogs',text: 'Actual', dataField: 'cogs_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'cogs',text: 'Variance', dataField: 'cogs_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
+                    { columngroup: 'cogs',text: 'Budgeted', dataField: 'cogs_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'cogs',text: 'Actual', dataField: 'cogs_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'cogs',text: 'Variance', dataField: 'cogs_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'}
 
                 ],
                 columngroups:
