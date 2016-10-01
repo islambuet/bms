@@ -187,7 +187,7 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         $results=$this->db->get()->result_array();
         foreach($results as $result)
         {
-            $consignments[$result['consignment_id']]['direct_cost'][$result['item_id']]=$result['cost'];
+            $consignments[$result['consignment_id']]['direct_costs'][$result['item_id']]=$result['cost'];
         }
         //consignment varieties
         $this->db->from($this->config->item('table_mgt_purchase_consignment_varieties').' cv');
@@ -214,44 +214,37 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
             }
             foreach($varieties as $v_id=>$result)
             {
-                $info=array();
                 if(isset($purchase_actual[$v_id]))
                 {
-                    //$cogs_actual[$v_id]['total_cogs']+=$total;
                     $purchase_actual[$v_id]['kg_actual']+=$result['quantity'];
                     $purchase_actual[$v_id]['pi_values']+=($result['quantity']*$consignments[$con_id]['rate']*$result['price']);
+                    foreach($direct_costs_items as $dc)
+                    {
+                        if(($total_weight>0)&& isset($consignments[$con_id]['direct_costs'][$dc['value']]))
+                        {
+                            $purchase_actual[$v_id]['direct_costs'][$dc['value']]+=($consignments[$con_id]['direct_costs'][$dc['value']]*$result['quantity']*$result['price']/$total_weight);
+                        }
+                    }
+
                 }
                 else
                 {
-                    //$cogs_actual[$v_id]['total_cogs']=$total;
                     $purchase_actual[$v_id]['kg_actual']=$result['quantity'];
                     $purchase_actual[$v_id]['pi_values']=$result['quantity']*$consignments[$con_id]['rate']*$result['price'];
-                }
+                    foreach($direct_costs_items as $dc)
+                    {
+                        if(($total_weight>0)&& isset($consignments[$con_id]['direct_costs'][$dc['value']]))
+                        {
+                            $purchase_actual[$v_id]['direct_costs'][$dc['value']]=($consignments[$con_id]['direct_costs'][$dc['value']]*$result['quantity']*$result['price']/$total_weight);
+                        }
+                        else
+                        {
+                            $purchase_actual[$v_id]['direct_costs'][$dc['value']]=0;
+                        }
 
-                /*$info['quantity']=$result['quantity'];
-                $info['currency_rate']=$consignments[$con_id]['rate'];
-                $info['unit_price']=$result['price'];
-                $info['pi_values']=$result['quantity']*$consignments[$con_id]['rate']*$result['price'];
-                $info['direct_cost']=0;
-                $info['packing_cost']=0;
 
-                $info['cogs']=0;
-                $info['total_cogs']=0;
-                $total=0;
-                $total+=$result['price']*$result['quantity']*$consignments[$con_id]['rate'];
-                if(($total_weight>0))
-                {
-                    $info['direct_cost']=($consignments[$con_id]['direct_cost']*$result['quantity']*$result['price']/$total_weight);
-                    $total+=$info['direct_cost'];
+                    }
                 }
-                if(isset($packing_costs[$variety_id]))
-                {
-                    $info['packing_cost']=$result['quantity']*$packing_costs[$variety_id];
-                    $total+=$info['packing_cost'];
-                }
-                $info['total_cogs']=$total;
-                $info['cogs']=$total/$result['quantity'];
-                $purchase_varieties[$variety_id][$con_id]=$info;*/
             }
 
         }
@@ -276,7 +269,7 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                 }
             }
         }
-
+        $this->db->where('v.whose','ARM');
         $this->db->order_by('crop.ordering','ASC');
         $this->db->order_by('type.ordering','ASC');
         $this->db->order_by('v.ordering','ASC');
@@ -294,15 +287,22 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         $grand_row['kg_actual']=$crop_row['kg_actual']=$type_row['kg_actual']=0;
         $grand_row['pi_budgeted']=$crop_row['pi_budgeted']=$type_row['pi_budgeted']=0;
         $grand_row['pi_actual']=$crop_row['pi_actual']=$type_row['pi_actual']=0;
+        $grand_row['dc_total_budgeted']=$crop_row['dc_total_budgeted']=$type_row['dc_total_budgeted']=0;
+        $grand_row['dc_total_actual']=$crop_row['dc_total_actual']=$type_row['dc_total_actual']=0;
         foreach($direct_costs_items as $dc)
         {
             $grand_row['dc_'.$dc['value'].'_budgeted']=$crop_row['dc_'.$dc['value'].'_budgeted']=$type_row['dc_'.$dc['value'].'_budgeted']=0;
+            $grand_row['dc_'.$dc['value'].'_actual']=$crop_row['dc_'.$dc['value'].'_actual']=$type_row['dc_'.$dc['value'].'_actual']=0;
         }
         foreach($packing_costs_items as $pc)
         {
             $grand_row['pc_'.$pc['value'].'_budgeted']=$crop_row['pc_'.$pc['value'].'_budgeted']=$type_row['pc_'.$pc['value'].'_budgeted']=0;
+            $grand_row['pc_'.$pc['value'].'_actual']=$crop_row['pc_'.$pc['value'].'_actual']=$type_row['pc_'.$pc['value'].'_actual']=0;
         }
         $grand_row['cogs_budgeted']=$crop_row['cogs_budgeted']=$type_row['cogs_budgeted']=0;
+        $grand_row['cogs_actual']=$crop_row['cogs_actual']=$type_row['cogs_actual']=0;
+        $grand_row['cogs_total_budgeted']=$crop_row['cogs_total_budgeted']=$type_row['cogs_total_budgeted']=0;
+        $grand_row['cogs_total_actual']=$crop_row['cogs_total_actual']=$type_row['cogs_total_actual']=0;
 
         $prev_crop_name='';
         $prev_crop_type_name='';
@@ -318,6 +318,8 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                     $type_row['kg_actual']=0;
                     $type_row['pi_budgeted']=0;
                     $type_row['pi_actual']=0;
+                    $type_row['dc_total_budgeted']=0;
+                    $type_row['dc_total_actual']=0;
 
 
 
@@ -325,18 +327,26 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                     $crop_row['kg_actual']=0;
                     $crop_row['pi_budgeted']=0;
                     $crop_row['pi_actual']=0;
+                    $crop_row['dc_total_budgeted']=0;
+                    $crop_row['dc_total_actual']=0;
                     foreach($direct_costs_items as $dc)
                     {
                         $type_row['dc_'.$dc['value'].'_budgeted']=0;
+                        $type_row['dc_'.$dc['value'].'_actual']=0;
                         $crop_row['dc_'.$dc['value'].'_budgeted']=0;
+                        $crop_row['dc_'.$dc['value'].'_actual']=0;
                     }
                     foreach($packing_costs_items as $pc)
                     {
                         $type_row['pc_'.$pc['value'].'_budgeted']=0;
+                        $type_row['pc_'.$pc['value'].'_actual']=0;
                         $crop_row['pc_'.$pc['value'].'_budgeted']=0;
+                        $crop_row['pc_'.$pc['value'].'_actual']=0;
                     }
-                    $type_row['cogs_budgeted']=0;
-                    $crop_row['cogs_budgeted']=0;
+                    $type_row['cogs_total_budgeted']=0;
+                    $type_row['cogs_total_actual']=0;
+                    $crop_row['cogs_total_budgeted']=0;
+                    $crop_row['cogs_total_actual']=0;
 
                     $item['crop_name']=$result['crop_name'];
                     $prev_crop_name=$result['crop_name'];
@@ -351,15 +361,20 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                     $type_row['kg_actual']=0;
                     $type_row['pi_budgeted']=0;
                     $type_row['pi_actual']=0;
+                    $type_row['dc_total_budgeted']=0;
+                    $type_row['dc_total_actual']=0;
                     foreach($direct_costs_items as $dc)
                     {
                         $type_row['dc_'.$dc['value'].'_budgeted']=0;
+                        $type_row['dc_'.$dc['value'].'_actual']=0;
                     }
                     foreach($packing_costs_items as $pc)
                     {
                         $type_row['pc_'.$pc['value'].'_budgeted']=0;
+                        $type_row['pc_'.$pc['value'].'_actual']=0;
                     }
-                    $type_row['cogs_budgeted']=0;
+                    $type_row['cogs_total_budgeted']=0;
+                    $type_row['cogs_total_actual']=0;
 
                     $item['crop_name']='';
                     $item['type_name']=$result['type_name'];
@@ -399,11 +414,14 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                 $item['cogs_budgeted']=0;
             }
             $cogs_dc_budgeted=0;
+            $item['dc_total_budgeted']=0;
             foreach($direct_costs_items as $dc)
             {
+
                 if(isset($direct_costs_percentage_budgeted[$dc['value']]))
                 {
                     $item['dc_'.$dc['value'].'_budgeted']=($direct_costs_percentage_budgeted[$dc['value']])*$item['pi_budgeted']/100;
+                    $item['dc_total_budgeted']+=$item['dc_'.$dc['value'].'_budgeted'];
                     $type_row['dc_'.$dc['value'].'_budgeted']+=$item['dc_'.$dc['value'].'_budgeted'];
                     $crop_row['dc_'.$dc['value'].'_budgeted']+=$item['dc_'.$dc['value'].'_budgeted'];
                     $grand_row['dc_'.$dc['value'].'_budgeted']+=$item['dc_'.$dc['value'].'_budgeted'];
@@ -414,6 +432,10 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                     $item['dc_'.$dc['value'].'_budgeted']=0;
                 }
             }
+            $type_row['dc_total_budgeted']+=$item['dc_total_budgeted'];
+            $crop_row['dc_total_budgeted']+=$item['dc_total_budgeted'];
+            $grand_row['dc_total_budgeted']+=$item['dc_total_budgeted'];
+
             $item['cogs_budgeted']+=$cogs_dc_budgeted;
             $cogs_pc_budgeted=0;
             foreach($packing_costs_items as $pc)
@@ -432,6 +454,11 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                 }
             }
             $item['cogs_budgeted']+=$cogs_pc_budgeted;
+            $item['cogs_total_budgeted']=$item['cogs_budgeted']*$item['kg_budgeted'];
+            $type_row['cogs_total_budgeted']+=$item['cogs_total_budgeted'];
+            $crop_row['cogs_total_budgeted']+=$item['cogs_total_budgeted'];
+            $grand_row['cogs_total_budgeted']+=$item['cogs_total_budgeted'];
+
 
             if(isset($purchase_actual[$result['variety_id']]))
             {
@@ -445,13 +472,59 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                 $type_row['pi_actual']+=$item['pi_actual'];
                 $crop_row['pi_actual']+=$item['pi_actual'];
                 $grand_row['pi_actual']+=$item['pi_actual'];
-                //$item['cogs_budgeted']=$purchase_budgeted[$result['variety_id']]['unit_price']*$purchase_budgeted[$result['variety_id']]['currency_rate'];;
+                $item['dc_total_actual']=0;
+                foreach($direct_costs_items as $dc)
+                {
+                    $item['dc_'.$dc['value'].'_actual']=$purchase_actual[$result['variety_id']]['direct_costs'][$dc['value']];
+                    $type_row['dc_'.$dc['value'].'_actual']+=$item['dc_'.$dc['value'].'_actual'];
+                    $crop_row['dc_'.$dc['value'].'_actual']+=$item['dc_'.$dc['value'].'_actual'];
+                    $grand_row['dc_'.$dc['value'].'_actual']+=$item['dc_'.$dc['value'].'_actual'];
+
+                    $item['dc_total_actual']+=$item['dc_'.$dc['value'].'_actual'];
+                }
+                $type_row['dc_total_actual']+=$item['dc_total_actual'];
+                $crop_row['dc_total_actual']+=$item['dc_total_actual'];
+                $grand_row['dc_total_actual']+=$item['dc_total_actual'];
             }
             else
             {
                 $item['kg_actual']=0;
                 $item['pi_actual']=0;
-                //$item['cogs_budgeted']=0;
+                $item['dc_total_actual']=0;
+                foreach($direct_costs_items as $dc)
+                {
+                    $item['dc_'.$dc['value'].'_actual']=0;
+                }
+            }
+            //$item['pc_total_actual']=0;
+            $pc_total_actual=0;;
+            foreach($packing_costs_items as $pc)
+            {
+                if(isset($packing_costs[$result['variety_id']][$pc['value']]))
+                {
+                    $item['pc_'.$pc['value'].'_actual']=$item['kg_actual']*$packing_costs[$result['variety_id']][$pc['value']];
+                    $type_row['pc_'.$pc['value'].'_actual']+=$item['pc_'.$pc['value'].'_actual'];
+                    $crop_row['pc_'.$pc['value'].'_actual']+=$item['pc_'.$pc['value'].'_actual'];
+                    $grand_row['pc_'.$pc['value'].'_actual']+=$item['pc_'.$pc['value'].'_actual'];
+                    $pc_total_actual+=$item['pc_'.$pc['value'].'_actual'];
+
+                }
+                else
+                {
+                    $item['pc_'.$pc['value'].'_actual']=0;
+                }
+            }
+            $item['cogs_total_actual']=$item['pi_actual']+$item['dc_total_actual']+$pc_total_actual;
+            $type_row['cogs_total_actual']+=$item['cogs_total_actual'];
+            $crop_row['cogs_total_actual']+=$item['cogs_total_actual'];
+            $grand_row['cogs_total_actual']+=$item['cogs_total_actual'];
+            if($item['kg_actual']!=0)
+            {
+                $item['cogs_actual']=$item['cogs_total_actual']/$item['kg_actual'];
+            }
+            else
+            {
+                $item['cogs_actual']=0;
             }
 
             $items[]=$this->get_report_row($item,$direct_costs_items,$packing_costs_items);
@@ -517,6 +590,30 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         {
             $info['pi_variance']='';
         }
+        if($item['dc_total_budgeted']!=0)
+        {
+            $info['dc_total_budgeted']=number_format($item['dc_total_budgeted'],2);
+        }
+        else
+        {
+            $info['dc_total_budgeted']='';
+        }
+        if($item['dc_total_actual']!=0)
+        {
+            $info['dc_total_actual']=number_format($item['dc_total_actual'],2);
+        }
+        else
+        {
+            $info['dc_total_actual']='';
+        }
+        if(($item['dc_total_budgeted']-$item['dc_total_actual'])!=0)
+        {
+            $info['dc_total_variance']=number_format($item['dc_total_budgeted']-$item['dc_total_actual'],2);
+        }
+        else
+        {
+            $info['dc_total_variance']='';
+        }
         foreach($direct_costs_items as $dc)
         {
             if($item['dc_'.$dc['value'].'_budgeted']!=0)
@@ -526,6 +623,22 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
             else
             {
                 $info['dc_'.$dc['value'].'_budgeted']='';
+            }
+            if($item['dc_'.$dc['value'].'_actual']!=0)
+            {
+                $info['dc_'.$dc['value'].'_actual']=number_format($item['dc_'.$dc['value'].'_actual'],2);
+            }
+            else
+            {
+                $info['dc_'.$dc['value'].'_actual']='';
+            }
+            if(($item['dc_'.$dc['value'].'_budgeted']-$item['dc_'.$dc['value'].'_actual'])!=0)
+            {
+                $info['dc_'.$dc['value'].'_variance']=number_format($item['dc_'.$dc['value'].'_budgeted']-$item['dc_'.$dc['value'].'_actual'],2);
+            }
+            else
+            {
+                $info['dc_'.$dc['value'].'_variance']='';
             }
         }
         foreach($packing_costs_items as $pc)
@@ -538,6 +651,22 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
             {
                 $info['pc_'.$pc['value'].'_budgeted']='';
             }
+            if($item['pc_'.$pc['value'].'_actual']!=0)
+            {
+                $info['pc_'.$pc['value'].'_actual']=number_format($item['pc_'.$pc['value'].'_actual'],2);
+            }
+            else
+            {
+                $info['pc_'.$pc['value'].'_actual']='';
+            }
+            if(($item['pc_'.$pc['value'].'_budgeted']-$item['pc_'.$pc['value'].'_actual'])!=0)
+            {
+                $info['pc_'.$pc['value'].'_variance']=number_format($item['pc_'.$pc['value'].'_budgeted']-$item['pc_'.$pc['value'].'_actual'],2);
+            }
+            else
+            {
+                $info['pc_'.$pc['value'].'_variance']='';
+            }
         }
         if($item['cogs_budgeted']!=0)
         {
@@ -546,6 +675,46 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         else
         {
             $info['cogs_budgeted']='';
+        }
+        if($item['cogs_actual']!=0)
+        {
+            $info['cogs_actual']=number_format($item['cogs_actual'],2);
+        }
+        else
+        {
+            $info['cogs_actual']='';
+        }
+        if(($item['cogs_budgeted']-$item['cogs_actual'])!=0)
+        {
+            $info['cogs_variance']=number_format($item['cogs_budgeted']-$item['cogs_actual'],2);
+        }
+        else
+        {
+            $info['cogs_variance']='';
+        }
+        if($item['cogs_total_budgeted']!=0)
+        {
+            $info['cogs_total_budgeted']=number_format($item['cogs_total_budgeted'],2);
+        }
+        else
+        {
+            $info['cogs_total_budgeted']='';
+        }
+        if($item['cogs_total_actual']!=0)
+        {
+            $info['cogs_total_actual']=number_format($item['cogs_total_actual'],2);
+        }
+        else
+        {
+            $info['cogs_total_actual']='';
+        }
+        if(($item['cogs_total_budgeted']-$item['cogs_total_actual'])!=0)
+        {
+            $info['cogs_total_variance']=number_format($item['cogs_total_budgeted']-$item['cogs_total_actual'],2);
+        }
+        else
+        {
+            $info['cogs_total_variance']='';
         }
         return $info;
     }

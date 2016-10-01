@@ -41,6 +41,10 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="pi_actual">PI Values Actual</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="pi_variance">PI Values Variance</label>
 
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="dc_total_budgeted">Total Direct Cost Budgeted</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="dc_total_actual">Total Direct Cost Actual</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="dc_total_variance">Total Direct Cost Variance</label>
+
                 <?php
                 foreach($direct_costs as $cost)
                 {?>
@@ -62,6 +66,9 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs_budgeted">COGS Budgeted</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs_actual">COGS Actual</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs_variance">COGS Variance</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs_total_budgeted">Total COGS Budgeted</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs_total_actual">Total COGS Actual</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="cogs_total_variance">Total COGS Variance</label>
 
             </div>
         </div>
@@ -97,6 +104,9 @@
                 { name: 'pi_budgeted', type: 'string' },
                 { name: 'pi_actual', type: 'string' },
                 { name: 'pi_variance', type: 'string' },
+                { name: 'dc_total_budgeted', type: 'string' },
+                { name: 'dc_total_actual', type: 'string' },
+                { name: 'dc_total_variance', type: 'string' },
                 <?php
                     foreach($direct_costs as $cost)
                     {?>{ name: '<?php echo 'dc_'.$cost['value'].'_budgeted'; ?>', type: 'string' },
@@ -115,7 +125,10 @@
                 ?>
                 { name: 'cogs_budgeted', type: 'string' },
                 { name: 'cogs_actual', type: 'string' },
-                { name: 'cogs_variance', type: 'string' }
+                { name: 'cogs_variance', type: 'string' },
+                { name: 'cogs_total_budgeted', type: 'string' },
+                { name: 'cogs_total_actual', type: 'string' },
+                { name: 'cogs_total_variance', type: 'string' }
 
             ],
             id: 'id',
@@ -195,30 +208,36 @@
                     { text: '<?php echo $CI->lang->line('LABEL_VARIETY_NAME'); ?>', dataField: 'variety_name',width: '130',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
 
                     { columngroup: 'quantity',text: 'Budgeted', dataField: 'kg_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'quantity',text: 'Actual', dataField: 'kg_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { columngroup: 'quantity',text: 'Variance', dataField: 'kg_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'quantity',text: 'Actual', dataField: 'kg_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'quantity',text: 'Variance', dataField: 'kg_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { columngroup: 'pi',text: 'Budgeted', dataField: 'pi_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: 'pi',text: 'Actual', dataField: 'pi_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { columngroup: 'pi',text: 'Variance', dataField: 'pi_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'pi',text: 'Actual', dataField: 'pi_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'pi',text: 'Variance', dataField: 'pi_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'direct_costs_total',text: 'Budgeted', dataField: 'dc_total_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'direct_costs_total',text: 'Actual', dataField: 'dc_total_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'direct_costs_total',text: 'Variance', dataField: 'dc_total_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     <?php
                         foreach($direct_costs as $cost)
-                        {?>{ columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Budgeted', dataField: '<?php echo 'dc_'.$cost['value'].'_budgeted'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Actual', dataField: '<?php echo 'dc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Variance', dataField: '<?php echo 'dc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                        {?>{ columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Budgeted',hidden:true, dataField: '<?php echo 'dc_'.$cost['value'].'_budgeted'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Actual',hidden:true, dataField: '<?php echo 'dc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: '<?php echo 'direct_costs_'.$cost['value']; ?>',text: 'Variance',hidden:true, dataField: '<?php echo 'dc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                             <?php
                         }
                     ?>
                     <?php
                         foreach($packing_costs as $cost)
-                        {?>{ columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Budgeted', dataField: '<?php echo 'pc_'.$cost['value'].'_budgeted'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
-                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Actual', dataField: '<?php echo 'pc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Variance', dataField: '<?php echo 'pc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                        {?>{ columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Budgeted',hidden:true, dataField: '<?php echo 'pc_'.$cost['value'].'_budgeted'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Actual',hidden:true, dataField: '<?php echo 'pc_'.$cost['value'].'_actual'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: '<?php echo 'packing_costs_'.$cost['value']; ?>',text: 'Variance',hidden:true, dataField: '<?php echo 'pc_'.$cost['value'].'_variance'; ?>',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                             <?php
                         }
                     ?>
                     { columngroup: 'cogs',text: 'Budgeted', dataField: 'cogs_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
                     { columngroup: 'cogs',text: 'Actual', dataField: 'cogs_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
-                    { columngroup: 'cogs',text: 'Variance', dataField: 'cogs_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'}
+                    { columngroup: 'cogs',text: 'Variance', dataField: 'cogs_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right'},
+                    { columngroup: 'cogs_total',text: 'Budgeted', dataField: 'cogs_total_budgeted',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'cogs_total',text: 'Actual', dataField: 'cogs_total_actual',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { columngroup: 'cogs_total',text: 'Variance', dataField: 'cogs_total_variance',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsalign: 'right',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer}
 
                 ],
                 columngroups:
@@ -226,6 +245,7 @@
                         { text: 'Quantity', align: 'center', name: 'quantity' },
                         { text: 'PI Values', align: 'center', name: 'pi' },
                         { text: 'Direct Costs', align: 'center', name: 'direct_costs' },
+                        { text: 'Total Direct Cost', align: 'center',parentgroup:'direct_costs', name: 'direct_costs_total' },
                         <?php
                             foreach($direct_costs as $cost)
                             {?>{ text: '<?php echo $cost['text']; ?>', align: 'center',parentgroup:'direct_costs', name: '<?php echo 'direct_costs_'.$cost['value']; ?>' },
@@ -239,7 +259,8 @@
                                 <?php
                             }
                         ?>
-                        { text: 'COGS', align: 'center', name: 'cogs' }
+                        { text: 'COGS', align: 'center', name: 'cogs' },
+                        { text: 'Total COGS', align: 'center', name: 'cogs_total' }
                     ]
 
             });
