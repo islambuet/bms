@@ -53,7 +53,7 @@ $CI->load->view("action_buttons",$action_data);
                 columnsresize: true,
                 pagesize:50,
                 pagesizeoptions: ['20', '50', '100', '200','300','500'],
-                selectionmode: 'checkbox',
+                selectionmode: 'singlerow',
                 altrows: true,
                 autoheight: true,
                 columns: [
