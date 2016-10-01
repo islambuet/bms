@@ -143,6 +143,7 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         {
             $currency_rates_budgeted[$result['currency_id']]=$result['rate'];
         }
+        //purchase budget calculation
         $this->db->from($this->config->item('table_mgt_purchase_budget').' purchase_budget');
         $this->db->select('purchase_budget.*');
         $this->db->where('purchase_budget.year0_id',$year0_id);
@@ -162,9 +163,99 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
             $purchase_budgeted[$result['variety_id']]['unit_price']=$result['unit_price'];
             $purchase_budgeted[$result['variety_id']]['currency_rate']=$currency_rates_budgeted[$result['currency_id']];
 
-            //$purchase_budgeted[$result['variety_id']]['pi_budgeted']=$quantity_total*$result['unit_price']*$currency_rates_budgeted[$result['currency_id']];
+        }
+        //purchase budget calculation finish
+        ////purchase actual calculation
+        $this->db->from($this->config->item('table_mgt_purchase_consignments').' con');
+        $this->db->select('con.*');
+
+        $this->db->where('con.year0_id',$year0_id);
+        $this->db->where('con.status',$this->config->item('system_status_active'));
+        $results=$this->db->get()->result_array();
+        $consignments=array();
+        $consignment_ids=array();
+        foreach($results as $result)
+        {
+            $consignment_ids[]=$result['id'];
+            $consignments[$result['id']]['rate']=$result['rate'];
+            $consignments[$result['id']]['direct_costs']=array();
+        }
+        $this->db->from($this->config->item('table_mgt_purchase_consignment_costs').' cost');
+        $this->db->select('cost.*');
+        $this->db->where('cost.revision',1);
+        $this->db->where_in('cost.consignment_id',$consignment_ids);
+        $results=$this->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $consignments[$result['consignment_id']]['direct_cost'][$result['item_id']]=$result['cost'];
+        }
+        //consignment varieties
+        $this->db->from($this->config->item('table_mgt_purchase_consignment_varieties').' cv');
+        $this->db->select('cv.*');
+        $this->db->where_in('cv.consignment_id',$consignment_ids);
+        $this->db->where('cv.revision',1);
+        $results=$this->db->get()->result_array();
+        $consignment_varieties=array();
+        foreach($results as $result)
+        {
+            $info=array();
+            $info['quantity']=$result['quantity'];
+            $info['price']=$result['price'];
+            $consignment_varieties[$result['consignment_id']][$result['variety_id']]=$info;
+        }
+        $purchase_actual=array();
+
+        foreach($consignment_varieties as $con_id=>$varieties)
+        {
+            $total_weight=0;
+            foreach($varieties as $result)
+            {
+                $total_weight+=$result['quantity']*$result['price'];
+            }
+            foreach($varieties as $v_id=>$result)
+            {
+                $info=array();
+                if(isset($purchase_actual[$v_id]))
+                {
+                    //$cogs_actual[$v_id]['total_cogs']+=$total;
+                    $purchase_actual[$v_id]['kg_actual']+=$result['quantity'];
+                    $purchase_actual[$v_id]['pi_values']+=($result['quantity']*$consignments[$con_id]['rate']*$result['price']);
+                }
+                else
+                {
+                    //$cogs_actual[$v_id]['total_cogs']=$total;
+                    $purchase_actual[$v_id]['kg_actual']=$result['quantity'];
+                    $purchase_actual[$v_id]['pi_values']=$result['quantity']*$consignments[$con_id]['rate']*$result['price'];
+                }
+
+                /*$info['quantity']=$result['quantity'];
+                $info['currency_rate']=$consignments[$con_id]['rate'];
+                $info['unit_price']=$result['price'];
+                $info['pi_values']=$result['quantity']*$consignments[$con_id]['rate']*$result['price'];
+                $info['direct_cost']=0;
+                $info['packing_cost']=0;
+
+                $info['cogs']=0;
+                $info['total_cogs']=0;
+                $total=0;
+                $total+=$result['price']*$result['quantity']*$consignments[$con_id]['rate'];
+                if(($total_weight>0))
+                {
+                    $info['direct_cost']=($consignments[$con_id]['direct_cost']*$result['quantity']*$result['price']/$total_weight);
+                    $total+=$info['direct_cost'];
+                }
+                if(isset($packing_costs[$variety_id]))
+                {
+                    $info['packing_cost']=$result['quantity']*$packing_costs[$variety_id];
+                    $total+=$info['packing_cost'];
+                }
+                $info['total_cogs']=$total;
+                $info['cogs']=$total/$result['quantity'];
+                $purchase_varieties[$variety_id][$con_id]=$info;*/
+            }
 
         }
+        ////purchase actual calculation finish
 
 
         $this->db->from($this->config->item('ems_setup_classification_varieties').' v');
@@ -200,7 +291,9 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         $type_row['variety_name']='Total Type';
         $grand_row['variety_name']=$crop_row['variety_name']='';
         $grand_row['kg_budgeted']=$crop_row['kg_budgeted']=$type_row['kg_budgeted']=0;
+        $grand_row['kg_actual']=$crop_row['kg_actual']=$type_row['kg_actual']=0;
         $grand_row['pi_budgeted']=$crop_row['pi_budgeted']=$type_row['pi_budgeted']=0;
+        $grand_row['pi_actual']=$crop_row['pi_actual']=$type_row['pi_actual']=0;
         foreach($direct_costs_items as $dc)
         {
             $grand_row['dc_'.$dc['value'].'_budgeted']=$crop_row['dc_'.$dc['value'].'_budgeted']=$type_row['dc_'.$dc['value'].'_budgeted']=0;
@@ -222,12 +315,16 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                 {
                     $items[]=$this->get_report_row($crop_row,$direct_costs_items,$packing_costs_items);
                     $type_row['kg_budgeted']=0;
+                    $type_row['kg_actual']=0;
                     $type_row['pi_budgeted']=0;
+                    $type_row['pi_actual']=0;
 
 
 
                     $crop_row['kg_budgeted']=0;
+                    $crop_row['kg_actual']=0;
                     $crop_row['pi_budgeted']=0;
+                    $crop_row['pi_actual']=0;
                     foreach($direct_costs_items as $dc)
                     {
                         $type_row['dc_'.$dc['value'].'_budgeted']=0;
@@ -251,7 +348,9 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
                 {
                     $items[]=$this->get_report_row($type_row,$direct_costs_items,$packing_costs_items);
                     $type_row['kg_budgeted']=0;
+                    $type_row['kg_actual']=0;
                     $type_row['pi_budgeted']=0;
+                    $type_row['pi_actual']=0;
                     foreach($direct_costs_items as $dc)
                     {
                         $type_row['dc_'.$dc['value'].'_budgeted']=0;
@@ -334,6 +433,27 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
             }
             $item['cogs_budgeted']+=$cogs_pc_budgeted;
 
+            if(isset($purchase_actual[$result['variety_id']]))
+            {
+                $item['kg_actual']=$purchase_actual[$result['variety_id']]['kg_actual'];
+
+                $type_row['kg_actual']+=$item['kg_actual'];
+                $crop_row['kg_actual']+=$item['kg_actual'];
+                $grand_row['kg_actual']+=$item['kg_actual'];
+
+                $item['pi_actual']=$purchase_actual[$result['variety_id']]['pi_values'];
+                $type_row['pi_actual']+=$item['pi_actual'];
+                $crop_row['pi_actual']+=$item['pi_actual'];
+                $grand_row['pi_actual']+=$item['pi_actual'];
+                //$item['cogs_budgeted']=$purchase_budgeted[$result['variety_id']]['unit_price']*$purchase_budgeted[$result['variety_id']]['currency_rate'];;
+            }
+            else
+            {
+                $item['kg_actual']=0;
+                $item['pi_actual']=0;
+                //$item['cogs_budgeted']=0;
+            }
+
             $items[]=$this->get_report_row($item,$direct_costs_items,$packing_costs_items);
         }
         $items[]=$this->get_report_row($type_row,$direct_costs_items,$packing_costs_items);
@@ -357,6 +477,22 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         {
             $info['kg_budgeted']='';
         }
+        if($item['kg_actual']!=0)
+        {
+            $info['kg_actual']=number_format($item['kg_actual'],3,'.','');
+        }
+        else
+        {
+            $info['kg_actual']='';
+        }
+        if(($item['kg_budgeted']-$item['kg_actual'])!=0)
+        {
+            $info['kg_variance']=number_format(($item['kg_budgeted']-$item['kg_actual']),3,'.','');
+        }
+        else
+        {
+            $info['kg_variance']='';
+        }
         if($item['pi_budgeted']!=0)
         {
             $info['pi_budgeted']=number_format($item['pi_budgeted'],2);
@@ -364,6 +500,22 @@ class Reports_mgt_purchase_budgetvsactual extends Root_Controller
         else
         {
             $info['pi_budgeted']='';
+        }
+        if($item['pi_actual']!=0)
+        {
+            $info['pi_actual']=number_format($item['pi_actual'],2);
+        }
+        else
+        {
+            $info['pi_actual']='';
+        }
+        if(($item['pi_budgeted']-$item['pi_actual'])!=0)
+        {
+            $info['pi_variance']=number_format($item['pi_budgeted']-$item['pi_actual'],2);
+        }
+        else
+        {
+            $info['pi_variance']='';
         }
         foreach($direct_costs_items as $dc)
         {
