@@ -909,7 +909,8 @@ class Analysis_sales_order extends Root_Controller
         if($year_info['date_start']>0)
         {
             $this->db->from($this->config->item('ems_payment_payment').' p');
-            $this->db->select('p.amount,p.date_payment_receive,p.customer_id');
+            $this->db->select('SUM(p.amount) amount');
+            $this->db->select('p.date_payment_receive,p.customer_id');
             $this->db->select('d.id district_id');
             $this->db->select('t.id territory_id');
             $this->db->select('zone.id zone_id');
