@@ -1114,6 +1114,14 @@ class Analysis_sales_order extends Root_Controller
         $info['zone_name']=$item['zone_name'];
         $info['territory_name']=$item['territory_name'];
         $info['district_name']=$item['district_name'];
+        if($item['sales_tp']!=0)
+        {
+            $info['total_tp']=number_format($item['sales_tp'],2);
+        }
+        else
+        {
+            $info['total_tp']='';
+        }
         if($item['total']!=0)
         {
             $info['total']=number_format($item['total'],2);

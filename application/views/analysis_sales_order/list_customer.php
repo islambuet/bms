@@ -36,7 +36,8 @@
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="zone_name"><?php echo $CI->lang->line('LABEL_ZONE_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="territory_name"><?php echo $CI->lang->line('LABEL_TERRITORY_NAME');?></label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="district_name"><?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?></label>
-                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total">Total Sales</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_tp">Total Sales (TP)</label>
+                <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total">Total Sales (NET)</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  checked value="total_po">Total # PO</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="opening_balance_tp">Opening Balance TP</label>
                 <label class="checkbox-inline"><input type="checkbox" class="system_jqx_column"  value="opening_balance_net">Opening Balance Net</label>
@@ -75,6 +76,7 @@
                 { name: 'zone_name', type: 'string' },
                 { name: 'territory_name', type: 'string' },
                 { name: 'district_name', type: 'string' },
+                { name: 'total_tp', type: 'string'},
                 { name: 'total', type: 'string'},
                 { name: 'total_po', type: 'string'},
 
@@ -157,7 +159,8 @@
                     { text: '<?php echo $CI->lang->line('LABEL_ZONE_NAME');?>', dataField: 'zone_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_TERRITORY_NAME');?>', dataField: 'territory_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
                     { text: '<?php echo $CI->lang->line('LABEL_DISTRICT_NAME');?>',hidden:true, dataField: 'district_name',width: '100',cellsrenderer: cellsrenderer,pinned:true,rendered: tooltiprenderer},
-                    { text: 'Total Sales', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Total Sales (TP)', dataField: 'total_tp',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
+                    { text: 'Total Sales (NET)', dataField: 'total',width: '130',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { text: 'Total # PO', dataField: 'total_po',width: '60',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,cellsAlign:'right',align:'center',aggregates: [{ 'total':aggregates}],aggregatesrenderer:aggregatesrenderer},
                     { columngroup: 'opening_balance',text: 'TP',hidden:true,dataField: 'opening_balance_tp',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsAlign:'right'},
                     { columngroup: 'opening_balance',text: 'NET',hidden:true,dataField: 'opening_balance_net',width:'150',cellsrenderer: cellsrenderer,rendered: tooltiprenderer,align:'center',cellsAlign:'right'},
