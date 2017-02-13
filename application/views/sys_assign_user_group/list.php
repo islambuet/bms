@@ -1,12 +1,22 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-    $CI = & get_instance();
-    $action_data=array();
-    if(isset($CI->permissions['edit'])&&($CI->permissions['edit']==1))
-    {
-        $action_data["action_edit"]=base_url($CI->controller_url."/index/edit");
-    }
-    $action_data["action_refresh"]=base_url($CI->controller_url."/index/list");
-    $CI->load->view("action_buttons",$action_data);
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+$CI=& get_instance();
+$action_data=array();
+if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
+{
+    $action_data["action_edit"]=site_url($CI->controller_url.'/index/edit');
+}
+if(isset($CI->permissions['action4']) && ($CI->permissions['action4']==1))
+{
+    $action_data['action_print']='print';
+}
+if(isset($CI->permissions['action5']) && ($CI->permissions['action5']==1))
+{
+    $action_data['action_download']='download';
+}
+$action_data['action_refresh']=site_url($CI->controller_url.'/index/list');
+$CI->load->view('action_buttons',$action_data);
 ?>
 
 <div class="row widget">
@@ -24,8 +34,7 @@
 <script type="text/javascript">
     $(document).ready(function ()
     {
-        turn_off_triggers();
-        var url = "<?php echo base_url($CI->controller_url.'/get_items');?>";
+        var url = "<?php echo base_url($CI->controller_url.'/index/get_items');?>";
 
         // prepare the data
         var source =

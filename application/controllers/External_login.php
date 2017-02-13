@@ -24,19 +24,16 @@ class External_login extends CI_Controller {
 	}
     public function login($auth_code)
     {
-        $db_login=$this->load->database('armalik_login',TRUE);
-        $db_login->from($this->config->item('table_other_sites_visit'));
-        $db_login->where('auth_key',$auth_code);
-        $db_login->where('status',$this->config->item('system_status_active'));
-        $info=$db_login->get()->row_array();
+        $this->db->from($this->config->item('system_db_login').'.'.$this->config->item('table_login_other_sites_visit'));
+        $this->db->where('auth_key',$auth_code);
+        $this->db->where('status',$this->config->item('system_status_active'));
+        $info=$this->db->get()->row_array();
         if($info)
         {
-            $db_login->where('id',$info['id']);
-            $db_login->set('status', $this->config->item('system_status_inactive'));
-            $db_login->update($this->config->item('table_other_sites_visit'));
-
-            $this->session->set_userdata("user_id", $info['user_id']);
-
+            $this->db->where('id',$info['id']);
+            $this->db->set('status',$this->config->item('system_status_inactive'));
+            $this->db->update($this->config->item('system_db_login').'.'.$this->config->item('table_login_other_sites_visit'));
+            $this->session->set_userdata('user_id',$info['user_id']);
         }
         redirect(site_url());
 

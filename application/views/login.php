@@ -13,13 +13,13 @@
                 <div class="login_header">
                     <h3>
                         AR Malik
-                        <img alt="Logo" height="40" class="pull-right" src="<?php echo base_url(); ?>images/logo.png">
+                        <img alt="Logo" height="40" class="pull-right" src="<?php echo base_url('images/logo.png'); ?>">
                     </h3>
                     <p>Fill out the form below to login.</p>
                 </div>
                 <div class="login_content">
-                    <input class="form-control margin_bottom validate[required]" type="text" name="username" placeholder="Username" value=""/>
-                    <input class="form-control validate[required]" type="password" name="password" value="" placeholder="Password" />
+                    <input class="form-control margin_bottom" type="text" name="username" placeholder="Username" value="" required>
+                    <input class="form-control" type="password" name="password" value="" placeholder="Password" required>
                 </div>
                 <div class="login_action">
                     <input type="submit"  value="Login" name="Login" class="btn btn-danger pull-right">

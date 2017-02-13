@@ -370,7 +370,7 @@ $(document).ready(function()
         newWindow.print();
 
     });
-    $(document).on("click", "#button_action_csv", function(event)
+    $(document).on("click", "#button_action_download", function(event)
     {
         //previous csv file
         /*var jqxgrid_id='#system_jqx_container';
@@ -478,43 +478,4 @@ function animate_message(message)
     $("#system_message").hide();
     $("#system_message").html(message);
     $('#system_message').slideToggle("slow").delay(3000).slideToggle("slow");
-}
-
-function turn_off_triggers()
-{
-    $(document).off("click", "#button_action_save_jqx");
-    $(document).off("click", ".task_action_all");
-    $(document).off("click", ".task_header_all");
-
-    //location setup
-    $(document).off("change", "#division_id");
-    $(document).off("change", "#zone_id");
-    $(document).off("change", "#territory_id");
-    $(document).off("change", "#district_id");
-    $(document).off("change", "#upazilla_id");
-
-    //classification
-    $(document).off("change", "#crop_id");
-    $(document).off("change", "#crop_type_id");
-    $(document).off("change",'input[name="variety[whose]:radio');//at create_crop_variety
-    //stock in
-    $(document).off("change", "#fiscal_year_id");
-    $(document).off("change", "#year0_id");
-    $(document).off("change", "#warehouse_id");
-    $(document).off("change", "#variety_id");
-    $(document).off("change", "#arm_bank_id");
-    //po
-    $(document).off("click", ".system_button_add_more");
-    $(document).off("click", ".system_button_add_delete");
-    $(document).off("change", ".crop_id");
-    $(document).off("change", ".crop_type_id");
-    $(document).off("change", ".variety_id");
-    $(document).off("change", ".pack_size_id");
-    $(document).off("change", ".quantity");
-
-    //stock out
-    $(document).off("change", "#purpose");
-    $(document).off("change", "#customer_id");
-    
-
 }

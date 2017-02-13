@@ -1,10 +1,13 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-    $CI = & get_instance();
-    $action_data=array();
-    $action_data["action_save"]='#save_form';
-    $CI->load->view("action_buttons",$action_data);
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+$CI=& get_instance();
+$action_data=array();
+$action_data['action_save']='#save_form';
+$CI->load->view('action_buttons',$action_data);
 ?>
-<form class="form_valid" id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
+
+<form id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
     <input type="hidden" id="system_save_new_status" name="system_save_new_status" value="0" />
     <div class="row widget">
         <div class="widget-header">
@@ -19,8 +22,7 @@
                 <label class="control-label pull-right"><?php echo $CI->lang->line('STATUS');?><span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <select id="status" name="site[status]" class="form-control">
-                    <!--<option value=""></option>-->
+                <select id="status" name="item[status]" class="form-control">
                     <option value="<?php echo $CI->config->item('system_status_active'); ?>">
                         <?php echo $CI->lang->line('ACTIVE') ?>
                     </option>
@@ -34,11 +36,3 @@
 
     <div class="clearfix"></div>
 </form>
-<script type="text/javascript">
-
-    jQuery(document).ready(function()
-    {
-        turn_off_triggers();
-
-    });
-</script>

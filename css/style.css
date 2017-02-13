@@ -258,3 +258,7 @@ footer a{
 .integer_type_positive,.float_type_positive,.float_type_all,.integer_type_all{
     text-align: right;
 }
+.print_container{
+    width: 8.27in;
+    margin: .5in;
+}

@@ -1,10 +1,10 @@
 <?php
 class Query_helper
 {
-    public static function add($tablename,$data)
+    public static function add($table_name,$data)
     {
         $CI =& get_instance();
-        $CI->db->insert($tablename, $data);
+        $CI->db->insert($table_name, $data);
         $user = User_helper::get_user();
 
         if($CI->db->affected_rows() >0)
@@ -14,14 +14,14 @@ class Query_helper
             $historyData = Array(
                 'controller'=>$CI->router->class,
                 'table_id'=>$id,
-                'table_name'=>$tablename,
+                'table_name'=>$table_name,
                 'data'=>json_encode($data),
                 'user_id'=>$user->user_id,
                 'action'=>'INSERT',
                 'date'=>time()
             );
 
-            $CI->db->insert($CI->config->item('table_history'), $historyData);
+            $CI->db->insert($CI->config->item('table_system_history'), $historyData);
             return $id;
         }
         else
@@ -30,7 +30,7 @@ class Query_helper
         }
     }
 
-    public static  function update($tablename,$data,$conditions)
+    public static  function update($table_name,$data,$conditions)
     {
         $CI =& get_instance();
         foreach($conditions as $condition)
@@ -38,7 +38,7 @@ class Query_helper
             $CI->db->where($condition);
 
         }
-        $rows=$CI->db->get($tablename)->result_array();
+        $rows=$CI->db->get($table_name)->result_array();
 
 
         foreach($conditions as $condition)
@@ -46,7 +46,7 @@ class Query_helper
             $CI->db->where($condition);
 
         }
-        $CI->db->update($tablename, $data);
+        $CI->db->update($table_name, $data);
 
         if($CI->db->affected_rows() >0)
         {
@@ -59,14 +59,14 @@ class Query_helper
                 $historyData = Array(
                     'controller'=>$CI->router->class,
                     'table_id'=>$row['id'],
-                    'table_name'=>$tablename,
+                    'table_name'=>$table_name,
                     'data'=>json_encode($data),
                     'user_id'=>$user->user_id,
                     'action'=>'UPDATE',
                     'date'=>$time
                 );
 
-                $CI->db->insert($CI->config->item('table_history'), $historyData);
+                $CI->db->insert($CI->config->item('table_system_history'), $historyData);
             }
 
             return true;
@@ -80,21 +80,21 @@ class Query_helper
 
     }
 
-    public static function get_info($tablename,$fieldnames,$conditions,$limit=0,$start=0,$order_by=null)
+    public static function get_info($table_name,$field_names,$conditions,$limit=0,$start=0,$order_by=null)
     {
         $CI =& get_instance();
 
-        if(is_array($fieldnames))
+        if(is_array($field_names))
         {
-            foreach($fieldnames as $fieldname)
+            foreach($field_names as $field_name)
             {
-                $CI->db->select($fieldname);
+                $CI->db->select($field_name);
 
             }
         }
         else
         {
-            $CI->db->select($fieldnames);
+            $CI->db->select($field_names);
 
         }
 
@@ -112,16 +112,16 @@ class Query_helper
         }
         if($limit==0)
         {
-            return $CI->db->get($tablename)->result_array();
+            return $CI->db->get($table_name)->result_array();
         }
         if($limit==1)
         {
-            return $CI->db->get($tablename)->row_array();
+            return $CI->db->get($table_name)->row_array();
         }
         else
         {
             $CI->db->limit($limit,$start);
-            return $CI->db->get($tablename)->result_array();
+            return $CI->db->get($table_name)->result_array();
         }
 
     }

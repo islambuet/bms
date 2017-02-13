@@ -1,12 +1,14 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-$CI = & get_instance();
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+$CI=& get_instance();
 $action_data=array();
-if(isset($CI->permissions['edit'])&&($CI->permissions['edit']==1))
+if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
 {
-    $action_data["action_edit"]=base_url($CI->controller_url."/index/edit");
+    $action_data['action_edit']=site_url($CI->controller_url.'/index/edit');
 }
-$action_data["action_refresh"]=base_url($CI->controller_url."/index/list");
-$CI->load->view("action_buttons",$action_data);
+$action_data['action_refresh']=site_url($CI->controller_url.'/index/list');
+$CI->load->view('action_buttons',$action_data);
 ?>
 
 <div class="row widget">
@@ -21,27 +23,23 @@ $CI->load->view("action_buttons",$action_data);
     </div>
 </div>
 <div class="clearfix"></div>
-<script type="text/javascript">
+<script>
     $(document).ready(function ()
     {
-        turn_off_triggers();
-        var url = "<?php echo base_url($CI->controller_url.'/get_items');?>";
-
-        // prepare the data
-        var source =
+        var url="<?php echo base_url($CI->controller_url.'/index/get_items'); ?>";
+        var source=
         {
-            dataType: "json",
-            dataFields: [
-                { name: 'id', type: 'int' },
-                { name: 'name', type: 'string' },
-                { name: 'total_task', type: 'int' }
-            ],
+            dataType:"json",
+            dataFields:
+                [
+                    {name:'id',type:'int'},
+                    {name:'name',type:'string'},
+                    {name:'total_task',type:'int'}
+                ],
             id: 'id',
             url: url
         };
-
-        var dataAdapter = new $.jqx.dataAdapter(source);
-        // create jqxgrid.
+        var dataAdapter=new $.jqx.dataAdapter(source);
         $("#system_jqx_container").jqxGrid(
             {
                 width: '100%',
@@ -56,11 +54,11 @@ $CI->load->view("action_buttons",$action_data);
                 selectionmode: 'singlerow',
                 altrows: true,
                 autoheight: true,
-                columns: [
-                    { text: '<?php echo $CI->lang->line('LABEL_NAME'); ?>', dataField: 'name'},
-                    { text: '<?php echo $CI->lang->line('TOTAL_TASK'); ?>', dataField: 'total_task',width:'150',cellsalign: 'right'}
-
-                ]
+                columns:
+                    [
+                        { text: '<?php echo $CI->lang->line('LABEL_NAME'); ?>', dataField: 'name'},
+                        { text: '<?php echo $CI->lang->line('TOTAL_TASK'); ?>', dataField: 'total_task',width:'150',cellsalign: 'right'}
+                    ]
             });
     });
 </script>

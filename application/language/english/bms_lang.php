@@ -8,6 +8,38 @@ $lang['MSG_NOT_ASSIGNED_GROUP'] = 'Please Contact with Admin(09666775544.Ext.901
 $lang['MSG_LOCATION_INVALID'] = 'Your assigned Location is invalid.Please contact with admin(09666775544.Ext.901).';
 $lang['MSG_LOCATION_NOT_ASSIGNED'] = 'No Location assigned for you.Please contact with admin(09666775544.Ext.901).';
 $lang['MSG_SITE_OFFLINE'] = 'Site is Currently Offline.Please contact with admin(09666775544.Ext.901).';
+
+//Action buttons
+$lang['ACTION_DASHBOARD'] = 'Dashboard';
+$lang['ACTION_NEW'] = 'New';
+$lang['ACTION_EDIT'] = 'Edit';
+$lang['ACTION_LOGOUT'] = 'Logout';
+$lang['ACTION_BACK'] = 'Back';
+$lang['ACTION_SAVE'] = 'Save';
+$lang['ACTION_SAVE_NEW'] = 'Save and New';
+$lang['ACTION_DETAILS'] = 'Details';
+$lang['ACTION_REFRESH'] = 'Refresh';
+$lang['ACTION_CLEAR'] = 'Clear';
+$lang['ACTION_DELETE'] = 'Delete';
+$lang['ACTION_PRINT'] = 'Print';
+$lang['ACTION_CSV'] = 'Download';
+$lang['DELETE_CONFIRM'] = 'Are You sure to delete?';
+$lang['MSG_ROLE_ASSIGN_SUCCESS'] = 'Role Assign Successful.';
+
+//****MODULE TASK//
+
+$lang['LABEL_PARENT'] = 'Parent';
+$lang['LABEL_CONTROLLER_NAME'] = 'Controller';
+$lang['TOTAL_TASK'] = 'Number of Tasks';
+$lang['LABEL_TYPE'] = 'Type';
+$lang['LABEL_ACTION0'] = 'View';
+$lang['LABEL_ACTION1'] = 'Add';
+$lang['LABEL_ACTION2'] = 'Edit';
+$lang['LABEL_ACTION3'] = 'Delete';
+$lang['LABEL_ACTION4'] = 'Print';
+$lang['LABEL_ACTION5'] = 'Download';
+$lang['LABEL_ACTION6'] = 'Column Headers';
+
 //locations
 $lang['LABEL_DIVISION_NAME'] = 'Division';
 $lang['LABEL_ZONE_NAME'] = 'Zone';
@@ -36,25 +68,7 @@ $lang['LABEL_EMPLOYEE_ID'] = 'Employee id';
 $lang['LABEL_USER_GROUP'] = 'User Group';
 $lang['LABEL_DESIGNATION_NAME'] = 'Designation';
 
-//Action buttons
-$lang['ACTION_DASHBOARD'] = 'Dashboard';
-$lang['ACTION_NEW'] = 'New';
-$lang['ACTION_EDIT'] = 'Edit';
-$lang['ACTION_LOGOUT'] = 'Logout';
-$lang['ACTION_BACK'] = 'Back';
-$lang['ACTION_SAVE'] = 'Save';
-$lang['ACTION_SAVE_NEW'] = 'Save and New';
-$lang['ACTION_DETAILS'] = 'Details';
-$lang['ACTION_REFRESH'] = 'Refresh';
-$lang['ACTION_CLEAR'] = 'Clear';
-$lang['ACTION_DELETE'] = 'Delete';
-$lang['ACTION_REQUEST_PO_APPROVE'] = 'Request Approve';
-$lang['ACTION_PRINT'] = 'Print';
-$lang['ACTION_CSV'] = 'Download';
-$lang['ACTION_APPROVE_REJECT'] = 'Approve/Reject';
-$lang['ACTION_REPORT'] = 'View Report';
-$lang['LABEL_ACTION'] = 'Action';
-$lang['ACTION_FORWARD'] = 'Forward';
+
 
 //save related
 $lang['YOU_DONT_HAVE_ACCESS'] = 'You cannot access this page';
@@ -63,14 +77,7 @@ $lang['MSG_SAVED_SUCCESS'] = 'Successfully Saved';
 $lang['MSG_SAVED_FAIL'] = 'Failed to Save!';
 $lang['MSG_INVALID_INPUT'] = 'Invalid data entry';
 
-//****MODULE TASK//
-
-$lang['LABEL_PARENT'] = 'Parent';
-$lang['LABEL_CONTROLLER_NAME'] = 'Controller';
-$lang['TOTAL_TASK'] = 'Number of Tasks';
-$lang['LABEL_TYPE'] = 'Type';
-
-//others
+//Input Labels
 $lang['LABEL_DESCRIPTION'] = 'Description';
 $lang['LABEL_NAME'] = 'Name';
 $lang['LABEL_ORDER'] = 'Ordering';
@@ -85,50 +92,6 @@ $lang['LABEL_SL_NO'] = 'SL#';
 $lang['LABEL_NUM_CROP'] = '#Crops';
 $lang['LABEL_NUM_TYPES'] = '#Types';
 $lang['LABEL_NUM_VARIETIES'] = '#Varities';
-
-
+$lang['STATUS'] = 'Status';
 $lang['ACTIVE'] = 'Active';
 $lang['INACTIVE'] = 'In-active';
-$lang['SELECT'] = 'Select';
-$lang['STATUS'] = 'Status';
-$lang['ACTION'] = 'Action';
-
-
-$lang['MSG_FILE_SIZE_ERROR']='File Size Error';
-$lang['MSG_FILE_TYPE_ERROR']='File Type Error';
-
-$lang['LABEL_YES'] = 'Yes';
-$lang['LABEL_NO'] = 'No';
-
-$lang['LABEL_CUSTOMER_NAME'] = 'Customer';
-//
-$lang['MSG_SETUP_MORE_FISCAL_YEAR'] = 'Please contact with admin to setup more fiscal years.';
-$lang['MSG_ALREADY_FORWARDED'] = 'Already Forwarded.';
-$lang['MSG_TARGET_NOT_FINALIZED'] = 'Target Not Finalized.';
-$lang['MSG_SUCCESSFULLY_FORWARDED'] = 'Forwarded Successfully.';
-$lang['LABEL_FORWARDED'] = 'Forwarded';
-$lang['LABEL_ALLOCATED'] = 'Allocated';
-$lang['LABEL_DISTRIBUTED'] = 'Distributed';
-$lang['LABEL_BUDGETED_YEAR'] = 'Budgeting Year';
-$lang['LABEL_NEXT_YEARS'] = 'Next Years';
-$lang['MSG_ALREADY_FINALIZED'] = 'Already Finalized.';
-//setup
-$lang['LABEL_CURRENCY_SYMBOL'] = 'Currency Symbol';
-$lang['LABEL_CURRENCY_RATE'] = 'Rate';
-$lang['LABEL_CURRENCY_NAME'] = 'Currency';
-$lang['LABEL_CONSIGNMENT_NAME'] = 'Consignment';
-$lang['LABEL_MONTH_PURCHASE'] = 'Purchase Month';
-$lang['LABEL_DATE_PURCHASE'] = 'Purchase Date';
-$lang['LABEL_PRINCIPAL_NAME'] = 'Principal';
-$lang['LABEL_LC_NUMBER'] = 'LC Number';
-
-$lang['LABEL_GENERAL_EXPENSE'] = 'General Expense';
-$lang['LABEL_MARKETING_EXPENSE'] = 'Marketing Expense';
-$lang['LABEL_FINANCE_EXPENSE'] = 'Financial Expense';
-$lang['LABEL_PROFIT'] = 'Profit';
-$lang['LABEL_SALES_COMMISSION'] = 'Sales Commission';
-$lang['LABEL_INCENTIVE'] = 'Incentive';
-$lang['MSG_FINALIZE_TARGET_BEFORE_PREDICTION'] = 'Please finalize this year\'s target first.';
-$lang['MSG_ALREADY_PREDICTION_FINALIZED'] = 'Prediction already finalized.';
-$lang['LABEL_PREDICTED'] = 'Predicted';
-$lang['MSG_PREDICTION_NOT_FINALIZED'] = 'Prediction Not Finalized.';

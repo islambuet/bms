@@ -14,206 +14,218 @@ class Sys_user_role extends Root_Controller
         $this->permissions=User_helper::get_permission('Sys_user_role');
         if($user->user_group==1)
         {
-            $this->permissions['view']=1;
-            $this->permissions['edit']=1;
+            $this->permissions['action0']=1;
+            $this->permissions['action2']=1;
         }
         $this->controller_url='sys_user_role';
-        $this->load->model("sys_user_role_model");
     }
 
-    public function index($action="list",$id=0)
+
+    public function index($action='list',$id=0)
     {
-        if($action=="list")
+        if($action=='list')
         {
-            $this->system_list($id);
+            $this->system_list();
         }
-        elseif($action=="edit")
+        elseif($action=='get_items')
+        {
+            $this->system_get_items();
+        }
+        elseif($action=='edit')
         {
             $this->system_edit($id);
         }
-        elseif($action=="save")
+        elseif($action=='save')
         {
             $this->system_save();
         }
         else
         {
-            $this->system_list($id);
+            $this->system_list();
         }
     }
 
-    public function system_list()
+    private function system_list()
     {
-        if(isset($this->permissions['view'])&&($this->permissions['view']==1))
+        if(isset($this->permissions['action0']) && ($this->permissions['action0']==1))
         {
-            $data['title']="User Role";
+            $data['title']='User Role';
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("sys_user_role/list",$data,true));
+            $ajax['system_content'][]=array('id'=>'#system_content','html'=>$this->load->view($this->controller_url.'/list',$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
             $ajax['system_page_url']=site_url($this->controller_url);
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
         else
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
+            $ajax['system_message']=$this->lang->line('YOU_DONT_HAVE_ACCESS');
+            $this->json_return($ajax);
         }
     }
-
-    public function system_edit($id)
+    private function system_get_items()
     {
-        if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
+        $user=User_helper::get_user();
+        $this->db->from($this->config->item('table_system_user_group'));
+        $this->db->select('id,name');
+        $this->db->where('status',$this->config->item('system_status_active'));
+        if($user->user_group!=1)
         {
-            if(($this->input->post('id')))
+            $this->db->where('id !=1');
+        }
+        $user_groups=$this->db->get()->result_array();
+
+        $this->db->from($this->config->item('table_system_user_group_role'));
+        $this->db->select('COUNT(id) total_task',false);
+        $this->db->select('user_group_id');
+        $this->db->where('revision',1);
+        $this->db->where('action0',1);
+        $this->db->group_by('user_group_id');
+        $results=$this->db->get()->result_array();
+
+        $total_roles=array();
+        foreach($results as $result)
+        {
+            $total_roles[$result['user_group_id']]['total_task']=$result['total_task'];
+        }
+        foreach($user_groups as &$groups)
+        {
+            if(isset($total_roles[$groups['id']]['total_task']))
             {
-                $group_id=$this->input->post('id');
+                $groups['total_task']=$total_roles[$groups['id']]['total_task'];
             }
             else
             {
-                $group_id=$id;
+                $groups['total_task']=0;
             }
-            $this->load->model("sys_module_task_model");
-
-            $data['modules_tasks']=$this->sys_module_task_model->get_modules_tasks_table_tree();
-            $data['role_status']=$this->sys_user_role_model->get_role_status($group_id);
+        }
+        $this->json_return($user_groups);
+    }
+    private function system_edit($id)
+    {
+        if(isset($this->permissions['action2']) && ($this->permissions['action2']==1))
+        {
+            if(($this->input->post('id')))
+            {
+                $item_id=$this->input->post('id');
+            }
+            else
+            {
+                $item_id=$id;
+            }
+            $data['modules_tasks']=Task_helper::get_modules_tasks_table_tree();
+            $data['role_status']=$this->get_role_status($item_id);
             $data['title']="Edit User Role";
-            $data['group_id']=$group_id;
+            $data['item_id']=$item_id;
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("sys_user_role/add_edit",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url.'/add_edit',$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit/'.$group_id);
-            $this->jsonReturn($ajax);
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit/'.$item_id);
+            $this->json_return($ajax);
         }
         else
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
+            $ajax['system_message']=$this->lang->line('YOU_DONT_HAVE_ACCESS');
+            $this->json_return($ajax);
         }
     }
-
-    public function system_save()
+    private function get_role_status($user_group_id)
     {
-        $group_id = $this->input->post("id");
-        $user = User_helper::get_user();
-        if(!(isset($this->permissions['edit'])&&($this->permissions['edit']==1)))
+        $this->db->from($this->config->item('table_system_user_group_role'));
+        $this->db->select('*');
+        $this->db->where('user_group_id',$user_group_id);
+        $this->db->where('revision',1);
+        $results=$this->db->get()->result_array();
+
+        $roles=array();
+        for($i=0;$i<$this->config->item('system_max_actions');$i++)
+        {
+            $roles['action'.$i]=array();
+        }
+        foreach($results as $result)
+        {
+            for($i=0;$i<$this->config->item('system_max_actions');$i++)
+            {
+                if($result['action'.$i])
+                {
+                    $roles['action'.$i][]=$result['task_id'];
+                }
+            }
+        }
+        return $roles;
+    }
+
+
+    private function system_save()
+    {
+        $item_id=$this->input->post('id');
+        $user=User_helper::get_user();
+        if(!(isset($this->permissions['action2']) && ($this->permissions['action2']==1)))
         {
             $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
+            $ajax['system_message']=$this->lang->line('YOU_DONT_HAVE_ACCESS');
+            $this->json_return($ajax);
             die();
         }
-
         $tasks=$this->input->post('tasks');
-
         $time=time();
-        $this->db->trans_start();  //DB Transaction Handle START
 
-        $this->db->where('user_group_id',$group_id);
-        $this->db->set('revision', 'revision+1', FALSE);
+        $this->db->trans_start(); //DB Transaction Handle START
+
+        $this->db->where('user_group_id',$item_id);
+        $this->db->set('revision','revision+1',false);
         $this->db->update($this->config->item('table_system_user_group_role'));
         if(is_array($tasks))
         {
             foreach($tasks as $task_id=>$task)
             {
-
                 $data=array();
-                if(isset($task['view'])&& ($task['view']==1))
+                for($i=0;$i<$this->config->item('system_max_actions');$i++)
                 {
-                    $data['view']=1;
+                    if(isset($task['action'.$i]) && ($task['action'.$i]==1))
+                    {
+                        $data['action'.$i]=1;
+                    }
+                    else
+                    {
+                        $data['action'.$i]=0;
+                    }
                 }
-                else
+                for($i=0;$i<$this->config->item('system_max_actions');$i++)
                 {
-                    $data['view']=0;
-                }
-                if(isset($task['add'])&& ($task['add']==1))
-                {
-                    $data['add']=1;
-                }
-                else
-                {
-                    $data['add']=0;
-                }
-                if(isset($task['edit'])&& ($task['edit']==1))
-                {
-                    $data['edit']=1;
-                }
-                else
-                {
-                    $data['edit']=0;
-                }
-                if(isset($task['delete'])&& ($task['delete']==1))
-                {
-                    $data['delete']=1;
-                }
-                else
-                {
-                    $data['delete']=0;
-                }
-                if(isset($task['print'])&& ($task['print']==1))
-                {
-                    $data['print']=1;
-                }
-                else
-                {
-                    $data['print']=0;
-                }
-                if(isset($task['download'])&& ($task['download']==1))
-                {
-                    $data['download']=1;
-                }
-                else
-                {
-                    $data['download']=0;
-                }
-                if(isset($task['column_headers'])&& ($task['column_headers']==1))
-                {
-                    $data['column_headers']=1;
-                }
-                else
-                {
-                    $data['column_headers']=0;
-                }
-                if(($data['add'])||($data['edit'])||($data['delete'])||($data['print'])||($data['download'])||($data['column_headers']))
-                {
-                    $data['view']=1;
+                    if($data['action'.$i])
+                    {
+                        $data['action0']=1;
+                        break;
+                    }
                 }
                 $data['task_id']=$task_id;
-                $data['user_group_id']=$group_id;
-                $data['user_created'] = $user->user_id;
-                $data['date_created'] =$time;
-
+                $data['user_group_id']=$item_id;
+                $data['user_created']=$user->user_id;
+                $data['date_created']=$time;
                 Query_helper::add($this->config->item('table_system_user_group_role'),$data);
-
             }
         }
+        $this->db->trans_complete(); //DB Transaction Handle END
 
-        $this->db->trans_complete();   //DB Transaction Handle END
-
-        if ($this->db->trans_status() === TRUE)
+        if ($this->db->trans_status()===true)
         {
-            $this->message=$this->lang->line("MSG_ROLE_ASSIGN_SUCCESS");
+            $this->message=$this->lang->line('MSG_ROLE_ASSIGN_SUCCESS');
             $this->system_list();
         }
         else
         {
             $ajax['status']=false;
-            $ajax['desk_message']=$this->lang->line("MSG_ROLE_ASSIGN_FAIL");
-            $this->jsonReturn($ajax);
+            $ajax['system_message']=$this->lang->line('MSG_ROLE_ASSIGN_FAIL');
+            $this->json_return($ajax);
         }
-    }
-    public function get_items()
-    {
-        //$items=Query_helper::get_info($this->config->item('table_system_user_group'),array('id','name','status','ordering'),array('status !="'.$this->config->item('system_status_delete').'"'));
-        $items=$this->sys_user_role_model->get_roles_count();
-        $this->jsonReturn($items);
-
     }
 
 }

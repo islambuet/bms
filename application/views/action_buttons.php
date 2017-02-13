@@ -160,7 +160,7 @@
     {
         ?>
         <div class="action_button">
-            <button id="button_action_print" class="btn" data-title="<?php echo $action_print; ?>"><?php echo $CI->lang->line("ACTION_PRINT"); ?></button>
+            <button id="button_action_print" class="btn" data-title="<?php echo $action_print; ?>"><?php echo $CI->lang->line("LABEL_ACTION4"); ?></button>
         </div>
     <?php
     }
@@ -170,17 +170,17 @@
     {
         ?>
         <div class="action_button">
-            <button onClick="window.print()" class="btn" data-title="<?php echo $action_print_page; ?>"><?php echo $CI->lang->line("ACTION_PRINT"); ?></button>
+            <button onClick="window.print()" class="btn" data-title="<?php echo $action_print_page; ?>"><?php echo $CI->lang->line("LABEL_ACTION4"); ?></button>
         </div>
     <?php
     }
     ?>
     <?php
-    if(isset($action_csv))
+    if(isset($action_download))
     {
         ?>
         <div class="action_button">
-            <button id="button_action_csv" class="btn" data-title="<?php echo $action_csv; ?>"><?php echo $CI->lang->line("ACTION_CSV"); ?></button>
+            <button id="button_action_download" class="btn" data-title="<?php echo $action_download; ?>"><?php echo $CI->lang->line("LABEL_ACTION5"); ?></button>
         </div>
     <?php
     }

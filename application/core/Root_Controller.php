@@ -10,7 +10,7 @@ abstract class Root_Controller extends CI_Controller
             $user=User_helper::get_user();
             if(!$user)
             {
-                if($this->router->class!="home")
+                if(!in_array(strtolower($this->router->class),$this->config->item('external_controllers')))
                 {
                     $this->login_page("Time out");
                 }
@@ -32,7 +32,7 @@ abstract class Root_Controller extends CI_Controller
             die();
         }
     }
-    public function jsonReturn($array)
+    public function json_return($array)
     {
         header('Content-type: application/json');
         echo json_encode($array);
@@ -67,8 +67,8 @@ abstract class Root_Controller extends CI_Controller
         {
             $ajax['system_message']=$message;
         }
-        $ajax['system_page_url']=base_url()."home/login";
-        $this->jsonReturn($ajax);
+        $ajax['system_page_url']=site_url('home/login');
+        $this->json_return($ajax);
     }
     public function dashboard_page($message="")
     {
@@ -80,7 +80,7 @@ abstract class Root_Controller extends CI_Controller
         {
             $ajax['system_message']=$message;
         }
-        $ajax['system_page_url']=base_url()."home";
-        $this->jsonReturn($ajax);
+        $ajax['system_page_url']=site_url('home');
+        $this->json_return($ajax);
     }
 }

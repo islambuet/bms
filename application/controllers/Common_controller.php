@@ -11,7 +11,7 @@ class Common_controller extends Root_Controller
     }
 
     //location setup
-    public function get_dropdown_zones_by_divisionid()
+    /*public function get_dropdown_zones_by_divisionid()
     {
         $division_id = $this->input->post('division_id');
         $html_container_id='#zone_id';
@@ -176,5 +176,5 @@ class Common_controller extends Root_Controller
         $ajax['system_content'][]=array("id"=>$html_container_id,"html"=>$this->load->view("dropdown_with_select",$data,true));
 
         $this->jsonReturn($ajax);
-    }
+    }*/
 }

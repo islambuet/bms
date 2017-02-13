@@ -11,7 +11,6 @@ class Sys_module_task extends Root_Controller
         $this->message="";
         $this->permissions=User_helper::get_permission('Sys_module_task');
         $this->controller_url='sys_module_task';
-        $this->load->model("sys_module_task_model");
     }
 
     public function index($action="list",$id=0)
@@ -41,24 +40,24 @@ class Sys_module_task extends Root_Controller
     private function system_list()
     {
         $data['title']="Module and Task";
-        if(isset($this->permissions['view'])&&($this->permissions['view']==1))
+        if(isset($this->permissions['action0'])&&($this->permissions['action0']==1))
         {
-            $data['modules_tasks']=$this->sys_module_task_model->get_modules_tasks_table_tree();
+            $data['items']=Task_helper::get_modules_tasks_table_tree();
 
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("sys_module_task/list",$data,true));
+            $ajax['system_content'][]=array('id'=>'#system_content','html'=>$this->load->view($this->controller_url.'/list',$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
             $ajax['system_page_url']=site_url($this->controller_url);
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
         else
         {
             $ajax['status']=false;
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
         /**/
 
@@ -66,11 +65,11 @@ class Sys_module_task extends Root_Controller
 
     private function system_add()
     {
-        if(isset($this->permissions['add'])&&($this->permissions['add']==1))
+        if(isset($this->permissions['action1'])&&($this->permissions['action1']==1))
         {
 
             $data['title']="Create New Module/Task";
-            $data["module_task"] = Array(
+            $data["item"] = Array(
                 'id' => 0,
                 'name' => '',
                 'type' => '',
@@ -82,70 +81,99 @@ class Sys_module_task extends Root_Controller
             );
             $ajax['system_page_url']=site_url($this->controller_url."/index/add");
             //$data['crops'] = System_helper::get_ordered_crops();
-            $data["modules"] = $this->sys_module_task_model->get_modules();
+            $data['modules']=$this->get_modules_tasks('Module');
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("sys_module_task/add_edit",$data,true));
+            $ajax['system_content'][]=array('id'=>'#system_content','html'=>$this->load->view($this->controller_url.'/add_edit',$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
         else
         {
             $ajax['status']=false;
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
     }
     private function system_edit($id)
     {
-        if(isset($this->permissions['edit'])&&($this->permissions['edit']==1))
+        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
         {
 
-            $data['module_task'] = $this->sys_module_task_model->get_module_task_info($id);
-            $data['title']='Edit '.$data['module_task']['name'];
+            $data['item']=$this->get_module_task_info($id);
+            $data['title']='Edit '.$data['item']['name'];
             $ajax['system_page_url']=site_url($this->controller_url."/index/edit/".$id);
             //$data['crops'] = System_helper::get_ordered_crops();
-            $data["modules"] = $this->sys_module_task_model->get_modules();
+            $data['modules']=$this->get_modules_tasks('Module');
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view("sys_module_task/add_edit",$data,true));
+            $ajax['system_content'][]=array('id'=>'#system_content','html'=>$this->load->view($this->controller_url.'/add_edit',$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
         else
         {
             $ajax['status']=false;
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
+    }
+    private function get_modules_tasks($type='') //Module or Task
+    {
+        $this->db->from($this->config->item('table_system_task'));
+        $this->db->order_by('ordering');
+        if($type!='')
+        {
+            $this->db->where('type',$type);
+        }
+        $results=$this->db->get()->result_array();
+        $children=array();
+        foreach($results as $result)
+        {
+            $children[$result['parent']]['ids'][$result['id']]=$result['id'];
+            $children[$result['parent']]['modules'][$result['id']]=$result;
+        }
+        $level0=$children[0]['modules'];
+        $tree=array();
+        foreach ($level0 as $module)
+        {
+            Task_helper::get_sub_modules_tasks_tree($module,'',$tree,$children);
+        }
+        return $tree;
+    }
+    private function get_module_task_info($id)
+    {
+        $this->db->from($this->config->item('table_system_task'));
+        $this->db->where('id',$id);
+        return $this->db->get()->row_array();
     }
 
     private function system_save()
     {
         $id = $this->input->post("id");
-        $data=$this->input->post('task');
+        $data=$this->input->post('item');
         $user = User_helper::get_user();
         if($id>0)
         {
-            if(!(isset($this->permissions['edit'])&&($this->permissions['edit']==1)))
+            if(!(isset($this->permissions['action2'])&&($this->permissions['action2']==1)))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-                $this->jsonReturn($ajax);
+                $this->json_return($ajax);
                 die();
             }
         }
         else
         {
-            if(!(isset($this->permissions['add'])&&($this->permissions['add']==1)))
+            if(!(isset($this->permissions['action1'])&&($this->permissions['action1']==1)))
             {
                 $ajax['status']=false;
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-                $this->jsonReturn($ajax);
+                $this->json_return($ajax);
                 die();
 
             }
@@ -154,7 +182,7 @@ class Sys_module_task extends Root_Controller
         {
             $ajax['status']=false;
             $ajax['system_message']=$this->message;
-            $this->jsonReturn($ajax);
+            $this->json_return($ajax);
         }
         else
         {
@@ -191,25 +219,21 @@ class Sys_module_task extends Root_Controller
             else
             {
                 $ajax['status']=false;
-                $ajax['desk_message']=$this->lang->line("MSG_SAVED_FAIL");
-                $this->jsonReturn($ajax);
+                $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+                $this->json_return($ajax);
             }
         }
     }
     private function check_validation()
     {
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('task[name]',$this->lang->line('LABEL_NAME'),'required');
-        $this->form_validation->set_rules('task[type]',$this->lang->line('LABEL_TYPE'),'required');
-        $data=$this->input->post('task');
-        if($data['type']=='TASK')
+        $this->form_validation->set_rules('item[name]',$this->lang->line('LABEL_NAME'),'required');
+        $this->form_validation->set_rules('item[type]',$this->lang->line('LABEL_TYPE'),'required');
+        if($this->input->post('item')['type']=='TASK')
         {
-            $this->form_validation->set_rules('task[controller]',$this->lang->line('LABEL_CONTROLLER_NAME'),'required');
+            $this->form_validation->set_rules('item[controller]',$this->lang->line('LABEL_CONTROLLER_NAME'),'required');
         }
-
-
-
-        if($this->form_validation->run() == FALSE)
+        if($this->form_validation->run()==false)
         {
             $this->message=validation_errors();
             return false;

@@ -10,21 +10,7 @@ class Test extends CI_Controller
     }
     public function index()
     {
-        $a=5;
-        $b=3;
-        $c=$a&&$b;
-        if($c===true)
-        {
-            echo 'yes';
-        }
-        else
-        {
-            echo 'no';
-        }
-        var_dump($c);
 
     }
-
-    //location setup
 
 }

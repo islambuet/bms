@@ -70,37 +70,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | The $query_builder variables lets you determine whether or not to load
 | the query builder class.
 */
-$active_group = 'armalik_ems_bms';
+$active_group = 'default';
 $query_builder = TRUE;
 
-$db['armalik_ems_bms']['hostname'] = '127.0.0.1';
-$db['armalik_ems_bms']['username'] = 'root';
-$db['armalik_ems_bms']['password'] = '';
-$db['armalik_ems_bms']['database'] = 'shaiful_arm_ems';
-$db['armalik_ems_bms']['dbdriver'] = 'mysqli';
-$db['armalik_ems_bms']['dbprefix'] = '';
-$db['armalik_ems_bms']['pconnect'] = TRUE;
-$db['armalik_ems_bms']['db_debug'] = TRUE;
-$db['armalik_ems_bms']['cache_on'] = FALSE;
-$db['armalik_ems_bms']['cachedir'] = '';
-$db['armalik_ems_bms']['char_set'] = 'utf8';
-$db['armalik_ems_bms']['dbcollat'] = 'utf8_general_ci';
-$db['armalik_ems_bms']['swap_pre'] = '';
-$db['armalik_ems_bms']['autoinit'] = TRUE;
-$db['armalik_ems_bms']['stricton'] = FALSE;
-
-$db['armalik_login']['hostname'] = '127.0.0.1';
-$db['armalik_login']['username'] = 'root';
-$db['armalik_login']['password'] = '';
-$db['armalik_login']['database'] = 'shaiful_arm_login';
-$db['armalik_login']['dbdriver'] = 'mysqli';
-$db['armalik_login']['dbprefix'] = '';
-$db['armalik_login']['pconnect'] = TRUE;
-$db['armalik_login']['db_debug'] = TRUE;
-$db['armalik_login']['cache_on'] = FALSE;
-$db['armalik_login']['cachedir'] = '';
-$db['armalik_login']['char_set'] = 'utf8';
-$db['armalik_login']['dbcollat'] = 'utf8_general_ci';
-$db['armalik_login']['swap_pre'] = '';
-$db['armalik_login']['autoinit'] = TRUE;
-$db['armalik_login']['stricton'] = FALSE;
+$db['default']['hostname'] = '127.0.0.1';
+$db['default']['username'] = 'root';
+$db['default']['password'] = '';
+$db['default']['database'] = 'arm_bms';
+$db['default']['dbdriver'] = 'mysqli';
+$db['default']['dbprefix'] = '';
+$db['default']['pconnect'] = TRUE;
+$db['default']['db_debug'] = TRUE;
+$db['default']['cache_on'] = FALSE;
+$db['default']['cachedir'] = '';
+$db['default']['char_set'] = 'utf8';
+$db['default']['dbcollat'] = 'utf8_general_ci';
+$db['default']['swap_pre'] = '';
+$db['default']['autoinit'] = TRUE;
+$db['default']['stricton'] = FALSE;
