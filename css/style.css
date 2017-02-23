@@ -185,12 +185,10 @@ footer a{
 #system_message{
     position: fixed;
     bottom: 60px;
-    right: 30px;
+    right: -5000px;
     color: white;
     background-color: #8A2BE2;
     padding: 10px;
-    display: none;
-
 }
 /*navbar*/
 .navbar-nav > li {

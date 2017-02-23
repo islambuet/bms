@@ -142,6 +142,7 @@ $(document).ready(function()
     //bind any anchor tag to ajax request
     $(document).on("click", "a", function(event)
     {
+        //if link href not found
         if(($(this).attr('href')=='#')||($(this).attr('href')==''))
         {
             event.preventDefault();
@@ -153,6 +154,15 @@ $(document).ready(function()
             return;
         }
         event.preventDefault();
+        //if link has confirm message
+        if($(this).is('[data-message-confirm]'))
+        {
+            var sure = confirm($(this).attr('data-message-confirm'));
+            if(!sure)
+            {
+                return;
+            }
+        }
         $.ajax({
             url: $(this).attr("href"),
             type: 'POST',
@@ -169,146 +179,6 @@ $(document).ready(function()
         });
 
     });
-    $(document).on("click", "#button_action_clear", function(event)
-    {
-
-        $($(this).attr('data-form')).trigger('reset');
-
-    });
-    $(document).on("click", "#button_action_report", function(event)
-    {
-        $('#system_report_container').html('');
-        $($(this).attr('data-form')).submit();
-
-    });
-    $(document).on("click", "#button_action_save", function(event)
-    {
-        $("#system_save_new_status").val(0);
-        $($(this).attr('data-form')).submit();
-
-    });
-    $(document).on("click", "#button_action_save_new", function(event)
-    {
-        $("#system_save_new_status").val(1);
-        $($(this).attr('data-form')).submit();
-
-    });
-    $(document).on("click", "#button_action_request_get", function(event)
-    {
-        if($(this).attr('id')=='button_action_request')
-        {
-
-            var sure = confirm('Are You sure to Forward?');
-            if(!sure)
-            {
-                return;
-            }
-        }
-        $.ajax({
-            url: $(this).attr('data-action-link'),
-            type: 'POST',
-            dataType: "JSON",
-            success: function (data, status)
-            {
-
-            },
-            error: function (xhr, desc, err)
-            {
-                console.log("error");
-
-            }
-        });
-    });
-    $(document).on("click", ".button_action_single", function(event)
-    {
-        var jqxgrid_id='#system_jqx_container';
-        var selected_row_indexes = $(jqxgrid_id).jqxGrid('getselectedrowindexes');
-        if (selected_row_indexes.length > 0)
-        {
-            if($(this).attr('id')=='button_action_request')
-            {
-
-                var sure = confirm('Are You sure to Forward?');
-                if(!sure)
-                {
-                    return;
-                }
-            }
-            //var selectedRowData = $(jqxgrid_id).jqxGrid('getrowdata', selected_row_indexes[0]);//only first selected
-            var selectedRowData = $(jqxgrid_id).jqxGrid('getrowdata', selected_row_indexes[selected_row_indexes.length-1]);//only last selected
-
-            $.ajax({
-                url: $(this).attr('data-action-link'),
-                type: 'POST',
-                dataType: "JSON",
-                data:{'id':selectedRowData.id},
-                success: function (data, status)
-                {
-
-                },
-                error: function (xhr, desc, err)
-                {
-                    console.log("error");
-
-                }
-            });
-
-
-        }
-        else
-        {
-            alert(SELCET_ONE_ITEM);
-        }
-
-    });
-    $(document).on("click", ".button_action_multiple", function(event)
-    {
-
-        var jqxgrid_id='#system_jqx_container';
-        var selected_row_indexes = $(jqxgrid_id).jqxGrid('getselectedrowindexes');
-        if (selected_row_indexes.length > 0)
-        {
-            if($(this).attr('id')=='button_action_delete')
-            {
-
-                var sure = confirm('Are You sure to Delete?');
-                if(!sure)
-                {
-                    return;
-                }
-            }
-            var ids=[];
-            for (var i = 0; i < selected_row_indexes.length; i++)
-            {
-                ids.push($(jqxgrid_id).jqxGrid('getrowdata', selected_row_indexes[i]).id);
-            }
-            $.ajax({
-                url: $(this).attr('data-action-link'),
-                type: 'POST',
-                dataType: "JSON",
-                data:{'ids':ids},
-                success: function (data, status)
-                {
-
-                },
-                error: function (xhr, desc, err)
-                {
-                    console.log("error");
-
-                }
-            });
-
-
-        }
-        else
-        {
-            alert(SELCET_ONE_ITEM);
-        }
-
-    });
-
-    //load the current page content
-    load_current_content();
     // binds form submission and fields to the validation engine
     $(document).on("change", ":file", function(event)
     {
@@ -350,34 +220,98 @@ $(document).ready(function()
         }
 
     });
-    $(document).on("click", "#button_action_print", function(event)
+    /*button start*/
+    $(document).on("click", "#button_action_clear", function(event)
     {
-        var jqxgrid_id='#system_jqx_container';
 
-        var gridContent = $(jqxgrid_id).jqxGrid('exportdata', 'html');
-        var newWindow = window.open('', '', 'width=800, height=500'),
-            document = newWindow.document.open(),
-            pageContent =
-                '<!DOCTYPE html>\n' +
-                    '<html>\n' +
-                    '<head>\n' +
-                    '<meta charset="utf-8" />\n' +
-                    '<title>'+$(this).attr('data-title')+'</title>\n' +
-                    '</head>\n' +
-                    '<body>\n' + gridContent + '\n</body>\n</html>';
-        document.write(pageContent);
-        document.close();
-        newWindow.print();
+        $($(this).attr('data-form')).trigger('reset');
 
     });
-    $(document).on("click", "#button_action_download", function(event)
+    $(document).on("click", "#button_action_report", function(event)
     {
-        //previous csv file
-        /*var jqxgrid_id='#system_jqx_container';
-         $(jqxgrid_id).jqxGrid('exportdata', 'csv', $(this).attr('data-title'));*/
-        var jqxgrid_id='#system_jqx_container';
+        if($(this).is('[data-message-confirm]'))
+        {
+            var sure = confirm($(this).attr('data-message-confirm'));
+            if(!sure)
+            {
+                return;
+            }
+        }
+        $('#system_report_container').html('');
+        $($(this).attr('data-form')).submit();
 
-        var gridContent = $(jqxgrid_id).jqxGrid('exportdata', 'html');
+    });
+    $(document).on("click", "#button_action_save", function(event)
+    {
+        if($(this).is('[data-message-confirm]'))
+        {
+            var sure = confirm($(this).attr('data-message-confirm'));
+            if(!sure)
+            {
+                return;
+            }
+        }
+        $("#system_save_new_status").val(0);
+        $($(this).attr('data-form')).submit();
+
+    });
+    $(document).on("click", "#button_action_save_new", function(event)
+    {
+        if($(this).is('[data-message-confirm]'))
+        {
+            var sure = confirm($(this).attr('data-message-confirm'));
+            if(!sure)
+            {
+                return;
+            }
+        }
+        $("#system_save_new_status").val(1);
+        $($(this).attr('data-form')).submit();
+
+    });
+    $(document).on("click", ".button_jqx_action", function(event)
+    {
+
+        var jqx_grid_id='#system_jqx_container';
+        var selected_row_indexes = $(jqx_grid_id).jqxGrid('getselectedrowindexes');
+        if (selected_row_indexes.length > 0)
+        {
+            if($(this).is('[data-message-confirm]'))
+            {
+                var sure = confirm($(this).attr('data-message-confirm'));
+                if(!sure)
+                {
+                    return;
+                }
+            }
+            var selectedRowData = $(jqx_grid_id).jqxGrid('getrowdata', selected_row_indexes[selected_row_indexes.length-1]);//only last selected
+            $.ajax({
+                url: $(this).attr('data-action-link'),
+                type: 'POST',
+                dataType: "JSON",
+                data:{'id':selectedRowData.id},
+                success: function (data, status)
+                {
+
+                },
+                error: function (xhr, desc, err)
+                {
+                    console.log("error");
+
+                }
+            });
+        }
+        else
+        {
+            alert(SELECT_ONE_ITEM);
+        }
+
+    });
+    $(document).on("click", ".button_action_download", function(event)
+    {
+        var jqx_grid_id='#system_jqx_container';
+
+        var gridContent = $(jqx_grid_id).jqxGrid('exportdata', 'html');
         var newWindow = window.open('', '', 'width=800, height=500,menubar=yes,toolbar=no,scrollbars=yes'),
             document = newWindow.document.open(),
             pageContent =
@@ -390,24 +324,38 @@ $(document).ready(function()
                     '<body>\n' + gridContent + '\n</body>\n</html>';
         document.write(pageContent);
         document.close();
+        if($(this).is('[data-print]'))
+        {
+            console.log($(this).attr('data-print'));
+            if($(this).attr('data-print')==true)
+            {
+                newWindow.print();
+            }
+            else
+            {
+                console.log('not here');
+            }
+        }
+
 
     });
     $(document).on("click", ".system_jqx_column", function(event)
     {
-        var jqxgrid_id='#system_jqx_container';
-        $(jqxgrid_id).jqxGrid('beginupdate');
+        var jqx_grid_id='#system_jqx_container';
+        $(jqx_grid_id).jqxGrid('beginupdate');
         if($(this).is(':checked'))
         {
-            $(jqxgrid_id).jqxGrid('showcolumn', $(this).val());
+            $(jqx_grid_id).jqxGrid('showcolumn', $(this).val());
         }
         else
         {
-            $(jqxgrid_id).jqxGrid('hidecolumn', $(this).val());
+            $(jqx_grid_id).jqxGrid('hidecolumn', $(this).val());
         }
-        $(jqxgrid_id).jqxGrid('endupdate');
+        $(jqx_grid_id).jqxGrid('endupdate');
 
     });
-
+    /*button end*/
+    /*number format input box*/
     $(document).on("input", ".float_type_positive", function(event)
     {
         this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
@@ -424,10 +372,12 @@ $(document).ready(function()
     {
         this.value = this.value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '');
     });
+    /*number format input box*/
     $("#popup_window").jqxWindow({
         width: 550,height:550, resizable: true,  isModal: true, autoOpen: false, modalOpacity: 0.01,position: { x: 60, y: 60 }
     });
-
+    //load the current page content
+    load_current_content();
 
 });
 function load_current_content()
@@ -475,7 +425,6 @@ function load_style(content)
 }
 function animate_message(message)
 {
-    $("#system_message").hide();
     $("#system_message").html(message);
-    $('#system_message').slideToggle("slow").delay(3000).slideToggle("slow");
+    $("#system_message").animate({right:"100px"}).animate({right:"30px"}).delay(3000).animate({right:"100px"}).animate({right:"-5000px"});
 }
