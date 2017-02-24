@@ -79,24 +79,6 @@ class System_helper
         $data['date_created_string']=System_helper::display_date($time);
         $CI->db->insert($CI->config->item('table_system_history_hack'), $data);
     }
-    public static function get_users_info($user_ids=array())
-    {
-        $CI=& get_instance();
-        $CI->db->from($CI->config->item('system_db_login').'.'.$CI->config->item('table_login_setup_user_info'));
-        if(sizeof($user_ids)>0)
-        {
-            $CI->db->where_in('user_id',$user_ids);
-        }
-        $CI->db->where('revision',1);
-        $results=$CI->db->get()->result_array();
-        $users=array();
-        foreach($results as $result)
-        {
-            $users[$result['user_id']]=$result;
-        }
-        return $users;
-
-    }
     /*public static function get_fiscal_years()
     {
         $CI =& get_instance();
