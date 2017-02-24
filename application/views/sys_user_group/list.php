@@ -2,17 +2,29 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 $CI=& get_instance();
-$action_data=array();
+$action_buttons=array();
 if(isset($CI->permissions['action1']) && ($CI->permissions['action1']==1))
 {
-    $action_data['action_new']=site_url($CI->controller_url.'/index/add');
+    $action_buttons[]=array(
+        'label'=>$CI->lang->line("ACTION_NEW"),
+        'href'=>site_url($CI->controller_url.'/index/add')
+    );
 }
 if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
 {
-    $action_data['action_edit']=site_url($CI->controller_url.'/index/edit');
+    $action_buttons[]=array(
+        'type'=>'button',
+        'label'=>$CI->lang->line("ACTION_EDIT"),
+        'class'=>'button_jqx_action',
+        'data-action-link'=>site_url($CI->controller_url.'/index/edit')
+    );
 }
-$action_data['action_refresh']=site_url($CI->controller_url.'/index/list');
-$CI->load->view('action_buttons',$action_data);
+$action_buttons[]=array(
+    'label'=>$CI->lang->line("ACTION_REFRESH"),
+    'href'=>site_url($CI->controller_url.'/index/list')
+
+);
+$CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
 ?>
 
 <div class="row widget">
